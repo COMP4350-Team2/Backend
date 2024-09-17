@@ -4,7 +4,7 @@
 [Link to slides. CLICK ME!](https://umanitoba-my.sharepoint.com/:p:/r/personal/seoa_myumanitoba_ca/_layouts/15/Doc.aspx?sourcedoc=%7B062B260E-9298-4CC3-BACE-D646A239C5D1%7D&file=Proposal%20Presentation.pptx&action=edit&mobileredirect=true)
 
 ## Summary & Vision
-**Cupboard** lets you manage your groceries and recipes in a convenient way, improving your experience in the kitchen. Users can keep track of ingredients they have, ingredients they need to buy and any recipes they create with these ingredients. Users can add others to their household, allowing all members to share ingredient inventory, grocery lists and recipes. Meal planning and  grocery shopping for a household has never been easier.
+**Cupboard** lets you manage your groceries and recipes in a convenient way, improving your experience in the kitchen. Users can keep track of ingredients they have, ingredients they need to buy and any recipes they create with these ingredients. Users can add others to their household, allowing all members to share ingredient inventory, grocery lists and recipes. Meal planning is made easy; simply add your recipes to your calendar. Meal planning and  grocery shopping for a household has never been easier!
 
 ## Features & User Stories
 ### Key Feature 1: Menu Planning 
