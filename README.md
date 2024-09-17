@@ -1,4 +1,4 @@
-# Cupboard
+# Cupboard by Team TeaCup
 
 ## Presentation Slides
 [Link to slides. CLICK ME!](https://umanitoba-my.sharepoint.com/:p:/r/personal/seoa_myumanitoba_ca/_layouts/15/Doc.aspx?sourcedoc=%7B062B260E-9298-4CC3-BACE-D646A239C5D1%7D&file=Proposal%20Presentation.pptx&action=edit&mobileredirect=true)
@@ -57,7 +57,8 @@ We aim to provide a response time of less than 1 second to 100 users concurrentl
 ![Diagram](/COMP4350_Architecture.jpg)
 
 ### Architecture Rationale
+Team TeaCup decided upon a 3-tier architecture by dividing the codespaces and flow into *UI*, *Logic* and *Data* layers. The 3-tier architecture is familiar to the team and is well-suited for the project. A large part of project involves CRUD operations being done on items in the data layer which means the 3-tier architecture would be convenient to reason about. Although the diagram shows a single instance of the *API Server* in the *Logic* layer, the technology used (*AWS Elastic Beanstalk*) allows automatic scaling in response to a large request volume. This service allows us our logic layer to be simplified as shown. Similarly an RDBMS service (*Microsoft Azure*) is used because it provides automatic *horizontal and vertical scaling* in response to incoming requests. The team will likely use a *horizontal scaling* approach to the database since the team values response time over conistency. That is, users will see *eventual consistency* on their interfaces. User login and authentication will be deligated by the *API Server* to *Auth0*. *Auth0* provides excellent scaling and is compatible with many interfaces and technologies. We chose the two front ends in the *UI* layer to be desktop and mobile since this software is to be used inside and outside the house. 
 
 
 ### Work Division
-Cupboard will use a lot of technologies that are new to all the team members. However, all the team members have shown strong enthusiasm towards learning all the new technologies. Therefore, the team decided to have a streamlined workflow where every teammate will get to enage with every component of Cupboard. However, once everyone's comfortable with all the technologies, sub-groups of the team might be assigned to different components of Cupboard as needed. The team is also using Linear to keep track of all the issues (features, user stories, devtasks, bugs etc.) for Cupboard's multirepo setup. 
+Team TeaCup will use a lot of technologies that are new to all the team members. However, all the team members have shown strong enthusiasm towards learning all the new technologies. Therefore, the team decided to have a streamlined workflow where every teammate will get to enage with every component of Cupboard. However, once everyone's comfortable with all the technologies, sub-groups of the team might be assigned to different components of Cupboard as needed. The team is also using Linear to keep track of all the issues (features, user stories, devtasks, bugs etc.) for Cupboard's multirepo setup. 
