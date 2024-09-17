@@ -56,5 +56,8 @@ We aim to provide a response time of less than 1 second to 100 users concurrentl
 ### Diagram:
 ![Diagram](/COMP4350_Architecture.jpg)
 
+### Architecture Rationale
 
 
+### Work Division
+Cupboard will use a lot of technologies that are new to all the team members. However, all the team members have shown strong enthusiasm towards learning all the new technologies. Therefore, the team decided to have a streamlined workflow where every teammate will get to enage with every component of Cupboard. However, once everyone's comfortable with all the technologies, sub-groups of the team might be assigned to different components of Cupboard as needed. The team is also using Linear to keep track of all the issues (features, user stories, devtasks, bugs etc.) for Cupboard's multirepo setup. 
