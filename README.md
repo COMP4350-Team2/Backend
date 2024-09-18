@@ -10,17 +10,17 @@
 ### Key Feature 1: Menu Planning 
 #### User Stories:
 - As a user, I should be able to see and access my calendar.\
-    **Acceptance Criteria:**
+**Acceptance Criteria:**
     - Given that I’m a logged-in user 
     - When I click on my calendar  
     - Then the system will open my personal calendar. 
 - As a user, I should be able to add a recipe for any day of the year and be able to see it in my calendar.\
-    **Acceptance Criteria:**
+**Acceptance Criteria:**
     - Given that I’m a logged in user who has their calendar opened. 
     - When I click on any day of the calendar and click the “add recipe” option. 
     - Then I should be able to assign one of my own recipes to that day. 
 - As a user, I should be able to add a recipe for breakfast, lunch, dinner, and snacks.\
-    **Acceptance Criteria:**
+**Acceptance Criteria:**
     - Given that I’m a logged in user who has their calendar opened. 
     - When I click on a certain day and click the “add recipe” option. 
     - Then I should have the option to select a tag of “breakfast”, “lunch”, or “dinner” to my recipe. 
@@ -28,15 +28,57 @@
 ### Key Feature 2: Organize ingredients
 #### User Stories:
 - As a user, I want to have a list of commonly available ingredients I can choose from.\  
+**Acceptance Criteria:**
+    - Given that I’m a logged in user and on my profile.  
+    - When I am on my profile, I should be able to see my list of ingredients available. 
+    - Upon clicking on my list, I should be able to click the “add ingredient” button.  
+    - Then, I should be presented with a list of commonly available ingredients that I can add to my own list. 
 - As a user, I want to search ingredients.\
-- As a user, I want to be able to set the amounts of ingredients added to my lists.\ 
+**Acceptance Criteria:**
+    - Given that I’m a logged in user and on my profile. 
+    - I should be able to see a list of my own ingredients that I can open. 
+    - When I click the “add ingredients” button upon opening my list. 
+    - Then I should be presented with a list of commonly available ingredients that I can search through using a search bar. 
+- As a user, I want to be able to set the amounts of ingredients added to my lists.\
+**Acceptance Criteria:**
+    - Given that I’m a logged in user who is trying to add an ingredient to my list. 
+    - When I add a new ingredient to my list  
+    - Then, I should be able to edit the amount of ingredient before adding it to my list.  
 - As a user, I want to create custom items and add them to my lists.\ 
+**Acceptance Criteria:**
+    - Given that I’m a logged in user with my list of ingredients open.  
+    - When I click “add ingredient”.   
+    - Then I should be able to add a custom ingredient by clicking the “add custom ingredient” option that lets me write the name and image of the ingredient.  
 - As a user, I want to see all the custom items I have previously made.\ 
+**Acceptance Criteria:**
+    - Given I’m a logged in user  
+    - When I click my own profile    
+    - Then I should be able to see a “my custom ingredients” section that shows me all the custom ingredients I’ve created. 
 - As a user, I want to see the ingredients I previously had in my list when I log in.\ 
+**Acceptance Criteria:**
+    - Given that I’m a logged-out user.
+    - When I enter my details correctly and get logged in.    
+    - Then, the app should keep my previous ingredients list.  
 - As a user, I want to organize ingredients into lists of my choice.\ 
+**Acceptance Criteria:**
+    - Given that I’m a logged in user. 
+    - When I click on my profile and click the “make new list” button    
+    - Then I should be able to make a custom list where I can add ingredients. 
 - As a user, I want to have a place to view all my lists.\ 
-- As a user, I want to sort ingredients in my list based on name, date added, date opened.\ 
+**Acceptance Criteria:**
+    - Given that I’m a logged in user. 
+    - When I click on my profile and click “view my lists”.   
+    - Then I should be able to see all my lists with all the ingredients in them.  
+- As a user, I want to sort ingredients in my list based on name or date added.\ 
+**Acceptance Criteria:**
+    - Given that I’m a logged in user. 
+    - When I click on my custom lists and choose a list of ingredients.    
+    - Then, I should be able to sort the list alphabetically or by date.  
 - As a user, I want search results to highlight ingredients that are already added in my list.\ 
+**Acceptance Criteria:**
+    - Given that I’m a logged in user with one of my lists open.  
+    - When I try to add a new ingredient by searching/scrolling through the ingredients.    
+    - Then, the ingredients already present in my list should be highlighted.  
 
 ### Key Feature 3: Sharing Grocery List 
 #### User Stories:
