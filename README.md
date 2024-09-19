@@ -9,17 +9,17 @@
 ## Features & User Stories
 ### Key Feature 1: Menu Planning 
 #### User Stories:
-- As a user, I should be able to see and access my calendar.\
+- ***As a user, I should be able to see and access my calendar.***<br />
 **Acceptance Criteria:**
     - Given that I’m a logged-in user 
     - When I click on my calendar  
     - Then the system will open my personal calendar. 
-- As a user, I should be able to add a recipe for any day of the year and be able to see it in my calendar.\
+- ***As a user, I should be able to add a recipe for any day of the year and be able to see it in my calendar.***<br />
 **Acceptance Criteria:**
     - Given that I’m a logged in user who has their calendar opened. 
     - When I click on any day of the calendar and click the “add recipe” option. 
     - Then I should be able to assign one of my own recipes to that day. 
-- As a user, I should be able to add a recipe for breakfast, lunch, dinner, and snacks.\
+- ***As a user, I should be able to add a recipe for breakfast, lunch, dinner, and snacks.***<br />
 **Acceptance Criteria:**
     - Given that I’m a logged in user who has their calendar opened. 
     - When I click on a certain day and click the “add recipe” option. 
@@ -27,54 +27,54 @@
 
 ### Key Feature 2: Organize ingredients
 #### User Stories:
-- As a user, I want to have a list of commonly available ingredients I can choose from.\  
+- ***As a user, I want to have a list of commonly available ingredients I can choose from.***<br /> 
 **Acceptance Criteria:**
     - Given that I’m a logged in user and on my profile.  
     - When I am on my profile, I should be able to see my list of ingredients available. 
     - Upon clicking on my list, I should be able to click the “add ingredient” button.  
     - Then, I should be presented with a list of commonly available ingredients that I can add to my own list. 
-- As a user, I want to search ingredients.\
+- ***As a user, I want to search ingredients.***<br />
 **Acceptance Criteria:**
     - Given that I’m a logged in user and on my profile. 
     - I should be able to see a list of my own ingredients that I can open. 
     - When I click the “add ingredients” button upon opening my list. 
     - Then I should be presented with a list of commonly available ingredients that I can search through using a search bar. 
-- As a user, I want to be able to set the amounts of ingredients added to my lists.\
+- ***As a user, I want to be able to set the amounts of ingredients added to my lists.***<br />
 **Acceptance Criteria:**
     - Given that I’m a logged in user who is trying to add an ingredient to my list. 
     - When I add a new ingredient to my list  
     - Then, I should be able to edit the amount of ingredient before adding it to my list.  
-- As a user, I want to create custom items and add them to my lists.\ 
+- ***As a user, I want to create custom items and add them to my lists.***<br />
 **Acceptance Criteria:**
     - Given that I’m a logged in user with my list of ingredients open.  
     - When I click “add ingredient”.   
     - Then I should be able to add a custom ingredient by clicking the “add custom ingredient” option that lets me write the name and image of the ingredient.  
-- As a user, I want to see all the custom items I have previously made.\ 
+- ***As a user, I want to see all the custom items I have previously made.***<br />
 **Acceptance Criteria:**
     - Given I’m a logged in user  
     - When I click my own profile    
     - Then I should be able to see a “my custom ingredients” section that shows me all the custom ingredients I’ve created. 
-- As a user, I want to see the ingredients I previously had in my list when I log in.\ 
+- ***As a user, I want to see the ingredients I previously had in my list when I log in.***<br />
 **Acceptance Criteria:**
     - Given that I’m a logged-out user.
     - When I enter my details correctly and get logged in.    
     - Then, the app should keep my previous ingredients list.  
-- As a user, I want to organize ingredients into lists of my choice.\ 
+- ***As a user, I want to organize ingredients into lists of my choice.***<br />
 **Acceptance Criteria:**
     - Given that I’m a logged in user. 
     - When I click on my profile and click the “make new list” button    
     - Then I should be able to make a custom list where I can add ingredients. 
-- As a user, I want to have a place to view all my lists.\ 
+- ***As a user, I want to have a place to view all my lists.***<br />
 **Acceptance Criteria:**
     - Given that I’m a logged in user. 
     - When I click on my profile and click “view my lists”.   
     - Then I should be able to see all my lists with all the ingredients in them.  
-- As a user, I want to sort ingredients in my list based on name or date added.\ 
+- ***As a user, I want to sort ingredients in my list based on name or date added.***<br />
 **Acceptance Criteria:**
     - Given that I’m a logged in user. 
     - When I click on my custom lists and choose a list of ingredients.    
     - Then, I should be able to sort the list alphabetically or by date.  
-- As a user, I want search results to highlight ingredients that are already added in my list.\ 
+- ***As a user, I want search results to highlight ingredients that are already added in my list.***<br /> 
 **Acceptance Criteria:**
     - Given that I’m a logged in user with one of my lists open.  
     - When I try to add a new ingredient by searching/scrolling through the ingredients.    
@@ -82,23 +82,45 @@
 
 ### Key Feature 3: Sharing Grocery List 
 #### User Stories:
-- As a user, I want to add other people to my personal grocery list.\ 
-- As a user, I want to view the lists I have joined.\ 
-- As a user, I want to make changes to lists that I have joined.\ 
-- As a user, I want to control who can view and edit my lists.\
+- ***As a user, I want to add other people to my personal grocery list.***<br />
+**Acceptance Criteria:**
+    - Given that I’m in a role of a registered user   
+    - When I open the “share” page     
+    - Then the system gives me text box to input either another users’ username or phone number 
+    - Once the username/phone number field is filled, I can press the invite button to send an invitation 
+- ***As a user, I want to view the lists I have joined.***<br />
+**Acceptance Criteria:**
+    - Given that I’m in a role of a registered user    
+    - When I open the “my lists” page      
+    - Then the system shows me a list of lists that created/joined 
+- ***As a user, I want to make changes to lists that I have joined.***<br /> 
+**Acceptance Criteria:**
+    - Given that I’m in a role of a registered user   
+    - When I open the “my lists” page     
+    - Then the system shows me a list of lists that created/joined  
+    - I then select which list I want to make changes to 
+    - Which brings up a detailed view of my list, with items and their quantities 
+    - From which I can add/remove quantity of a product by either typing in an associated field or press +/- symbols to change the value 
+    - And I am also offered the option to fill in a search field with the name of an item I want to add 
+    - Which when the apply button is selected, brings up a list of relevant items and the aforementioned add/remove quantity change options 
+- ***As a user, I want to control who can view and edit my lists.***<br />
+**Acceptance Criteria:**
+    - Given that I’m a logged in user who has lists.   
+    - When I share a list with another user       
+    - Then, I want to be able to select which lists they can view and/or edit   
 
 ### Key Feature 4: Create/Logging Recipes
 #### User Stories:
-- As a user, I want to create recipes.\ 
-- As a user, I want to add/remove ingredients with amounts to my recipes.\ 
-- As a user, I want to adjust the amount of ingredients in my recipes.\ 
-- As a user, I want to add pictures to my recipes.\ 
-- As a user, I want to add steps to my recipes.\ 
-- As a user, I want to view all my recipes.\ 
-- As a user, I want to share my recipes with other users.\ 
-- As a user, I want to view all my shared recipes.\ 
-- As a user, I want to favourite recipes.\ 
-- As a user, I want to see which ingredients in a recipe I don’t have in my list.\ 
+- ***As a user, I want to create recipes.***<br />
+- ***As a user, I want to add/remove ingredients with amounts to my recipes.***<br /> 
+- ***As a user, I want to adjust the amount of ingredients in my recipes.***<br />
+- ***As a user, I want to add pictures to my recipes.***<br />
+- ***As a user, I want to add steps to my recipes.***<br />
+- ***As a user, I want to view all my recipes.***<br />
+- ***As a user, I want to share my recipes with other users.***<br />
+- ***As a user, I want to view all my shared recipes.***<br />
+- ***As a user, I want to favourite recipes.***<br />
+- ***As a user, I want to see which ingredients in a recipe I don’t have in my list.***<br />
 
 ### Non-functional Feature: Minimize Response Time
 We aim to provide a response time of less than 1 second to 100 users concurrently.
