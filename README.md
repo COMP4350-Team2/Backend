@@ -165,8 +165,6 @@
 ### Non-functional Feature: Minimize Response Time
 We aim to provide a response time of less than 1 second to 100 users concurrently.
 
-## Acceptance Criteria
-
 ## Initial Architecture
 ### Diagram:
 ![Diagram](/COMP4350_Architecture.jpg)
