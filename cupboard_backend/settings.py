@@ -14,6 +14,7 @@ import environ
 from pathlib import Path
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from pymongo import MongoClient
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
