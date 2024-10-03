@@ -82,9 +82,7 @@ DATABASES = {
         'ENGINE': 'djongo',
         'NAME': 'CupboardDB',
         'CLIENT': {
-            'host': 'mongodb+srv://<username>:<password>@cluster0.mongodb.net/<your-database-name>?retryWrites=true&w=majority',
-            'username': 'Vaughn',
-            'password': '2BsUOxF60dEKkXRp',
+            'host': env('MONGO_URL'),
         }
     }
 }
