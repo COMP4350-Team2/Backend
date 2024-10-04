@@ -27,14 +27,11 @@ environ.Env.read_env()
 uri = env('MONGO_URL')
 client = MongoClient(uri, server_api=ServerApi('1'))
 
+SECRET_KEY = env('DJANGO_SECRET_KEY')
+DEBUG_ENABLE = env('DEBUG_ENABLE')
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(+ego$8sktax4rjq&v%o13-28u-m+ie0p7=0etc$w35iitwbu5'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = []
 
