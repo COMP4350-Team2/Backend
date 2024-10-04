@@ -13,10 +13,6 @@ class TestIngredients(TestCase):
         #new_ingredient = Ingredient("testing","TEST")
         #new_ingredient.save()
     def test_get_all_ingredients(self):
-        #uri = "mongodb+srv://Vaughn:test@cluster0.8fysf.mongodb.net/CupboardDB?retryWrites=true&w=majority"
-        #client = MongoClient(uri)
-        #db = client.CupBoardDB
-        #ingredients = db.ingredients.find()
         ingredients_list = get_all_ingredients()
         for item in ingredients_list:
             print(item)
