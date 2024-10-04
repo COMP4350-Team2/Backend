@@ -8,14 +8,10 @@ from pymongo import MongoClient
 # Create your tests here.
 class TestIngredients(TestCase):
     def setUp(self):
-        call_command('flush', verbosity=0, interactive=False)  # This ensures a clean state
         Ingredient.objects.create(name="testing",type="TEST")
-        #new_ingredient = Ingredient("testing","TEST")
-        #new_ingredient.save()
+
     def test_get_all_ingredients(self):
         ingredients_list = get_all_ingredients()
         for item in ingredients_list:
             print(item)
-        #for ingredient in ingredients:
-        #    print(ingredient)
         
