@@ -1,5 +1,4 @@
 from django.db import models
-from bson import ObjectId
 
 # Create your models here.
 class User(models.Model):
@@ -10,8 +9,8 @@ class User(models.Model):
         return f"{self.username} {self.email}"
     
 class Ingredient(models.Model):
-    name = models.CharField(max_length=100,unique=True)
-    type = models.CharField(max_length=100,unique=True)
+    name = models.CharField(max_length=100)
+    type = models.CharField(max_length=100)
 
     def __str__(self):
         return f"{self.name} {self.type}"
@@ -29,33 +28,18 @@ class Measurement(models.Model):
         return f"{self.unit}"
     
 class UserListIngredients(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_list_ingredients')
-    listName = models.ForeignKey(ListName, on_delete=models.CASCADE, related_name='user_lists')
-    
-    # Use JSONField to store the ingredients, amounts, and units in a single field
-    ingredients = models.JSONField(null=True, blank=True)  # Store as a list of dictionaries
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    listName = models.ForeignKey(ListName, on_delete=models.CASCADE)
+    ingredients = []
 
     def __str__(self):
-        if self.ingredients:
-            # Extract the ingredient details from the JSON field
-            ingredients_str = ", ".join([
-                f"{ingredient['name']} (Amount: {ingredient['amount']}, Unit: {ingredient['unit']})"
-                for ingredient in self.ingredients
-            ])
-        else:
-            ingredients_str = "No ingredients"
-
-        return f"{self.listName} - {self.user.username}: {ingredients_str}"
+        return f"{self.listName} - {self.user.username}"
     
 class Recipe(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_recipes')
-    recipeName = models.CharField(max_length=100, unique=True)
-
-    # Use JSONField to store steps as a list of strings
-    steps = models.JSONField(null=True, blank=True)  # Store steps as a list of strings
-
-    # Use JSONField to store ingredients as a list of dictionaries
-    ingredients = models.JSONField(null=True, blank=True)  # Store ingredients as a list of dictionaries
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipeName = models.CharField(max_length=100)
+    steps = []
+    ingredients = []
 
     def __str__(self):
         return f"{self.recipeName} by {self.user.username}"
