@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env()
 
-uri = "mongodb+srv://Vaughn:test@cluster0.8fysf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+uri = env('MONGO_URL')
 client = MongoClient(uri, server_api=ServerApi('1'))
 
 # Test the connection
