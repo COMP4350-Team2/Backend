@@ -1,13 +1,15 @@
 from django.db import models
 
+
 # Create your models here.
 class User(models.Model):
-    username = models.CharField(max_length=30,unique=True)
-    email = models.CharField(max_length=30,unique=True)
+    username = models.CharField(max_length=30, unique=True)
+    email = models.CharField(max_length=30, unique=True)
 
     def __str__(self):
         return f"{self.username} {self.email}"
-    
+
+
 class Ingredient(models.Model):
     name = models.CharField(max_length=25)
     type = models.CharField(max_length=25)
@@ -15,18 +17,21 @@ class Ingredient(models.Model):
     def __str__(self):
         return f"{self.name} {self.type}"
 
+
 class ListName(models.Model):
     listName = models.CharField(max_length=15)
 
     def __str__(self):
         return f"{self.listName}"
 
+
 class Measurement(models.Model):
-    unit = models.CharField(max_length=15,unique=True)
+    unit = models.CharField(max_length=15, unique=True)
 
     def __str__(self):
         return f"{self.unit}"
-    
+
+
 class UserListIngredients(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     listName = models.ForeignKey(ListName, on_delete=models.CASCADE)
@@ -34,7 +39,8 @@ class UserListIngredients(models.Model):
 
     def __str__(self):
         return f"{self.listName} - {self.user.username}"
-    
+
+
 class Recipe(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     recipeName = models.CharField(max_length=25)

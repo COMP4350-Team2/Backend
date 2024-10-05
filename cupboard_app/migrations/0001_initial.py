@@ -8,14 +8,21 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
             name='Ingredient',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID'
+                    )
+                ),
                 ('name', models.CharField(max_length=100, unique=True)),
                 ('type', models.CharField(max_length=100, unique=True)),
             ],
@@ -23,21 +30,45 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ListName',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID'
+                    )
+                ),
                 ('listName', models.CharField(max_length=100, unique=True)),
             ],
         ),
         migrations.CreateModel(
             name='Measurement',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID'
+                    )
+                ),
                 ('unit', models.CharField(max_length=100, unique=True)),
             ],
         ),
         migrations.CreateModel(
             name='User',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID'
+                    )
+                ),
                 ('username', models.CharField(max_length=100, unique=True)),
                 ('email', models.CharField(max_length=100, unique=True)),
             ],
@@ -45,20 +76,57 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='UserListIngredients',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID'
+                    )
+                ),
                 ('ingredients', models.JSONField(blank=True, null=True)),
-                ('listName', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_lists', to='cupboard_app.listname')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_list_ingredients', to='cupboard_app.user')),
+                (
+                    'listName',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='user_lists',
+                        to='cupboard_app.listname'
+                    )
+                ),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='user_list_ingredients',
+                        to='cupboard_app.user'
+                    )
+                ),
             ],
         ),
         migrations.CreateModel(
             name='Recipe',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID'
+                    )
+                ),
                 ('recipeName', models.CharField(max_length=100, unique=True)),
                 ('steps', models.JSONField(blank=True, null=True)),
                 ('ingredients', models.JSONField(blank=True, null=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user_recipes', to='cupboard_app.user')),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='user_recipes',
+                        to='cupboard_app.user'
+                    )
+                ),
             ],
         ),
     ]
