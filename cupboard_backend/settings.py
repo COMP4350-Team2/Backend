@@ -26,7 +26,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Initialize environment variables
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
-DEBUG = os.getenv('DEBUG_ENABLE')
+if os.getenv('DEBUG_ENABLE') == 'false':
+    DEBUG = False
+else:
+    DEBUG = True
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 
