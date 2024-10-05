@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-import environ
+import os
 
 import dns.resolver
 from pathlib import Path
@@ -25,21 +25,17 @@ dns.resolver.default_resolver.nameservers=['8.8.8.8']
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Initialize environment variables
-env = environ.Env()
-environ.Env.read_env()
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+DEBUG = os.getenv('DEBUG_ENABLE')
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 
 # Get uri from environment, create client
-uri = env('MONGO_URL')
+uri = os.getenv('MONGO_URL')
 client = MongoClient(uri, server_api=ServerApi('1'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(+ego$8sktax4rjq&v%o13-28u-m+ie0p7=0etc$w35iitwbu5'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -54,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'cupboard_app',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -64,6 +61,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.auth.middleware.RemoteUserMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'django.contrib.auth.backends.RemoteUserBackend',
 ]
 
 ROOT_URLCONF = 'cupboard_backend.urls'
@@ -95,7 +98,7 @@ DATABASES = {
         'ENGINE': 'djongo',
         'NAME': 'CupboardDB',
         'CLIENT': {
-            'host': env('MONGO_URL'),
+            'host': os.getenv('MONGO_URL'),
         },
         'ENFORCE_SCHEMA': False,
     }
@@ -142,3 +145,25 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+
+JWT_AUTH = {
+    'JWT_PAYLOAD_GET_USERNAME_HANDLER':
+        'auth0authorization.utils.jwt_get_username_from_payload_handler',
+    'JWT_DECODE_HANDLER':
+        'auth0authorization.utils.jwt_decode_token',
+    'JWT_ALGORITHM': 'RS256',
+    'JWT_AUDIENCE': AUTH0_API_IDENTIFIER,
+    'JWT_ISSUER': 'https://{}/'.format(AUTH0_DOMAIN),
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+}
