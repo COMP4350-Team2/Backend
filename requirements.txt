@@ -10,3 +10,4 @@ django-cors-headers==4.4.0
 drf-jwt==1.19.2
 pyjwt==2.9.0
 requests==2.32.3
+dnspython==2.6.1
