@@ -47,6 +47,9 @@ def get_listName(id):
     else: 
         return None
     
+def create_user(username,email):
+    newUser = User(username = username, email = email)
+    newUser.save()
 
 # Given strings for username, list name, ingredient name, and unit
 # Along with an integer value for amount 
