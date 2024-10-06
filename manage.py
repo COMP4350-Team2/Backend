@@ -14,6 +14,11 @@ def main():
     # Reads the .env file and loads the values
     load_dotenv()
 
+    # Set mock environment variables
+    os.environ.setdefault('MOCK_KEY', 'cupboard_secret')
+    os.environ.setdefault('MOCK_DOMAIN', 'my-domain.ca.auth0.com')
+    os.environ.setdefault('MOCK_API_IDENTIFIER', 'https://api.example.com')
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
