@@ -1,5 +1,8 @@
-from django.db import models
 import json
+
+from django.db import models
+
+
 # Create your models here.
 class User(models.Model):
     username = models.CharField(max_length=30, unique=True)
@@ -14,14 +17,9 @@ class Ingredient(models.Model):
     type = models.CharField(max_length=25)
 
     def __str__(self):
-    #    return f'{"name:":{self.name}, "type":{self.type}}'
-        my_dictionary = {"name":self.name,"type":self.type}
+        my_dictionary = {"name": self.name, "type": self.type}
         result = json.dumps(my_dictionary)
         return result
-
-    #def getIngredient(self):
-    #    my_dictionary = {"name":self.name,"type":self.type}
-    #    return my_dictionary
 
 
 class ListName(models.Model):

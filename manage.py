@@ -3,16 +3,23 @@
 import os
 import sys
 
-from dotenv import load_dotenv
 from django.core.management.commands.runserver import Command as runserver
+
+from utils.env_helper import load_env_variables
 
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cupboard_backend.settings')
+    # Reads the .env file and loads all the values
+    load_env_variables()
 
-    # Reads the .env file and loads the values
-    load_dotenv()
+    # Checks if this is a test
+    if sys.argv[1:2] == ["test"]:
+        # Running tests
+        os.environ['TEST_RUN'] = 'true'
+    else:
+        # Not a test run
+        os.environ['TEST_RUN'] = 'false'
 
     try:
         from django.core.management import execute_from_command_line
@@ -23,9 +30,8 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    # Override default port for `runserver` command, use 8000 if not set
-    runserver.default_port = os.getenv('DJANGO_PORT', '8000')
-
+    # Override default port for `runserver` command
+    runserver.default_port = os.getenv('DJANGO_PORT')
     execute_from_command_line(sys.argv)
 
 
