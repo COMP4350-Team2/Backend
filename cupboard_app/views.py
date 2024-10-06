@@ -8,6 +8,9 @@ from rest_framework.permissions import AllowAny
 from .queries import get_all_ingredients as queries_get_all_ingredients
 import json
 
+CRED_NOT_PROVIDED = {'detail': 'Authentication credentials were not provided.'}
+TOKEN_DECODE_ERROR = {'detail': 'Error decoding token.'}
+
 def get_token_auth_header(request):
     """
     Obtains the Access Token from the Authorization Header
@@ -82,29 +85,16 @@ def private_scoped(request):
     )
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+#@permission_classes([AllowAny])
 def get_all_ingredients(request):
-    return get_all_ingredients_worker()
-
-# Gets all ingredients and returns, accepts mockData (triggering )
-def get_all_ingredients_worker(mockData = None):
-    if(mockData != None):
-        return JsonResponse(
-            {
-                'result': (
-                    mockData
-                )
-            }
-        )
-    else:
-        all_ingredients = queries_get_all_ingredients() # runs the query for getting all ingredients
-        converted_ingredients = []
-        for ing in all_ingredients:
-            converted_ingredients.append(json.loads(ing))
-        return JsonResponse(
-            {
-                'result': (
-                    converted_ingredients
-                )
-            }
-        )
+    all_ingredients = queries_get_all_ingredients() # runs the query for getting all ingredients
+    converted_ingredients = []
+    for ing in all_ingredients:
+        converted_ingredients.append(json.loads(ing))
+    return JsonResponse(
+        {
+            'result': (
+                converted_ingredients
+            )
+        }
+    )
