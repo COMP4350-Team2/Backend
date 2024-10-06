@@ -2,7 +2,9 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+
 from dotenv import load_dotenv
+from django.core.management.commands.runserver import Command as runserver
 
 
 def main():
@@ -20,6 +22,10 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+
+    # Override default port for `runserver` command, use 8000 if not set
+    runserver.default_port = os.getenv('DJANGO_PORT', '8000')
+
     execute_from_command_line(sys.argv)
 
 

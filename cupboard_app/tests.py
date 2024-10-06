@@ -9,10 +9,12 @@ import json
 class TestIngredients(TestCase):
     def setUp(self):
         Ingredient.objects.create(name="testing", type="TEST")
-
+        Ingredient.objects.create(name="testing2", type="TEST2")
     def test_get_all_ingredients(self):
         ingredients_list = get_all_ingredients()
         for item in ingredients_list:
+            #temp = json.loads(item)
+            #print(temp["name"])
             print(item)
 
 class TestAPIs(TestCase):
@@ -20,6 +22,6 @@ class TestAPIs(TestCase):
         pass
     
     def test_get_all_ingredients(self):
-        all_ingredients = views_get_all_ingredients(mockData = ['{"Name":"pickels", "Type":"Yummy"}', '{"Name":"apples", "Type":"fruit"}', '{"Name":"tomato", "Type":"vegi-fluid"}'])
+        all_ingredients = views_get_all_ingredients(mockData = ['{"name":"pickels", "type":"Yummy"}', '{"name":"apples", "type":"fruit"}', '{"name":"tomato", "type":"vegi-fluid"}'])
         #print("Response from views is:" + str(json.loads(all_ingredients.content)))
-        self.assertTrue(json.loads(all_ingredients.content) == {'result': ['{"Name":"pickels", "Type":"Yummy"}', '{"Name":"apples", "Type":"fruit"}', '{"Name":"tomato", "Type":"vegi-fluid"}']})
+        self.assertTrue(json.loads(all_ingredients.content) == {'result': ['{"name":"pickels", "type":"Yummy"}', '{"name":"apples", "type":"fruit"}', '{"name":"tomato", "type":"vegi-fluid"}']})
