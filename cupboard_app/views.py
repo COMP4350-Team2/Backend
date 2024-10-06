@@ -85,13 +85,25 @@ def private_scoped(request):
         }
     )
 
+# Gets all possible ingredients in db
+# Output Format:
+#{
+#      "result":[
+#        {
+#            "name":"ingredient_1"
+#            "type":"ingredient_type"
+#        },
+#        {
+#            "name":"ingredient_2"
+#            "type":"ingredint_type2"
+#        }
+#      ]
+#   }
 @api_view(['GET'])
-#@permission_classes([AllowAny])
 def get_all_ingredients(request):
     all_ingredients = queries_get_all_ingredients() # runs the query for getting all ingredients
     converted_ingredients = []
     for ing in all_ingredients:
-        print("Current Item being processed: "+str(ing))
         converted_ingredients.append(json.loads(str(ing)))
     return JsonResponse(
         {
