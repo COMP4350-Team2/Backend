@@ -1,3 +1,5 @@
+import json
+
 from django.db import models
 
 
@@ -15,13 +17,15 @@ class Ingredient(models.Model):
     type = models.CharField(max_length=25)
 
     def __str__(self):
-        return f"{self.name} {self.type}"
+        my_dictionary = {"name": self.name, "type": self.type}
+        result = json.dumps(my_dictionary)
+        return result
 
 
 class ListName(models.Model):
-    listName = models.CharField(max_length=15)
+    listName = models.CharField(max_length=15, unique=True)
 
-    def __str__(self):
+    def __dict__(self):
         return f"{self.listName}"
 
 
@@ -33,8 +37,8 @@ class Measurement(models.Model):
 
 
 class UserListIngredients(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    listName = models.ForeignKey(ListName, on_delete=models.CASCADE)
+    userId = models.ForeignKey(User, on_delete=models.CASCADE)
+    listNameId = models.ForeignKey(ListName, on_delete=models.CASCADE)
     ingredients = []
 
     def __str__(self):

@@ -3,21 +3,15 @@
 import os
 import sys
 
-from dotenv import load_dotenv
 from django.core.management.commands.runserver import Command as runserver
+
+from utils.env_helper import load_env_variables
 
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cupboard_backend.settings')
-
-    # Reads the .env file and loads the values
-    load_dotenv()
-
-    # Set mock environment variables
-    os.environ.setdefault('MOCK_KEY', 'cupboard_secret')
-    os.environ.setdefault('MOCK_DOMAIN', 'my-domain.ca.auth0.com')
-    os.environ.setdefault('MOCK_API_IDENTIFIER', 'https://api.example.com')
+    # Reads the .env file and loads all the values
+    load_env_variables()
 
     # Checks if this is a test
     if sys.argv[1:2] == ["test"]:
@@ -36,9 +30,8 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    # Override default port for `runserver` command, use 8000 if not set
-    runserver.default_port = os.getenv('DJANGO_PORT', '8000')
-
+    # Override default port for `runserver` command
+    runserver.default_port = os.getenv('DJANGO_PORT')
     execute_from_command_line(sys.argv)
 
 

@@ -10,9 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
+from pathlib import Path
 
 import dns.resolver
-from pathlib import Path
 from pymongo.server_api import ServerApi
 from pymongo import MongoClient
 

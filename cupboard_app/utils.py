@@ -6,15 +6,10 @@ import jwt
 import requests
 from django.contrib.auth import authenticate
 
-DEV_LAYER = os.getenv('DEV_LAYER', 'mock')
+DEV_LAYER = os.getenv('DEV_LAYER')
+PORT = os.getenv('DJANGO_PORT')
 TEST_RUN = os.getenv('TEST_RUN')
 TEST_KEY = os.getenv('TEST_KEY')
-
-MOCK_KEY = os.getenv('MOCK_KEY')
-MOCK_DOMAIN = os.getenv('MOCK_DOMAIN')
-MOCK_API_IDENTIFIER = os.getenv('MOCK_API_IDENTIFIER')
-
-PORT = os.getenv('PORT')
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 CUPBOARD_TEST_CLIENT_ID = os.getenv('CUPBOARD_TEST_CLIENT_ID')
@@ -51,20 +46,9 @@ def jwt_decode_token(token: str) -> dict:
     """
     header = jwt.get_unverified_header(token)
     result = None
+    issuer = 'https://{}/'.format(AUTH0_DOMAIN)
 
-    if DEV_LAYER == 'mock':
-        issuer = 'https://{}/'.format(MOCK_DOMAIN)
-
-        result = jwt.decode(
-            token,
-            MOCK_KEY,
-            audience=MOCK_API_IDENTIFIER,
-            issuer=issuer,
-            algorithms=['HS256']
-        )
-    elif TEST_RUN == 'true':
-        issuer = 'https://{}/'.format(AUTH0_DOMAIN)
-
+    if DEV_LAYER == 'mock' or TEST_RUN == 'true':
         result = jwt.decode(
             token,
             TEST_KEY,
@@ -81,8 +65,6 @@ def jwt_decode_token(token: str) -> dict:
 
         if public_key is None:
             raise Exception('Public key not found.')
-
-        issuer = 'https://{}/'.format(AUTH0_DOMAIN)
 
         result = jwt.decode(
             token,
