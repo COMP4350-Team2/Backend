@@ -14,6 +14,19 @@ def main():
     # Reads the .env file and loads the values
     load_dotenv()
 
+    # Set mock environment variables
+    os.environ.setdefault('MOCK_KEY', 'cupboard_secret')
+    os.environ.setdefault('MOCK_DOMAIN', 'my-domain.ca.auth0.com')
+    os.environ.setdefault('MOCK_API_IDENTIFIER', 'https://api.example.com')
+
+    # Checks if this is a test
+    if sys.argv[1:2] == ["test"]:
+        # Running tests
+        os.environ['TEST_RUN'] = 'true'
+    else:
+        # Not a test run
+        os.environ['TEST_RUN'] = 'false'
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
