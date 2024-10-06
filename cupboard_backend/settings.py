@@ -13,13 +13,12 @@ import os
 
 import dns.resolver
 from pathlib import Path
-from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from pymongo import MongoClient
 
 # Avoids reading /etc/resolv.conf and uses Google's public DNS server
-dns.resolver.default_resolver=dns.resolver.Resolver(configure=False)
-dns.resolver.default_resolver.nameservers=['8.8.8.8']
+dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
+dns.resolver.default_resolver.nameservers = ['8.8.8.8']
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
