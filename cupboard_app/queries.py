@@ -48,8 +48,13 @@ def get_listName(id):
         return None
     
 def create_user(username,email):
-    newUser = User(username = username, email = email)
-    newUser.save()
+    userObject = User.objects.get(username=username)
+    userObject2 = User.objects.get(email=email)
+    if userObject.exists() or userObject2.exists():
+        print("Account Generation Failed.")
+    else:
+        newUser = User(username = username, email = email)
+        newUser.save()
 
 # Given strings for username, list name, ingredient name, and unit
 # Along with an integer value for amount 
