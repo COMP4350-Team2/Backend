@@ -7,26 +7,46 @@ from .models import Measurement
 import json
 
 def get_listName_id(listName):
-    listNameObject = ListName.objects.filter(listName=listName)
-    return listNameObject.id
-
+    listNameObject = ListName.objects.get(listName=listName)
+    if listNameObject.exists():
+        return listNameObject.id
+    else:
+        return None
+    
 def get_user_id(username):
-    userObject = User.objects.filter(username=username)
-    return userObject.id
+    userObject = User.objects.get(username=username)
+    if userObject.exists():
+        return userObject.id
+    else:
+        return None
 
 def get_measurement_id(unit):
-    measurementObject = Measurement.objects.filter(unit=unit)
-    return measurementObject.id
-
+    measurementObject = Measurement.objects.get(unit=unit)
+    if measurementObject.exists():
+        return measurementObject.id
+    else:
+        return None
+    
 def get_ingredient_id(name):
-    ingredientObject = Ingredient.objects.filter(name=name)
-    return ingredientObject.id
-
+    ingredientObject = Ingredient.objects.get(name=name)
+    if ingredientObject.exists():
+        return ingredientObject.id
+    else:
+        return None
+    
 def get_all_recipes():
     return Recipe.objects.all()
 
 def get_all_ingredients():
     return Ingredient.objects.all()
+
+def get_listName(id):
+    listNameObject = ListName.objects.get(id = id)
+    if listNameObject.exists():
+        return listNameObject.first().listName
+    else: 
+        return None
+    
 
 # Given strings for username, list name, ingredient name, and unit
 # Along with an integer value for amount 
@@ -46,3 +66,25 @@ def update_list_ingredient(username,listName,ingredient,amount,unit):
         if(i["_id"] == searchId):
            i["amount"] = amount
            i["unitId"] = get_measurement_id(unit)
+
+# Given a string for username
+# Return a 2d array that has this format:
+# lists[0][0] = {"listName":Pantry}
+# lists[0][1] = {"ingredientId": Id, "amount": Integer,"unitId": Id}
+# lists[0][2] = {"ingredientId": Id, "amount": Integer,"unitId": Id}
+# #etc.
+# lists[1][0] = {"listName":Grocery}
+# lists[1][1] = {"ingredientId": Id, "amount": Integer,"unitId": Id}
+# lists[1][2] = {"ingredientId": Id, "amount": Integer,"unitId": Id}
+  #etc.
+def get_all_user_lists(username):
+    allLists = UserListIngredients.objects.filter(get_user_id(username))
+    counter = 0
+    lists = []
+    for i in allLists:
+        lists[counter] = []
+        lists[counter].append({"listName":get_listName(i.listNameId)}) 
+        for k in i.ingredients:
+            lists[counter].append({"ingredientId": k["_id"], "amount": k["amount"], "unitId": k["unitId"]})
+        counter += 1
+    return lists
