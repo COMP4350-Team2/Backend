@@ -91,7 +91,8 @@ def get_all_ingredients(request):
     all_ingredients = queries_get_all_ingredients() # runs the query for getting all ingredients
     converted_ingredients = []
     for ing in all_ingredients:
-        converted_ingredients.append(json.loads(ing))
+        print("Current Item being processed: "+str(ing))
+        converted_ingredients.append(json.loads(str(ing)))
     return JsonResponse(
         {
             'result': (

@@ -93,6 +93,29 @@ class PublicMessageApi(TestCase):
 
 
 class PrivateMessageApi(TestCase):
+    def setUp(self):
+        Ingredient.objects.create(name="testing", type="TEST")
+        Ingredient.objects.create(name="testing2", type="TEST2")
+
+    def test_get_all_ingredients(self):
+        response = self.client.get(
+            reverse('get_all_ingredients'),
+            HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
+        )
+
+        self.assertEqual(response.status_code, 200)
+        #self.assertDictEqual(
+        #    response.json(),
+         #   {
+        #        'message': (
+        #            'Hello from a private endpoint! '
+         #           'You need to be authenticated to see this.'
+         #       )
+         #   }
+        #)
+        print("OUTPUT: " + str(response.json()))
+        print("FULL OUTPUT: " + str(response))
+
     def test_private_api_without_token_returns_unauthorized(self):
         response = self.client.get(reverse('private'))
 
