@@ -31,8 +31,18 @@ def get_all_ingredients():
 # Given strings for username, list name, ingredient name, and unit
 # Along with an integer value for amount 
 # Add that ingredient to the list for the user with the associated amount
-def insert_ingredient(username,listName,ingredient,amount,unit):
+def insert_list_ingredient(username,listName,ingredient,amount,unit):
     list = UserListIngredients.objects.get(get_user_id(username),get_listName_id(listName))
     ingredient_dictionary = {"ingredientId":get_ingredient_id(ingredient),"amount":amount,"unitId":get_measurement_id(unit)}
     list.ingredients.append(ingredient_dictionary)
 
+# Given strings for username, list name, ingredient name, and unit
+# Along with an integer value for amount 
+# Update the given ingredient's amount and unit to the passed amount and unit
+def update_list_ingredient(username,listName,ingredient,amount,unit):
+    list = UserListIngredients.objects.get(get_user_id(username),get_listName_id(listName))
+    searchId = get_ingredient_id(ingredient)
+    for i in list.ingredients:
+        if(i["_id"] == searchId):
+           i["amount"] = amount
+           i["unitId"] = get_measurement_id(unit)
