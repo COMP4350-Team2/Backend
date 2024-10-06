@@ -5,8 +5,8 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 
-import queries
-
+from .queries import get_all_ingredients as queries_get_all_ingredients
+import json
 
 def get_token_auth_header(request):
     """
@@ -83,15 +83,28 @@ def private_scoped(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-# accepts the incoming request and 
-def get(request, mockData = None):
-    return JsonResponse(
-        {
-            'result': (
-                if(mockDate != None):
+def get_all_ingredients(request):
+    return get_all_ingredients_worker()
+
+# Gets all ingredients and returns, accepts mockData (triggering )
+def get_all_ingredients_worker(mockData = None):
+    if(mockData != None):
+        return JsonResponse(
+            {
+                'result': (
                     mockData
-                else:
-                    queries.get_all_ingredients()
-            )
-        }
-    )
+                )
+            }
+        )
+    else:
+        all_ingredients = queries_get_all_ingredients() # runs the query for getting all ingredients
+        converted_ingredients = []
+        for ing in all_ingredients:
+            converted_ingredients.append(json.loads(ing))
+        return JsonResponse(
+            {
+                'result': (
+                    converted_ingredients
+                )
+            }
+        )
