@@ -28,3 +28,25 @@ Once all the Prerequsites and Dependencies are installed and the environment var
 
 Then run the following to run the Django server on the specified PORT in the `.env` file.
 `python manage.py runserver`
+
+## API Usage
+GET /api/get_all_ingredients
+
+Header parameters:
+   key-name: value format ????
+
+Body: What's required? Possibly we only have GET requests now so there won't be body yet
+
+Respond Body: #if json, preferably json :giggle_giggle, face_with_hand_over_mouth:
+   {
+      "result":[
+        {
+            "name":"ingredient_1"
+            "type":"ingredient_type"
+        },
+        {
+            "name":"ingredient_2"
+            "type":"ingredint_type2"
+        }
+      ]
+   }

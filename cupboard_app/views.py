@@ -6,6 +6,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 
 from .utils import jwt_decode_token
+from .queries import get_all_ingredients as queries_get_all_ingredients
+import json
 
 CRED_NOT_PROVIDED = {'detail': 'Authentication credentials were not provided.'}
 TOKEN_DECODE_ERROR = {'detail': 'Error decoding token.'}
@@ -117,6 +119,34 @@ def private_scoped(request: Request) -> JsonResponse:
                 'Hello from a private endpoint! '
                 'You need to be authenticated and have a scope of '
                 'read:messages to see this.'
+            )
+        }
+    )
+
+# Gets all possible ingredients in db
+# Output Format:
+#{
+#      "result":[
+#        {
+#            "name":"ingredient_1"
+#            "type":"ingredient_type"
+#        },
+#        {
+#            "name":"ingredient_2"
+#            "type":"ingredint_type2"
+#        }
+#      ]
+#   }
+@api_view(['GET'])
+def get_all_ingredients(request):
+    all_ingredients = queries_get_all_ingredients() # runs the query for getting all ingredients
+    converted_ingredients = []
+    for ing in all_ingredients:
+        converted_ingredients.append(json.loads(str(ing)))
+    return JsonResponse(
+        {
+            'result': (
+                converted_ingredients
             )
         }
     )
