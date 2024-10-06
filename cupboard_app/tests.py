@@ -12,25 +12,10 @@ from .views import (
     TOKEN_DECODE_ERROR
 )
 
-# Mock payload
-MOCK_DOMAIN = os.getenv('MOCK_DOMAIN')
-MOCK_API_IDENTIFIER = os.getenv('MOCK_API_IDENTIFIER')
-MOCK_KEY = os.getenv('MOCK_KEY')
-MOCK_VALID_TOKEN_PAYLOAD = {
-    "iss": 'https://{}/'.format(MOCK_DOMAIN),
-    "sub": "user@clients",
-    "aud": MOCK_API_IDENTIFIER,
-    "iat": time(),
-    "exp": time() + 3600,
-    "azp": "mK3brgMY0GIMox40xKWcUZBbv2Xs0YdG",
-    "scope": "read:messages",
-    "gty": "client-credentials",
-    "permissions": [],
-}
-
-# Test payload
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
+
+# Test payload
 TEST_KEY = os.getenv('TEST_KEY')
 TEST_VALID_TOKEN_PAYLOAD = {
     "iss": 'https://{}/'.format(AUTH0_DOMAIN),
@@ -44,40 +29,44 @@ TEST_VALID_TOKEN_PAYLOAD = {
     "permissions": [],
 }
 
-DEV_LAYER = os.getenv('DEV_LAYER', 'mock')
 
 def get_access_token() -> str:
     """
-    Gets the access_token to run the tests.
+    Gets the access_token to run the tests using simple encryption for
+    mock/test payloads.
 
     Returns:
-        access_token for the actual test cupboard application or
-        creates an access_token for the mock.
+        Access_token for the test payload or mock payload depending on DEV_LAYER
+        environment variable.
     """
-    token = None
-    if DEV_LAYER == 'mock':
-        token = jwt.encode(MOCK_VALID_TOKEN_PAYLOAD, str(MOCK_KEY), algorithm='HS256')
-    else:
-        token = jwt.encode(TEST_VALID_TOKEN_PAYLOAD, str(TEST_KEY), algorithm='HS256')
+    return jwt.encode(TEST_VALID_TOKEN_PAYLOAD, TEST_KEY, algorithm='HS256')
 
-    return token
 
-# Create your tests here.
+# DB Tests
 class TestIngredients(TestCase):
     def setUp(self):
+        """
+        Sets up a test database with test values
+        """
         Ingredient.objects.create(name="testing", type="TEST")
         Ingredient.objects.create(name="testing2", type="TEST2")
+
     def test_get_all_ingredients(self):
+        """
+        Testing get_all_ingredients retrieves all the ingredients
+        from the database
+        """
         ingredients_list = get_all_ingredients()
         for item in ingredients_list:
-            #temp = json.loads(item)
-            #print(temp["name"])
             print(item)
 
 
-# API tests
+# API Tests
 class PublicMessageApi(TestCase):
     def test_public_api_returns(self):
+        """
+        Testing the public api
+        """
         response = self.client.get(reverse('public'))
 
         self.assertEqual(response.status_code, 200)
@@ -94,6 +83,9 @@ class PublicMessageApi(TestCase):
 
 class PrivateMessageApi(TestCase):
     def test_private_api_without_token_returns_unauthorized(self):
+        """
+        Testing the private api without a token
+        """
         response = self.client.get(reverse('private'))
 
         self.assertEqual(response.status_code, 401)
@@ -103,6 +95,9 @@ class PrivateMessageApi(TestCase):
         )
 
     def test_private_api_with_invalid_token_returns_unauthorized(self):
+        """
+        Testing the private api with a invalid token
+        """
         response = self.client.get(
             reverse('private'),
             HTTP_AUTHORIZATION='Bearer invalid-token'
@@ -115,6 +110,9 @@ class PrivateMessageApi(TestCase):
         )
 
     def test_private_api_with_valid_token_returns_ok(self):
+        """
+        Testing the private api with a valid token
+        """
         response = self.client.get(
             reverse('private'),
             HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
@@ -134,6 +132,9 @@ class PrivateMessageApi(TestCase):
 
 class PrivateScopedMessageApi(TestCase):
     def test_private_scoped_api_without_token_returns_unauthorized(self):
+        """
+        Testing the private-scoped api without a token
+        """
         response = self.client.get(reverse('private-scoped'))
 
         self.assertEqual(response.status_code, 401)
@@ -143,6 +144,9 @@ class PrivateScopedMessageApi(TestCase):
         )
 
     def test_private_scoped_api_with_invalid_token_returns_unauthorized(self):
+        """
+        Testing the private-scoped api with a invalid token
+        """
         response = self.client.get(
             reverse('private-scoped'),
             HTTP_AUTHORIZATION="Bearer invalid-token"
@@ -155,7 +159,9 @@ class PrivateScopedMessageApi(TestCase):
         )
 
     def test_private_scoped_api_with_valid_token_returns_ok(self):
-
+        """
+        Testing the private-scoped api with a valid token
+        """
         response = self.client.get(
             reverse('private-scoped'),
             HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
