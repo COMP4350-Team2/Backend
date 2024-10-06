@@ -32,7 +32,7 @@ def get_all_ingredients():
 # Along with an integer value for amount 
 # Add that ingredient to the list for the user with the associated amount
 def insert_ingredient(username,listName,ingredient,amount,unit):
-    list = UserListIngredients.objects.filter(get_user_id(username),get_listName_id(listName))
+    list = UserListIngredients.objects.get(get_user_id(username),get_listName_id(listName))
     ingredient_dictionary = {"ingredientId":get_ingredient_id(ingredient),"amount":amount,"unitId":get_measurement_id(unit)}
     list.ingredients.append(ingredient_dictionary)
 
