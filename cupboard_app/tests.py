@@ -179,12 +179,20 @@ class PrivateScopedMessageApi(TestCase):
             }
         )
 
+
 class GetAllIngredientsApi(TestCase):
     def setUp(self):
+        """
+        Sets up a test database with test values
+        """
         Ingredient.objects.create(name="testing", type="TEST")
         Ingredient.objects.create(name="testing2", type="TEST2")
 
     def test_get_all_ingredients(self):
+        """
+        Testing get_all_ingredients retrieves all the ingredients
+        from the database
+        """
         response = self.client.get(
             reverse('get_all_ingredients'),
             HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
@@ -194,9 +202,9 @@ class GetAllIngredientsApi(TestCase):
         self.assertDictEqual(
             response.json(),
             {
-                'result':[
-                    {'name':'testing', 'type':'TEST'},
-                    {'name':'testing2', 'type':'TEST2'}
+                'result': [
+                    {'name': 'testing', 'type': 'TEST'},
+                    {'name': 'testing2', 'type': 'TEST2'}
                 ]
             }
         )
