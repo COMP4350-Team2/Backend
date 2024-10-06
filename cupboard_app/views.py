@@ -1,9 +1,13 @@
 from functools import wraps
-import jwt
 
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+
+from .utils import jwt_decode_token
+
+CRED_NOT_PROVIDED = {'detail': 'Authentication credentials were not provided.'}
+TOKEN_DECODE_ERROR = {'detail': 'Error decoding token.'}
 
 
 def get_token_auth_header(request):
@@ -28,7 +32,7 @@ def requires_scope(required_scope):
         @wraps(f)
         def decorated(*args, **kwargs):
             token = get_token_auth_header(args[0])
-            decoded = jwt.decode(token, verify=False)
+            decoded = jwt_decode_token(token)
             if decoded.get("scope"):
                 token_scopes = decoded["scope"].split()
                 for token_scope in token_scopes:
