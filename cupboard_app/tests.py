@@ -212,7 +212,7 @@ class AddIngredientApi(TestCase):
 
     def test_add_ingredient_missing_list(self):
         response = self.client.post(reverse('add_ingredient'),
-            data={
+            body={
                 'username':'fakeUser',
                 'listName':'myList',
                 'ingredient':'fakeIngredient',

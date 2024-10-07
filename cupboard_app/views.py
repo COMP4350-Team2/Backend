@@ -173,13 +173,14 @@ def get_all_ingredients(request):
 #   'unit':[True or False]
 #}
 #
+# TODO MAKE THIS PUBLiC SO THAT THEN WE CAN JUST ACCESS IT FROM ANYWHERE, THen I GUES MAKE A POST REQUEST OVER CMD TO TEST IF IT ACUTALLY FUNCTIONS AS EXPECTED
 @api_view(['POST'])
 def add_ingredient(request):
     if(request.method == 'POST'):
         if(request.body == None):
             print("REQUEST BODY IS EMPTY!!!!!!!!!")
         else:
-            print("REQUEST BODY: " + str(request.data.dict()))
+            print("REQUEST BODY: " + str(request.body))
         requestDict = request.data.dict() #converts querydict to dict
 
         #Gets ids of all items to ensure thier existence
