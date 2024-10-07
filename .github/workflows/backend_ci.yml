@@ -6,8 +6,6 @@ on:
       - 'main'
   workflow_dispatch:
 
-env:
-
 jobs:
   my-job:
     runs-on: ubuntu-latest
