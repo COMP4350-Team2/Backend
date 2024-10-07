@@ -4,17 +4,9 @@ from django.db import models
 
 
 # Create your models here.
-class User(models.Model):
-    username = models.CharField(max_length=30, unique=True)
-    email = models.CharField(max_length=30, unique=True)
-
-    def __str__(self):
-        return f"{self.username} {self.email}"
-
-
 class Ingredient(models.Model):
-    name = models.CharField(max_length=25)
-    type = models.CharField(max_length=25)
+    name = models.CharField(max_length=30, unique=True)
+    type = models.CharField(max_length=30)
 
     def __str__(self):
         my_dictionary = {"name": self.name, "type": self.type}
@@ -23,33 +15,43 @@ class Ingredient(models.Model):
 
 
 class ListName(models.Model):
-    listName = models.CharField(max_length=15, unique=True)
+    listName = models.CharField(max_length=30, unique=True)
 
-    def __dict__(self):
+    def __str__(self):
         return f"{self.listName}"
 
 
 class Measurement(models.Model):
-    unit = models.CharField(max_length=15, unique=True)
+    unit = models.CharField(max_length=30, unique=True)
 
     def __str__(self):
         return f"{self.unit}"
 
 
-class UserListIngredients(models.Model):
-    userId = models.ForeignKey(User, on_delete=models.CASCADE)
-    listNameId = models.ForeignKey(ListName, on_delete=models.CASCADE)
-    ingredients = []
+class User(models.Model):
+    username = models.CharField(max_length=30, unique=True)
+    email = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return f"{self.listName} - {self.user.username}"
+        my_dictionary = {"username": self.username, "email": self.email}
+        result = json.dumps(my_dictionary)
+        return result
+
+
+class UserListIngredients(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    listName = models.ForeignKey(ListName, on_delete=models.CASCADE)
+    ingredients = models.JSONField()
+
+    def __str__(self):
+        return f"{self.user.username} - {self.listName.listName}"
 
 
 class Recipe(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    recipeName = models.CharField(max_length=25)
-    steps = []
-    ingredients = []
+    recipeName = models.CharField(max_length=50)
+    steps = models.JSONField()
+    ingredients = models.JSONField()
 
     def __str__(self):
         return f"{self.recipeName} by {self.user.username}"
