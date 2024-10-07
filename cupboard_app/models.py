@@ -5,7 +5,7 @@ from django.db import models
 
 # Create your models here.
 class Ingredient(models.Model):
-    name = models.CharField(max_length=30)
+    name = models.CharField(max_length=30, unique=True)
     type = models.CharField(max_length=30)
 
     def __str__(self):
