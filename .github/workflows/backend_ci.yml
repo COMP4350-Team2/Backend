@@ -14,6 +14,4 @@ jobs:
         with:
           ref: main
 
-      - run: echo "Hello World!"
-      - run: python --version
-      - run: ls
+      - run: python manage.py test
