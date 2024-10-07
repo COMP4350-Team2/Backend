@@ -33,7 +33,9 @@ class User(models.Model):
     email = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return f"{self.username} {self.email}"
+        my_dictionary = {"username": self.username, "email": self.email}
+        result = json.dumps(my_dictionary)
+        return result
 
 
 class UserListIngredients(models.Model):
@@ -42,7 +44,7 @@ class UserListIngredients(models.Model):
     ingredients = models.JSONField()
 
     def __str__(self):
-        return f"{self.listName} - {self.user.username}"
+        return f"{self.user.username} - {self.listName.listName}"
 
 
 class Recipe(models.Model):
