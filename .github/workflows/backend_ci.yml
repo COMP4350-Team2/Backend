@@ -15,8 +15,8 @@ jobs:
           ref: main
       - run: pip install -r requirements.txt
       - run: pip install pyopenssl --upgrade
+      - run: pip install --force-reinstall -v "cryptography=42.0.0"
       - env:
           env_file: ${{ secrets.env }}
         run: echo "$env_file" > ".env"
-      - run: echo .env
       - run: python manage.py test
