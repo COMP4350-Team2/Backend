@@ -7,6 +7,11 @@ from rest_framework.request import Request
 
 from .utils import jwt_decode_token
 from .queries import get_all_ingredients as queries_get_all_ingredients
+from .queries import get_listName_id as queries_get_listName_id
+from .queries import get_user_id as queries_get_user_id
+from .queries import get_measurement_id as queries_get_measurment_id
+from .queries import get_ingredient_id as queries_get_ingredient_id
+
 import json
 
 CRED_NOT_PROVIDED = {'detail': 'Authentication credentials were not provided.'}
@@ -150,3 +155,63 @@ def get_all_ingredients(request):
             )
         }
     )
+
+# Adds ingredients specified to list specified, if it exists
+# Output Format for success:
+#{
+#   "result":"success",
+#}
+#
+# Output Format for failure
+# each of the entries after "result" is either True or False depending of if
+# the item can be found in the db
+#{
+#   "result":"failure",
+#   'username':[True or False],
+#   'listName':[True or False],
+#   'ingredient':[True or False],
+#   'unit':[True or False]
+#}
+#
+@api_view(['POST'])
+def add_ingredient(request):
+    if(request.method == 'POST'):
+        if(request.body == None):
+            print("REQUEST BODY IS EMPTY!!!!!!!!!")
+        else:
+            print("REQUEST BODY: " + str(request.data.dict()))
+        requestDict = request.data.dict() #converts querydict to dict
+
+        #Gets ids of all items to ensure thier existence
+        userID = queries_get_user_id(requestDict['username'])
+        listID = queries_get_listName_id(requestDict['listName'])
+        ingID = queries_get_ingredient_id(requestDict['ingredient'])
+        measureID = queries_get_measurment_id(requestDict['unit'])
+
+        #Adds the ingredient to the list if all required compenents are found
+        if(
+            userID!= None
+            and listID != None
+            and ingID != None
+            and measureID != None
+        ):
+            insert_list_ingredient(requestDict['username'], requestDict['listName'], requestDict['ingredient'], requestDict['amount'], requestDict['unit'])
+
+            return JsonResponse(
+                {
+                    'result':'succes'
+                }
+            )
+
+        #returns failure if any of the required items cannot be found in the db
+        else:
+            return JsonResponse(
+                {
+                    'result':'failure',
+                    'username':str(userID!=None),
+                    'listName':str(listID!=None),
+                    'ingredient':str(ingID!=None),
+                    'unit':str(measureID!=None)
+                },
+                status=500
+            )

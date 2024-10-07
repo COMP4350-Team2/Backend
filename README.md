@@ -50,3 +50,34 @@ Respond Body: #if json, preferably json :giggle_giggle, face_with_hand_over_mout
         }
       ]
    }
+
+POST /api/add_ingredient
+
+Header parameters:
+   key-name: value format ????
+
+Body:
+    {
+        'username':'testUser',
+        'listName':'testList',
+        'ingredient':'testIngredient',
+        'amount':'20',
+        'unit':'testUnit' 
+    }
+
+Respond Body: #if json, preferably json :giggle_giggle, face_with_hand_over_mouth:
+Output Format for success:
+    {
+       "result":"success",
+    }
+
+Output Format for failure
+each of the entries after "result" is either True or False depending of if
+the item can be found in the db
+    {
+       "result":"failure",
+       'username':[True or False],
+       'listName':[True or False],
+       'ingredient':[True or False],
+       'unit':[True or False]
+    }

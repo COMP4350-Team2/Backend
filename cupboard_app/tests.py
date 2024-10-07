@@ -200,3 +200,42 @@ class GetAllIngredientsApi(TestCase):
                 ]
             }
         )
+
+class AddIngredientApi(TestCase):
+    #List doesnt exist
+    #List exists and item is properly added
+    #Item attemting to be added doesn't exist but list does
+    #
+    def setUp(self):
+        Ingredient.objects.create(name="testing", type="TEST")
+        Ingredient.objects.create(name="testing2", type="TEST2")
+
+    def test_add_ingredient_missing_list(self):
+        response = self.client.post(reverse('add_ingredient'),
+            data={
+                'username':'fakeUser',
+                'listName':'myList',
+                'ingredient':'fakeIngredient',
+                'amount':'fakeAmount',
+                'unit':'miles'
+            },
+            HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
+        )
+       
+        self.assertEqual(response.status_code, 500)
+    """
+    def test_add_ingredient_missing_list(self):
+        List.objects.create()
+        response = self.client.post(reverse('add_ingredient'),
+            data={
+                'username':'fakeUser',
+                'listName':'myList',
+                'ingredient':'fakeIngredient',
+                'amount':'fakeAmount',
+                'unit':'miles'
+            },
+            HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
+        )
+       
+        self.assertEqual(response.status_code, 200)
+    """
