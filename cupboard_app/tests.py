@@ -19,7 +19,7 @@ AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 TEST_KEY = os.getenv('TEST_KEY')
 TEST_VALID_TOKEN_PAYLOAD = {
     "iss": 'https://{}/'.format(AUTH0_DOMAIN),
-    "sub": "user@clients",
+    "sub": "CupboardTest@clients",
     "aud": AUTH0_API_IDENTIFIER,
     "iat": time(),
     "exp": time() + 3600,
@@ -27,6 +27,7 @@ TEST_VALID_TOKEN_PAYLOAD = {
     "scope": "read:messages",
     "gty": "client-credentials",
     "permissions": [],
+    "email": "testing@cupboard.com",
 }
 
 
@@ -206,5 +207,51 @@ class GetAllIngredientsApi(TestCase):
                     {'name': 'testing', 'type': 'TEST'},
                     {'name': 'testing2', 'type': 'TEST2'}
                 ]
+            }
+        )
+
+
+class CreateUser(TestCase):
+    def test_create_user_without_token_returns_unauthorized(self):
+        """
+        Testing the create user api without a token
+        """
+        response = self.client.post(reverse('create_user'))
+
+        self.assertEqual(response.status_code, 401)
+        self.assertDictEqual(
+            response.json(),
+            CRED_NOT_PROVIDED
+        )
+
+    def test_create_user_api_with_invalid_token_returns_unauthorized(self):
+        """
+        Testing the create user api with a invalid token
+        """
+        response = self.client.post(
+            reverse('create_user'),
+            HTTP_AUTHORIZATION='Bearer invalid-token'
+        )
+
+        self.assertEqual(response.status_code, 401)
+        self.assertDictEqual(
+            response.json(),
+            TOKEN_DECODE_ERROR
+        )
+
+    def test_create_user_api_with_valid_token_returns_ok(self):
+        """
+        Testing the create user api with a valid token
+        """
+        response = self.client.post(
+            reverse('create_user'),
+            HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': 'Item created successfully.'
             }
         )
