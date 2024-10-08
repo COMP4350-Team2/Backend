@@ -18,5 +18,8 @@ jobs:
       - run: pip install --force-reinstall -v "cryptography==42.0.0"
       - env:
           env_file: ${{ secrets.env }}
+          failInd: 'FAILED'
         run: echo "$env_file" > ".env"
-      - run: python manage.py test
+      - run: testOutput=$(python manage.py test)
+      - run: echo $testOutput
+      - run: if [[$testOutput =~ $failInd]]; then exit 1 fi
