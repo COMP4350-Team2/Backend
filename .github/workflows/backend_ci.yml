@@ -20,6 +20,6 @@ jobs:
           env_file: ${{ secrets.env }}
           failInd: 'FAILED'
         run: echo "$env_file" > ".env"
-      - run: testOutput=$(`python manage.py test` -a)
-      - run: echo $testOutput
-      - run: if [[$testOutput =~ $failInd]]; then exit 1 fi
+      - run: python manage.py test
+      #- run: echo $testOutput
+      #- run: if [[$testOutput =~ $failInd]]; then exit 1 fi
