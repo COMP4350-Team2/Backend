@@ -13,14 +13,14 @@ from .views import (
 )
 
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
-AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
+AUTH0_API_AUDIENCE = os.getenv('AUTH0_API_AUDIENCE')
 
 # Test payload
 TEST_KEY = os.getenv('TEST_KEY')
 TEST_VALID_TOKEN_PAYLOAD = {
     "iss": 'https://{}/'.format(AUTH0_DOMAIN),
     "sub": "CupboardTest@clients",
-    "aud": AUTH0_API_IDENTIFIER,
+    "aud": AUTH0_API_AUDIENCE,
     "iat": time(),
     "exp": time() + 3600,
     "azp": "mK3brgMY0GIMox40xKWcUZBbv2Xs0YdG",

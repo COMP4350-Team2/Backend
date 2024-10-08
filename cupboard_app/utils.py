@@ -11,7 +11,6 @@ PORT = os.getenv('DJANGO_PORT')
 TEST_RUN = os.getenv('TEST_RUN')
 TEST_KEY = os.getenv('TEST_KEY')
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
-AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 AUTH0_API_AUDIENCE = os.getenv('AUTH0_API_AUDIENCE')
 CUPBOARD_TEST_CLIENT_ID = os.getenv('CUPBOARD_TEST_CLIENT_ID')
 CUPBOARD_TEST_CLIENT_SECRET = os.getenv('CUPBOARD_TEST_CLIENT_SECRET')
@@ -53,7 +52,7 @@ def jwt_decode_token(token: str) -> dict:
         result = jwt.decode(
             token,
             TEST_KEY,
-            audience=AUTH0_API_IDENTIFIER,
+            audience=AUTH0_API_AUDIENCE,
             issuer=issuer,
             algorithms=['HS256']
         )
