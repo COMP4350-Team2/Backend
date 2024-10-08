@@ -37,7 +37,7 @@ The previous is for running a locally hosted instance, for runing in production 
 GET /api/get_all_ingredients
 
 Header parameters:
-    HTTP_AUTHORIZATION:"Bearer [auth0 token]" # replaace [auth0 token] with token provided after user completes auth0 login
+   HTTP_AUTHORIZATION:"Bearer [auth0 token]" # replaace [auth0 token] with token provided after user completes auth0 login
 
 Respond Body:
    {
@@ -51,4 +51,15 @@ Respond Body:
             "type":"ingredint_type2"
         }
       ]
+   }
+
+
+POST /api/create_user
+
+Header parameters:
+   HTTP_AUTHORIZATION:"Bearer [auth0 token]" # replaace [auth0 token] with token provided after user completes auth0 login
+
+Respond Body:
+   {
+      "result": "Item created successfully."
    }
