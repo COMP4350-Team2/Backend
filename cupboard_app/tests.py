@@ -1,16 +1,27 @@
 import os
 from time import time
-
+import sys
 import jwt
+import json
 from django.test import TestCase
 from rest_framework.reverse import reverse
 
 from .models import Ingredient
 from .queries import get_all_ingredients
+from .queries import create_ingredient
+from .queries import get_ingredient
+from .queries import create_list
 from .views import (
     CRED_NOT_PROVIDED,
     TOKEN_DECODE_ERROR
 )
+
+from .models import Ingredient
+from .models import ListName
+from .models import Measurement
+from .models import User
+from .models import UserListIngredients
+from .models import Recipe
 
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
@@ -48,18 +59,49 @@ class TestIngredients(TestCase):
         """
         Sets up a test database with test values
         """
-        Ingredient.objects.create(name="testing", type="TEST")
-        Ingredient.objects.create(name="testing2", type="TEST2")
+        Ingredient.objects.create(name="test_ingredient1", type="test_type1")
+        Ingredient.objects.create(name="test_ingredient2", type="test_type1")
 
+    
     def test_get_all_ingredients(self):
         """
         Testing get_all_ingredients retrieves all the ingredients
         from the database
         """
         ingredients_list = get_all_ingredients()
-        for item in ingredients_list:
-            print(item)
+        self.assertEqual(json.dumps({"name": "test_ingredient1", "type": "test_type1"}), str(ingredients_list[0]))
+        self.assertEqual(json.dumps({"name": "test_ingredient2", "type": "test_type1"}), str(ingredients_list[1]))
 
+    def test_create_ingredient(self):
+        """
+        Testing create_ingredient creates an ingredient
+        in the database
+        """
+        create_ingredient("test_ingredient3", "test_type2")
+        self.assertEqual(Ingredient.objects.filter(name = "test_ingredient3", type = "test_type2").exists(),True)  
+
+
+    def test_get_ingredient(self):
+        """
+        Testing get_ingredient returns an ingredient
+        from the database
+        """
+        test_ingredient = get_ingredient("test_ingredient1")
+        temp_ingredient  = Ingredient.objects.get(name="test_ingredient2")
+        test_ingredient2 = get_ingredient("test_ingredient2",temp_ingredient.id)
+        test_ingredient3 = get_ingredient("doesnt_exist")
+
+        self.assertEqual(test_ingredient, Ingredient.objects.get(name="test_ingredient1")) 
+        self.assertEqual(test_ingredient2, Ingredient.objects.get(name="test_ingredient2")) 
+        self.assertEqual(test_ingredient3, None)
+
+    def test_create_list(self):
+        """
+        Testing create_list creates a list
+        in the database
+        """
+        create_list("test_listname")
+        self.assertEqual(ListName.objects.filter(listName="test_listname").exists(), True)
 
 # API Tests
 class PublicMessageApi(TestCase):
