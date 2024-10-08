@@ -30,7 +30,7 @@ if os.getenv('DEBUG_ENABLE') == 'false':
 else:
     DEBUG = True
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
-AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
+AUTH0_API_AUDIENCE = os.getenv('AUTH0_API_AUDIENCE')
 
 # Get uri from environment, create client
 uri = os.getenv('MONGO_URL')
@@ -165,7 +165,7 @@ JWT_AUTH = {
     'JWT_DECODE_HANDLER':
         'cupboard_app.utils.jwt_decode_token',
     'JWT_ALGORITHM': 'RS256',
-    'JWT_AUDIENCE': AUTH0_API_IDENTIFIER,
+    'JWT_AUDIENCE': AUTH0_API_AUDIENCE,
     'JWT_ISSUER': 'https://{}/'.format(AUTH0_DOMAIN),
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
 }
