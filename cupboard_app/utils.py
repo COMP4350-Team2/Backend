@@ -12,6 +12,7 @@ TEST_RUN = os.getenv('TEST_RUN')
 TEST_KEY = os.getenv('TEST_KEY')
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
+AUTH0_API_AUDIENCE = os.getenv('AUTH0_API_AUDIENCE')
 CUPBOARD_TEST_CLIENT_ID = os.getenv('CUPBOARD_TEST_CLIENT_ID')
 CUPBOARD_TEST_CLIENT_SECRET = os.getenv('CUPBOARD_TEST_CLIENT_SECRET')
 
@@ -45,7 +46,7 @@ def jwt_decode_token(token: str) -> dict:
         Decoded access token in the form of dictionary.
     """
     header = jwt.get_unverified_header(token)
-    result = None
+    result = {}
     issuer = 'https://{}/'.format(AUTH0_DOMAIN)
 
     if DEV_LAYER == 'mock' or TEST_RUN == 'true':
@@ -69,7 +70,7 @@ def jwt_decode_token(token: str) -> dict:
         result = jwt.decode(
             token,
             public_key,
-            audience=AUTH0_API_IDENTIFIER,
+            audience=AUTH0_API_AUDIENCE,
             issuer=issuer,
             algorithms=['RS256']
         )
@@ -89,7 +90,7 @@ def jwt_get_token() -> dict:
         '{'
         f'"client_id":"{CUPBOARD_TEST_CLIENT_ID}",'
         f'"client_secret":"{CUPBOARD_TEST_CLIENT_SECRET}",'
-        f'"audience":"{AUTH0_API_IDENTIFIER}",'
+        f'"audience":"{AUTH0_API_AUDIENCE}",'
         '"grant_type":"client_credentials"'
         '}'
     )

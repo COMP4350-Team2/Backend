@@ -33,6 +33,7 @@ def load_env_variables():
     os.environ.setdefault('TEST_KEY', 'cupboard_secret')
     os.environ.setdefault('AUTH0_DOMAIN', 'my-domain.ca.auth0.com')
     os.environ.setdefault('AUTH0_API_IDENTIFIER', 'https://api.example.com')
+    os.environ.setdefault('AUTH0_API_AUDIENCE', 'https://my-domain.ca.auth0.com/api/v2/')
 
     # TO DO: Set default MONGO_URL and make sure it works with settings.py
     os.environ.setdefault('MONGO_URL', '')
