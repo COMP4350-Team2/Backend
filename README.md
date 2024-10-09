@@ -5,8 +5,8 @@
 - **Language:** python
 - **Platform:** AWS Elastic Beanstalk
 ### Database
-- **Engine:** PostgreSQL
-- **Platform:** MS Azure
+- **Engine:** Djongo
+- **Platform:** Mongo Atlas
 ### Authentication
 - **Platform:** Auth0
 
