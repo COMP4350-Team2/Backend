@@ -168,3 +168,8 @@ def create_user(request: Request) -> JsonResponse:
         status = 500
 
     return JsonResponse(dict(message=response), status=status)
+
+
+if __name__ == '__main__':
+    # Protect when running pydoc
+    print('')

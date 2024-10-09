@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Python: module cupboard_app.views</title>
+</head><body>
+
+<table class="heading">
+<tr class="heading-text decor">
+<td class="title">&nbsp;<br><strong class="title"><a href="cupboard_app.html" class="white">cupboard_app</a>.views</strong></td>
+<td class="extra"><a href=".">index</a><br><a href="file:c%3A%5Cdev%5Ccomp4350%5Cbackend%5Ccupboard_app%5Cviews.py">c:\dev\comp4350\backend\cupboard_app\views.py</a></td></tr></table>
+    <p></p>
+<p>
+<table class="section">
+<tr class="decor pkg-content-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Modules</strong></td></tr>
+    
+<tr><td class="decor pkg-content-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><table><tr><td class="multicolumn"><a href="json.html">json</a><br>
+</td><td class="multicolumn"><a href="os.html">os</a><br>
+</td><td class="multicolumn"></td><td class="multicolumn"></td></tr></table></td></tr></table><p>
+<table class="section">
+<tr class="decor functions-decor heading-text">
+<td class="section-title" colspan=3>&nbsp;<br><strong class="bigsection">Functions</strong></td></tr>
+    
+<tr><td class="decor functions-decor"><span class="code">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></td><td>&nbsp;</td>
+<td class="singlecolumn"><dl><dt><a name="-create_user"><strong>create_user</strong></a>(self, request, *args, **kwargs)</dt><dd><span class="code">Create&nbsp;a&nbsp;new&nbsp;user&nbsp;in&nbsp;the&nbsp;database&nbsp;based&nbsp;on&nbsp;auth0&nbsp;user<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;request:&nbsp;The&nbsp;rest&nbsp;framework&nbsp;Request&nbsp;object&nbsp;with&nbsp;access&nbsp;token<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;json&nbsp;object&nbsp;with&nbsp;the&nbsp;message&nbsp;of&nbsp;the&nbsp;create&nbsp;user&nbsp;result.</span></dd></dl>
+ <dl><dt><a name="-get_all_ingredients"><strong>get_all_ingredients</strong></a>(self, request, *args, **kwargs)</dt><dd><span class="code">Gets&nbsp;all&nbsp;possible&nbsp;ingredients&nbsp;in&nbsp;db<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;request:&nbsp;The&nbsp;rest&nbsp;framework&nbsp;Request&nbsp;object&nbsp;with&nbsp;access&nbsp;token<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;json&nbsp;object&nbsp;with&nbsp;the&nbsp;ingredients&nbsp;as&nbsp;a&nbsp;result.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Output&nbsp;Format:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"result":&nbsp;[<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name":"ingredient_1"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"type":"ingredient_type"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name":"ingredient_2"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"type":"ingredint_type2"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}</span></dd></dl>
+ <dl><dt><a name="-private"><strong>private</strong></a>(self, request, *args, **kwargs)</dt><dd><span class="code">Example&nbsp;of&nbsp;private&nbsp;api&nbsp;request.&nbsp;A&nbsp;valid&nbsp;access&nbsp;token&nbsp;is&nbsp;required&nbsp;to&nbsp;access&nbsp;this&nbsp;route<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;request:&nbsp;The&nbsp;rest&nbsp;framework&nbsp;Request&nbsp;object&nbsp;with&nbsp;access&nbsp;token<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;json&nbsp;object&nbsp;with&nbsp;the&nbsp;message&nbsp;from&nbsp;private.</span></dd></dl>
+ <dl><dt><a name="-private_scoped"><strong>private_scoped</strong></a>(self, request, *args, **kwargs)</dt><dd><span class="code">Example&nbsp;of&nbsp;private-scoped&nbsp;api&nbsp;request.&nbsp;A&nbsp;valid&nbsp;access&nbsp;token&nbsp;and&nbsp;an&nbsp;appropriate&nbsp;scope<br>
+are&nbsp;required&nbsp;to&nbsp;access&nbsp;this&nbsp;route.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;request:&nbsp;The&nbsp;rest&nbsp;framework&nbsp;Request&nbsp;object&nbsp;with&nbsp;access&nbsp;token&nbsp;containing&nbsp;a&nbsp;scope<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"read:messages".<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;json&nbsp;object&nbsp;with&nbsp;the&nbsp;message&nbsp;from&nbsp;private-scoped.</span></dd></dl>
+ <dl><dt><a name="-public"><strong>public</strong></a>(self, request, *args, **kwargs)</dt><dd><span class="code">Example&nbsp;of&nbsp;public&nbsp;api&nbsp;request.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;request:&nbsp;The&nbsp;rest&nbsp;framework&nbsp;Request&nbsp;object<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;json&nbsp;object&nbsp;with&nbsp;the&nbsp;message&nbsp;from&nbsp;public.</span></dd></dl>
+</body></html>
