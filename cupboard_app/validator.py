@@ -7,6 +7,7 @@ from authlib.jose.rfc7517.jwk import JsonWebKey
 
 TEST_KEY = os.getenv('TEST_KEY')
 
+
 class Auth0JWTBearerTokenValidator(JWTBearerTokenValidator):
     def __init__(self, domain: str, audience: str):
         issuer = f'https://{domain}/'

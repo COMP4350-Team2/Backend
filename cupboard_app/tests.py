@@ -8,7 +8,6 @@ from rest_framework.reverse import reverse
 from cupboard_app.models import Ingredient
 from cupboard_app.queries import (
     CREATE_SUCCESS_MSG,
-    EXISTS_MSG,
     get_all_ingredients
 )
 
@@ -90,7 +89,6 @@ class PrivateMessageApi(TestCase):
         response = self.client.get(reverse('private'))
         self.assertEqual(response.status_code, 401)
 
-
     def test_private_api_with_invalid_token_returns_unauthorized(self):
         """
         Testing the private api with a invalid token
@@ -100,7 +98,6 @@ class PrivateMessageApi(TestCase):
             HTTP_AUTHORIZATION='Bearer invalid-token'
         )
         self.assertEqual(response.status_code, 401)
-
 
     def test_private_api_with_valid_token_returns_ok(self):
         """
@@ -130,7 +127,6 @@ class PrivateScopedMessageApi(TestCase):
         response = self.client.get(reverse('private_scoped'))
         self.assertEqual(response.status_code, 401)
 
-
     def test_private_scoped_api_with_invalid_token_returns_unauthorized(self):
         """
         Testing the private_scoped api with a invalid token
@@ -140,7 +136,6 @@ class PrivateScopedMessageApi(TestCase):
             HTTP_AUTHORIZATION="Bearer invalid-token"
         )
         self.assertEqual(response.status_code, 401)
-
 
     def test_private_scoped_api_with_valid_token_returns_ok(self):
         """
@@ -201,7 +196,6 @@ class CreateUser(TestCase):
         response = self.client.post(reverse('create_user'))
         self.assertEqual(response.status_code, 401)
 
-
     def test_create_user_api_with_invalid_token_returns_unauthorized(self):
         """
         Testing the create user api with a invalid token
@@ -211,7 +205,6 @@ class CreateUser(TestCase):
             HTTP_AUTHORIZATION='Bearer invalid-token'
         )
         self.assertEqual(response.status_code, 401)
-
 
     def test_create_user_api_with_valid_token_returns_ok(self):
         """
