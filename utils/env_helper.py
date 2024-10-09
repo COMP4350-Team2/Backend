@@ -34,4 +34,8 @@ def load_env_variables():
     os.environ.setdefault('AUTHLIB_INSECURE_TRANSPORT', 'true')
     os.environ.setdefault('AUTH0_DOMAIN', 'my-domain.ca.auth0.com')
     os.environ.setdefault('AUTH0_API_IDENTIFIER', 'https://api.example.com')
+    os.environ.setdefault('DB_NAME', 'DCupboardDB')
+    os.environ.setdefault('DB_TEST_NAME', 'test_DCupboardDB')
     os.environ.setdefault('MONGO_URL', '')
+
+    print('DB Name {}'.format(os.getenv('DB_NAME')))
