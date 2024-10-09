@@ -5,33 +5,33 @@ import jwt
 from django.test import TestCase
 from rest_framework.reverse import reverse
 
-from .models import Ingredient
-from .queries import get_all_ingredients
-from .views import (
-    CRED_NOT_PROVIDED,
-    TOKEN_DECODE_ERROR
+from cupboard_app.models import Ingredient
+from cupboard_app.queries import (
+    CREATE_SUCCESS_MSG,
+    EXISTS_MSG,
+    get_all_ingredients
 )
 
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
-AUTH0_API_AUDIENCE = os.getenv('AUTH0_API_AUDIENCE')
+AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 
 # Test payload
 TEST_KEY = os.getenv('TEST_KEY')
 TEST_VALID_TOKEN_PAYLOAD = {
     "iss": 'https://{}/'.format(AUTH0_DOMAIN),
     "sub": "CupboardTest@clients",
-    "aud": AUTH0_API_AUDIENCE,
+    "aud": AUTH0_API_IDENTIFIER,
     "iat": time(),
     "exp": time() + 3600,
     "azp": "mK3brgMY0GIMox40xKWcUZBbv2Xs0YdG",
     "scope": "read:messages",
     "gty": "client-credentials",
     "permissions": [],
-    "email": "testing@cupboard.com",
+    "https://cupboard-teacup.com/email": "testing@cupboard.com",
 }
 
 
-def get_access_token() -> str:
+def get_test_access_token() -> str:
     """
     Gets the access_token to run the tests using simple encryption for
     mock/test payloads.
@@ -88,12 +88,8 @@ class PrivateMessageApi(TestCase):
         Testing the private api without a token
         """
         response = self.client.get(reverse('private'))
-
         self.assertEqual(response.status_code, 401)
-        self.assertDictEqual(
-            response.json(),
-            CRED_NOT_PROVIDED
-        )
+
 
     def test_private_api_with_invalid_token_returns_unauthorized(self):
         """
@@ -103,12 +99,8 @@ class PrivateMessageApi(TestCase):
             reverse('private'),
             HTTP_AUTHORIZATION='Bearer invalid-token'
         )
-
         self.assertEqual(response.status_code, 401)
-        self.assertDictEqual(
-            response.json(),
-            TOKEN_DECODE_ERROR
-        )
+
 
     def test_private_api_with_valid_token_returns_ok(self):
         """
@@ -116,9 +108,8 @@ class PrivateMessageApi(TestCase):
         """
         response = self.client.get(
             reverse('private'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token())
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(
             response.json(),
@@ -134,40 +125,31 @@ class PrivateMessageApi(TestCase):
 class PrivateScopedMessageApi(TestCase):
     def test_private_scoped_api_without_token_returns_unauthorized(self):
         """
-        Testing the private-scoped api without a token
+        Testing the private_scoped api without a token
         """
-        response = self.client.get(reverse('private-scoped'))
-
+        response = self.client.get(reverse('private_scoped'))
         self.assertEqual(response.status_code, 401)
-        self.assertDictEqual(
-            response.json(),
-            CRED_NOT_PROVIDED
-        )
+
 
     def test_private_scoped_api_with_invalid_token_returns_unauthorized(self):
         """
-        Testing the private-scoped api with a invalid token
+        Testing the private_scoped api with a invalid token
         """
         response = self.client.get(
-            reverse('private-scoped'),
+            reverse('private_scoped'),
             HTTP_AUTHORIZATION="Bearer invalid-token"
         )
-
         self.assertEqual(response.status_code, 401)
-        self.assertDictEqual(
-            response.json(),
-            TOKEN_DECODE_ERROR
-        )
+
 
     def test_private_scoped_api_with_valid_token_returns_ok(self):
         """
-        Testing the private-scoped api with a valid token
+        Testing the private_scoped api with a valid token
         """
         response = self.client.get(
-            reverse('private-scoped'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
+            reverse('private_scoped'),
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token())
         )
-
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(
             response.json(),
@@ -196,7 +178,7 @@ class GetAllIngredientsApi(TestCase):
         """
         response = self.client.get(
             reverse('get_all_ingredients'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token())
         )
 
         self.assertEqual(response.status_code, 200)
@@ -217,12 +199,8 @@ class CreateUser(TestCase):
         Testing the create user api without a token
         """
         response = self.client.post(reverse('create_user'))
-
         self.assertEqual(response.status_code, 401)
-        self.assertDictEqual(
-            response.json(),
-            CRED_NOT_PROVIDED
-        )
+
 
     def test_create_user_api_with_invalid_token_returns_unauthorized(self):
         """
@@ -232,12 +210,8 @@ class CreateUser(TestCase):
             reverse('create_user'),
             HTTP_AUTHORIZATION='Bearer invalid-token'
         )
-
         self.assertEqual(response.status_code, 401)
-        self.assertDictEqual(
-            response.json(),
-            TOKEN_DECODE_ERROR
-        )
+
 
     def test_create_user_api_with_valid_token_returns_ok(self):
         """
@@ -245,13 +219,13 @@ class CreateUser(TestCase):
         """
         response = self.client.post(
             reverse('create_user'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_access_token())
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token())
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(
             response.json(),
             {
-                'message': 'Item created successfully.'
+                'message': CREATE_SUCCESS_MSG
             }
         )

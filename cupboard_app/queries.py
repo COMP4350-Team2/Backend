@@ -1,11 +1,13 @@
 from django.db.models.query import QuerySet
 
-from .models import Ingredient
-from .models import ListName
-from .models import Measurement
-from .models import User
-from .models import UserListIngredients
-from .models import Recipe
+from cupboard_app.models import (
+    Ingredient,
+    ListName,
+    Measurement,
+    User,
+    UserListIngredients,
+    Recipe
+)
 
 CREATE_SUCCESS_MSG = 'Item created successfully.'
 UPDATE_SUCCESS_MSG = 'Item updated successfully.'
