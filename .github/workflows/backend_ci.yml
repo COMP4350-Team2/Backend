@@ -14,9 +14,8 @@ jobs:
         with:
           ref: main
       - run: python -m venv testVenv
-      - run: cd testVenv/Scripts
+      - run: cd testVenv
       - run: ls
-      - run: cd ..
       - run: cd ..
       - run: source testVenv/Scripts/activate.ps1
       - run: pip install -r requirements.txt
