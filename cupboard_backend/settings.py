@@ -32,6 +32,8 @@ else:
     DEBUG = True
 
 # Get uri from environment, create client
+db_name = os.getenv('DB_NAME')
+db_test_name = os.getenv('DB_TEST_NAME')
 uri = os.getenv('MONGO_URL')
 client = MongoClient(uri, server_api=ServerApi('1'))
 
@@ -97,11 +99,14 @@ WSGI_APPLICATION = 'cupboard_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': 'CupboardDB',
+        'NAME': db_name,
         'CLIENT': {
-            'host': os.getenv('MONGO_URL'),
+            'host': uri,
         },
         'ENFORCE_SCHEMA': False,
+        'TEST': {
+            'NAME': db_test_name,
+        },
     }
 }
 
