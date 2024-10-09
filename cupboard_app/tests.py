@@ -1,20 +1,33 @@
 import os
-from time import time
-import jwt
 import json
+from time import time
+
+import jwt
 from django.test import TestCase
 from rest_framework.reverse import reverse
 
 from cupboard_app.models import (
     Ingredient,
-    ListName
+    ListName,
+    Measurement,
+    User
 )
 from cupboard_app.queries import (
     CREATE_SUCCESS_MSG,
-    get_all_ingredients,
+    EXISTS_MSG,
     create_ingredient,
+    get_all_ingredients,
     get_ingredient,
-    create_list
+    create_list,
+    get_all_lists,
+    get_list,
+    create_measurement,
+    get_all_measurements,
+    get_measurement,
+    create_user,
+    get_all_users,
+    get_user,
+    create_list_ingredient
 )
 
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
@@ -63,6 +76,7 @@ class TestIngredients(TestCase):
         from the database
         """
         ingredients_list = get_all_ingredients()
+        self.assertEqual(len(ingredients_list), 2)
         self.assertEqual(
             json.dumps({"name": "test_ingredient1", "type": "test_type1"}),
             str(ingredients_list[0])
@@ -107,6 +121,155 @@ class TestIngredients(TestCase):
         """
         create_list("test_listname")
         self.assertEqual(ListName.objects.filter(listName="test_listname").exists(), True)
+
+    def test_get_all_lists(self):
+        """
+        Testing get_all_lists retrieves all listNames
+        in the database
+        """
+        create_list("test_listname")
+        create_list("test_listname2")
+        create_list("test_listname3")
+        all_lists = get_all_lists()
+        self.assertEqual(len(all_lists), 3)
+        self.assertEqual("test_listname", str(all_lists[0]))
+        self.assertEqual("test_listname2", str(all_lists[1]))
+        self.assertEqual("test_listname3", str(all_lists[2]))
+
+    def test_get_list(self):
+        """
+        Testing get_list returns an ingredient
+        from the database
+        """
+        create_list("test_listname")
+        create_list("test_listname2")
+        test_list = get_list("test_listname")
+        temp_list = ListName.objects.get(listName="test_listname2")
+        test_list2 = get_list("test_ingredient2", temp_list.id)
+        test_list3 = get_list("doesnt_exist")
+
+        self.assertEqual(test_list, ListName.objects.get(listName="test_listname"))
+        self.assertEqual(test_list2, ListName.objects.get(listName="test_listname2"))
+        self.assertEqual(test_list3, None)
+
+    def test_create_measurement(self):
+        """
+        Testing create_measurement creates a measurement
+        in the database
+        """
+        create_measurement("test_unit")
+        self.assertEqual(Measurement.objects.filter(unit="test_unit").exists(), True)
+        create_measurement(5)
+        self.assertEqual(
+            Measurement.objects.filter(unit=5).exists(),
+            True
+        )
+
+    def test_get_all_measurements(self):
+        """
+        Testing get_all_measurements retrieves all the measurements
+        from the database
+        """
+        create_measurement("test_unit")
+        create_measurement("test_unit2")
+        create_measurement("test_unit3")
+        all_units = get_all_measurements()
+        self.assertEqual(len(all_units), 3)
+        self.assertEqual("test_unit", str(all_units[0]))
+        self.assertEqual("test_unit2", str(all_units[1]))
+        self.assertEqual("test_unit3", str(all_units[2]))
+
+    def test_get_measurement(self):
+        """
+        Testing get_measurement retrieves a specific measurement
+        from the database
+        """
+        create_measurement("test_unit")
+        create_measurement("test_unit2")
+        test_unit = get_measurement("test_unit")
+        temp_unit = Measurement.objects.get(unit="test_unit2")
+        test_unit2 = get_measurement("test_unit2", temp_unit.id)
+        test_unit3 = get_measurement("doesnt_exist")
+
+        self.assertEqual(test_unit, Measurement.objects.get(unit="test_unit"))
+        self.assertEqual(test_unit2, Measurement.objects.get(unit="test_unit2"))
+        self.assertEqual(test_unit3, None)
+
+    def test_create_user(self):
+        """
+        Testing create_user creates a measurement
+        in the database
+        """
+        create_user("test_user", "user@test.com")
+        self.assertEqual(
+            User.objects.filter(
+                username="test_user",
+                email="user@test.com"
+            ).exists(),
+            True
+        )
+
+    def test_get_all_users(self):
+        """
+        Testing get_all_users retrieves all the users
+        from the database
+        """
+        create_user("test_user", "user@test.com")
+        create_user("test_user2", "user2@test.com")
+        create_user("test_user3", "user3@test.com")
+        all_users = get_all_users()
+        self.assertEqual(len(all_users), 3)
+        self.assertEqual(
+            json.dumps({"username": "test_user", "email": "user@test.com"}),
+            str(all_users[0])
+        )
+        self.assertEqual(
+            json.dumps({"username": "test_user2", "email": "user2@test.com"}),
+            str(all_users[1])
+        )
+        self.assertEqual(
+            json.dumps({"username": "test_user3", "email": "user3@test.com"}),
+            str(all_users[2])
+        )
+
+    def test_get_user(self):
+        """
+        Testing get_user retrieves the specified user
+        from the database
+        """
+        create_user("test_user", "user@test.com")
+        create_user("test_user2", "user2@test.com")
+        test_user = get_user("test_user")
+        temp_user = User.objects.get(username="test_user2")
+        test_user2 = get_user("test_user2", temp_user.id)
+        test_user3 = get_user("doesnt_exist")
+
+        self.assertEqual(test_user, User.objects.get(username="test_user"))
+        self.assertEqual(test_user2, User.objects.get(username="test_user2"))
+        self.assertEqual(test_user3, None)
+
+    def test_create_list_ingredient(self):
+        """
+        Testing create_list_ingredient creates an ingredient dictionary
+        """
+        create_ingredient("test_ing", "test_type1")
+        create_ingredient("test_ing2", "test_type2")
+        create_measurement("test_unit")
+        ing1 = create_list_ingredient("test_ing", 500, "test_unit")
+        ing2 = create_list_ingredient("test_ing2", 500, "none")
+        ing3 = create_list_ingredient("test_ing2", "none", "test_unit")
+        ing4 = create_list_ingredient("none", 500, "test_unit")
+        self.assertEqual(
+            ing1,
+            {
+                "ingredientId": ing1.get("ingredientId"),
+                "amount": 500,
+                "unitId": ing1.get("unitId")
+            }
+        )
+        self.assertEqual(ing2, None)
+        self.assertEqual(ing3, None)
+        self.assertEqual(ing4, None)
 
 
 # API Tests
@@ -256,7 +419,9 @@ class CreateUser(TestCase):
 
     def test_create_user_api_with_valid_token_returns_ok(self):
         """
-        Testing the create user api with a valid token
+        Testing the create user api with a valid token.
+        We run the same request twice to check response when user already
+        exists in the db.
         """
         response = self.client.post(
             reverse('create_user'),
@@ -268,5 +433,18 @@ class CreateUser(TestCase):
             response.json(),
             {
                 'message': CREATE_SUCCESS_MSG
+            }
+        )
+
+        response = self.client.post(
+            reverse('create_user'),
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token())
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': EXISTS_MSG
             }
         )
