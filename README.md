@@ -15,7 +15,7 @@
 [Link to Mobile Webapp](https://github.com/COMP4350-Team2/Mobile-WebApp)
 
 ## Prerequisites
-Have python veraion 3.12 or greater installed on machine
+Have python version >= 3.12 and < 3.12.13 installed on machine
 
 Install all the requirements by running:
 `pip install -r requirements.txt`
