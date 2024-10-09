@@ -159,3 +159,30 @@ def get_all_ingredients(request: Request) -> JsonResponse:
             )
         }
     )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def testquery(request: Request) -> JsonResponse:
+    from .queries import create_ingredient
+
+    name = 'Lean Ground Beef'
+    type = 'Meat'
+    response = create_ingredient(name=name, type=type)
+
+    name = '1% Milk'
+    type = 'Dairy'
+    response = create_ingredient(name=name, type=type)
+
+    name = '2% Milk'
+    type = 'Dairy'
+    response = create_ingredient(name=name, type=type)
+
+    name = '3% Milk'
+    type = 'Dairy'
+    response = create_ingredient(name=name, type=type)
+    
+    return JsonResponse(
+        {
+            'result': response
+        }
+    )
