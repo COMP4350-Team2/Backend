@@ -14,7 +14,7 @@ jobs:
         with:
           ref: main
       - run: python -m venv testVenv
-      - run: testVenv/Scripts/activate
+      - run: source ./testVenv/Scripts/activate
       - run: pip install -r requirements.txt
       - run: pip install pyopenssl --upgrade
       - run: pip install --force-reinstall -v "cryptography==42.0.0"
