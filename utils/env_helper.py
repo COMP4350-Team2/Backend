@@ -16,6 +16,10 @@ def generate_secret() -> str:
 
 
 def load_env_variables():
+    """
+    Loads Environment variables from .env file and if not existing
+    then set defaults
+    """
     # Reads the .env file and loads the values
     load_dotenv()
 
