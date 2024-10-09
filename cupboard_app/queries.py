@@ -1,11 +1,11 @@
 from django.db.models.query import QuerySet
 
-from .models import Ingredient
-from .models import ListName
-from .models import Measurement
-from .models import User
-from .models import UserListIngredients
-from .models import Recipe
+from cupboard_app.models import (
+    Ingredient,
+    ListName,
+    Measurement,
+    User
+)
 
 CREATE_SUCCESS_MSG = 'Item created successfully.'
 UPDATE_SUCCESS_MSG = 'Item updated successfully.'
@@ -29,11 +29,12 @@ def create_ingredient(name: str, type: str) -> str:
     """
     result = CREATE_SUCCESS_MSG
     try:
-        Ingredient.objects.get_or_create(name=name, type=type)
-    except Exception:
-        result = CREATE_FAILED_MSG
         if Ingredient.objects.filter(name=name).exists():
             result = EXISTS_MSG
+        else:
+            Ingredient.objects.get_or_create(name=name, type=type)
+    except Exception:
+        result = CREATE_FAILED_MSG
 
     return result
 
@@ -83,11 +84,12 @@ def create_list(listName: str) -> str:
     """
     result = CREATE_SUCCESS_MSG
     try:
-        ListName.objects.get_or_create(listName=listName)
-    except Exception:
-        result = CREATE_FAILED_MSG
         if ListName.objects.filter(listName=listName).exists():
             result = EXISTS_MSG
+        else:
+            ListName.objects.get_or_create(listName=listName)
+    except Exception:
+        result = CREATE_FAILED_MSG
 
     return result
 
@@ -137,11 +139,12 @@ def create_measurement(unit: str) -> str:
     """
     result = CREATE_SUCCESS_MSG
     try:
-        Measurement.objects.get_or_create(unit=unit)
-    except Exception:
-        result = CREATE_FAILED_MSG
         if Measurement.objects.filter(unit=unit).exists():
             result = EXISTS_MSG
+        else:
+            Measurement.objects.get_or_create(unit=unit)
+    except Exception:
+        result = CREATE_FAILED_MSG
 
     return result
 
@@ -192,11 +195,12 @@ def create_user(username: str, email: str) -> str:
     """
     result = CREATE_SUCCESS_MSG
     try:
-        User.objects.get_or_create(username=username, email=email)
-    except Exception:
-        result = CREATE_FAILED_MSG
         if User.objects.filter(username=username).exists():
             result = EXISTS_MSG
+        else:
+            User.objects.get_or_create(username=username, email=email)
+    except Exception:
+        result = CREATE_FAILED_MSG
 
     return result
 
@@ -223,7 +227,7 @@ def get_user(username: str, id: int = None) -> User | None:
         User object or None if user is not found.
     """
     result = None
-    if isinstance(username,str) and (isinstance(id,int) or id is None):
+    if isinstance(username, str) and (isinstance(id, int) or id is None):
         try:
             if id:
                 result = User.objects.get(id=id)
@@ -251,7 +255,11 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
     ingredient_dict = None
     ingredient = get_ingredient(name=ingredient)
     unit = get_measurement(unit=unit)
-    if ingredient is not None and unit is not None and (isinstance(amount,int) or isinstance(amount,float)):
+    if (
+        ingredient is not None
+        and unit is not None
+        and (isinstance(amount, int) or isinstance(amount, float))
+    ):
         ingredient_dict = {
             "ingredientId": ingredient.id,
             "amount": amount,

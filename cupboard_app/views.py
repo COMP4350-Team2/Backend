@@ -1,60 +1,48 @@
-from functools import wraps
-
-from django.http import JsonResponse
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.request import Request
-
-from .utils import jwt_decode_token
-from .queries import get_all_ingredients as queries_get_all_ingredients
+import os
 import json
 
-CRED_NOT_PROVIDED = {'detail': 'Authentication credentials were not provided.'}
-TOKEN_DECODE_ERROR = {'detail': 'Error decoding token.'}
+from django.http import JsonResponse
+from authlib.integrations.django_oauth2 import ResourceProtector
+from rest_framework.request import Request
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes
+
+from cupboard_app.validator import (
+    TestBearerTokenValidator,
+    Auth0JWTBearerTokenValidator
+)
+from cupboard_app.utils import (
+    decode_auth_access_token,
+    get_auth_access_token_from_header,
+    get_auth_username_from_payload
+)
+from cupboard_app.queries import (
+    get_all_ingredients as queries_get_all_ingredients,
+    create_user as queries_create_user,
+)
 
 
-def get_token_auth_header(request: Request) -> str:
-    """
-    Obtains the Access Token from the Authorization Header
-
-    Args:
-        request: The rest_framework Request object
-
-    Returns:
-        The access token from the request.
-    """
-    auth = request.META.get("HTTP_AUTHORIZATION", None)
-    parts = auth.split()
-    token = parts[1]
-
-    return token
+# Environment Variables
+DEV_LAYER = os.getenv('DEV_LAYER')
+TEST_RUN = os.getenv('TEST_RUN')
+TEST_KEY = os.getenv('TEST_KEY')
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 
 
-def requires_scope(required_scope: str):
-    """
-    Determines if the required scope is present in the Access Token
-
-    Args:
-        required_scope: The scope required to access the resource that we are looking for
-
-    Returns:
-        A decorator function that checks for the scope in the token
-    """
-    def require_scope(f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            token = get_token_auth_header(args[0])
-            decoded = jwt_decode_token(token)
-            if decoded.get("scope"):
-                token_scopes = decoded["scope"].split()
-                for token_scope in token_scopes:
-                    if token_scope == required_scope:
-                        return f(*args, **kwargs)
-            response = JsonResponse({'message': 'You don\'t have access to this resource'})
-            response.status_code = 403
-            return response
-        return decorated
-    return require_scope
+# Set validator
+require_auth = ResourceProtector()
+if DEV_LAYER == 'mock' or TEST_RUN == 'true':
+    validator = TestBearerTokenValidator(
+        AUTH0_DOMAIN,
+        AUTH0_API_IDENTIFIER
+    )
+else:
+    validator = Auth0JWTBearerTokenValidator(
+        AUTH0_DOMAIN,
+        AUTH0_API_IDENTIFIER
+    )
+require_auth.register_token_validator(validator)
 
 
 @api_view(['GET'])
@@ -64,79 +52,67 @@ def public(request: Request) -> JsonResponse:
     Example of public api request.
 
     Args:
-        request: The rest_framework Request object
+        request: The rest framework Request object
 
     Returns:
         A json object with the message from public.
     """
-    return JsonResponse(
-        {
-            'message': (
-                'Hello from a public endpoint! '
-                'You don\'t need to be authenticated to see this.'
-            )
-        }
-    )
+    response = "Hello from a public endpoint! You don't need to be authenticated to see this."
+    return JsonResponse(dict(message=response))
 
 
 @api_view(['GET'])
+@require_auth(None)
 def private(request: Request) -> JsonResponse:
     """
-    Example of private api request.
+    Example of private api request. A valid access token is required to access this route
 
     Args:
-        request: The rest_framework Request object with access token
+        request: The rest framework Request object with access token
 
     Returns:
         A json object with the message from private.
     """
-    return JsonResponse(
-        {
-            'message': (
-                'Hello from a private endpoint! '
-                'You need to be authenticated to see this.'
-            )
-        }
-    )
+    response = "Hello from a private endpoint! You need to be authenticated to see this."
+    return JsonResponse(dict(message=response))
 
 
 @api_view(['GET'])
-@requires_scope('read:messages')
+@require_auth("read:messages")
 def private_scoped(request: Request) -> JsonResponse:
     """
-    Example of private-scoped api request.
+    Example of private-scoped api request. A valid access token and an appropriate scope
+    are required to access this route.
 
     Args:
-        request: The rest_framework Request object with access token
-                 containing a scope "read:messages".
+        request: The rest framework Request object with access token containing a scope
+                "read:messages".
 
     Returns:
         A json object with the message from private-scoped.
     """
-    return JsonResponse(
-        {
-            'message': (
-                'Hello from a private endpoint! '
-                'You need to be authenticated and have a scope of '
-                'read:messages to see this.'
-            )
-        }
+    response = (
+        "Hello from a private endpoint! You need to be authenticated "
+        "and have a scope of read:messages to see this."
     )
+    return JsonResponse(dict(message=response))
 
 
+# API Views - Get requests
 @api_view(['GET'])
+@require_auth(None)
 def get_all_ingredients(request: Request) -> JsonResponse:
     """
     Gets all possible ingredients in db
 
     Args:
-        request: The rest_framework Request object with access token
+        request: The rest framework Request object with access token
 
     Returns:
         A json object with the ingredients as a result.
         Output Format:
         {
-            "result":[
+            "result": [
                 {
                     "name":"ingredient_1"
                     "type":"ingredient_type"
@@ -148,7 +124,8 @@ def get_all_ingredients(request: Request) -> JsonResponse:
             ]
         }
     """
-    all_ingredients = queries_get_all_ingredients()  # runs the query for getting all ingredients
+    # Runs the query for getting all ingredients
+    all_ingredients = queries_get_all_ingredients()
     converted_ingredients = []
     for ing in all_ingredients:
         converted_ingredients.append(json.loads(str(ing)))
@@ -160,29 +137,34 @@ def get_all_ingredients(request: Request) -> JsonResponse:
         }
     )
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def testquery(request: Request) -> JsonResponse:
-    from .queries import create_ingredient
 
-    name = 'Lean Ground Beef'
-    type = 'Meat'
-    response = create_ingredient(name=name, type=type)
+# API Views - Post requests
+@api_view(['POST'])
+@require_auth(None)
+def create_user(request: Request) -> JsonResponse:
+    """
+    Create a new user in the database based on auth0 user
 
-    name = '1% Milk'
-    type = 'Dairy'
-    response = create_ingredient(name=name, type=type)
+    Args:
+        request: The rest framework Request object with access token
 
-    name = '2% Milk'
-    type = 'Dairy'
-    response = create_ingredient(name=name, type=type)
+    Returns:
+        A json object with the message of the create user result.
+    """
+    # Get access token and payload from the request
+    token = get_auth_access_token_from_header(request=request)
+    payload = decode_auth_access_token(token=token)
 
-    name = '3% Milk'
-    type = 'Dairy'
-    response = create_ingredient(name=name, type=type)
-    
-    return JsonResponse(
-        {
-            'result': response
-        }
-    )
+    # Extract username and email from payload
+    username = get_auth_username_from_payload(payload=payload)
+    email = payload.get('https://cupboard-teacup.com/email')
+
+    if email and username:
+        # Try creating user in the db
+        response = queries_create_user(username=username, email=email)
+        status = 200
+    else:
+        response = 'Username or email missing. Unable to create new user.'
+        status = 500
+
+    return JsonResponse(dict(message=response), status=status)

@@ -1,39 +1,36 @@
 import os
 import json
-import http.client
 
 import jwt
 import requests
 from django.contrib.auth import authenticate
+from rest_framework.request import Request
 
 DEV_LAYER = os.getenv('DEV_LAYER')
-PORT = os.getenv('DJANGO_PORT')
 TEST_RUN = os.getenv('TEST_RUN')
 TEST_KEY = os.getenv('TEST_KEY')
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
-CUPBOARD_TEST_CLIENT_ID = os.getenv('CUPBOARD_TEST_CLIENT_ID')
-CUPBOARD_TEST_CLIENT_SECRET = os.getenv('CUPBOARD_TEST_CLIENT_SECRET')
 
 
-def jwt_get_username_from_payload_handler(payload):
+def get_auth_access_token_from_header(request: Request) -> str:
     """
-    Maps the sub field from the access_token to the username.
-    The authenticate method creates a remote user and returns
-    a User object for the username.
+    Obtains the Access Token from the Authorization Header
 
     Args:
-        payload: body of the API request.
+        request: The rest framework Request object
 
     Returns:
-        Remote user object for the specified username.
+        The access token from the request.
     """
-    username = payload.get('sub').replace('|', '.')
-    authenticate(remote_user=username)
-    return username
+    auth = request.META.get("HTTP_AUTHORIZATION", None)
+    parts = auth.split()
+    token = parts[1]
+
+    return token
 
 
-def jwt_decode_token(token: str) -> dict:
+def decode_auth_access_token(token: str) -> dict:
     """
     Fetches the JWKS from Auth0 account to verify and decode the
     incoming Access Token.
@@ -44,8 +41,8 @@ def jwt_decode_token(token: str) -> dict:
     Returns:
         Decoded access token in the form of dictionary.
     """
+    result = {}
     header = jwt.get_unverified_header(token)
-    result = None
     issuer = 'https://{}/'.format(AUTH0_DOMAIN)
 
     if DEV_LAYER == 'mock' or TEST_RUN == 'true':
@@ -58,6 +55,8 @@ def jwt_decode_token(token: str) -> dict:
         )
     else:
         jwks = requests.get('https://{}/.well-known/jwks.json'.format(AUTH0_DOMAIN)).json()
+
+        # Find public key
         public_key = None
         for jwk in jwks['keys']:
             if jwk['kid'] == header['kid']:
@@ -76,46 +75,19 @@ def jwt_decode_token(token: str) -> dict:
     return result
 
 
-def jwt_get_token() -> dict:
+def get_auth_username_from_payload(payload: dict) -> str:
     """
-    Gets the test access token for Cupboard (Test Application)
-
-    Returns:
-        JSON object of the access_token, expiry_time, and token_type
-    """
-    conn = http.client.HTTPSConnection(AUTH0_DOMAIN)
-
-    payload = (
-        '{'
-        f'"client_id":"{CUPBOARD_TEST_CLIENT_ID}",'
-        f'"client_secret":"{CUPBOARD_TEST_CLIENT_SECRET}",'
-        f'"audience":"{AUTH0_API_IDENTIFIER}",'
-        '"grant_type":"client_credentials"'
-        '}'
-    )
-
-    headers = {'content-type': "application/json"}
-    conn.request("POST", "/oauth/token", payload, headers)
-    res = conn.getresponse()
-    data = res.read()
-    return json.loads(data)
-
-
-def jwt_send_token(api_path: str, access_token: str) -> dict:
-    """
-    Sends the token to the API
+    Maps the sub field from the access_token to the username.
+    The authenticate method creates a remote user and returns
+    a User object for the username.
 
     Args:
-        api_path: api args i.e. /api/public
-        access_token: Access token
+        payload: dictionary of the payload resulting from
+                 decoding the auth0 access token
 
     Returns:
-        The returns JSON from the api call.
+        Username string for the specified username.
     """
-    conn = http.client.HTTPConnection('localhost:{}'.format(PORT))
-
-    headers = {'authorization': "Bearer {}".format(access_token)}
-    conn.request("GET", api_path, headers=headers)
-    res = conn.getresponse()
-    data = res.read()
-    return json.loads(data)
+    username = payload.get('sub').replace('|', '.')
+    authenticate(remote_user=username)
+    return username
