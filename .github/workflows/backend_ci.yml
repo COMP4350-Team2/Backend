@@ -18,7 +18,7 @@ jobs:
       - run: python -m venv testVenv && echo "$env_file" > ".env" && source testVenv/bin/activate && pip install -r requirements.txt && pip install pyopenssl --upgrade && pip install --force-reinstall -v "cryptography==42.0.0" && python manage.py test
       - run: echo ls
       - run: |
-          python manage.py runserver
+          source testVenv/bin/activate && python manage.py runserver
           python sysTests.py
       #- run: python -m venv testVenv
       #- run: cd testVenv && ls
