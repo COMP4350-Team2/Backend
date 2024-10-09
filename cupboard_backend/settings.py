@@ -24,6 +24,7 @@ dns.resolver.default_resolver.nameservers = ['8.8.8.8']
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Initialize environment variables
+REACT_CLIENT_ORIGIN_URL = os.getenv('REACT_CLIENT_ORIGIN_URL')
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if os.getenv('DEBUG_ENABLE') == 'false':
     DEBUG = False
@@ -41,7 +42,7 @@ ALLOWED_HOSTS = ['*']
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
+    REACT_CLIENT_ORIGIN_URL,
 ]
 
 
