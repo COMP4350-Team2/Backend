@@ -25,10 +25,7 @@ Install all the requirements by running:
 - Enter the required details. (Contact a member of the dev team for a copy of the proper file)
 
 ## Run
-Once all the Prerequsites and Dependencies are installed and the environment variables are set, run the following to apply all changes to the db:
-`python manage.py migrate`
-
-Then run the following to run the Django server on the specified PORT in the `.env` file.
+Run the following to run the Django server on the specified PORT in the `.env` file.
 `python manage.py runserver`
 
 The previous is for running a locally hosted instance, for runing in production on a hosted server in aws or elsewhere are requiered (not applicable for current development)
