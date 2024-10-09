@@ -14,14 +14,3 @@ jobs:
         with:
           ref: main
       - run: echo 'PLZ help'
-      #- env:
-      #    env_file: ${{ secrets.env }}
-      #    run: echo "$env_file" > ".env"
-      #- run: python -m venv testVenv && source testVenv/bin/activate && pip install -r requirements.txt && pip install pyopenssl --upgrade && pip install --force-reinstall -v "cryptography==42.0.0" && python manage.py test
-      #- run: python -m venv testVenv
-      #- run: cd testVenv && ls
-      #- run: source testVenv/bin/activate
-      #- run: pip install -r requirements.txt
-      #- run: pip install pyopenssl --upgrade
-      #- run: pip install --force-reinstall -v "cryptography==42.0.0"
-      #- run: python manage.py test
