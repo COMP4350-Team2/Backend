@@ -80,5 +80,3 @@ def load_env_variables():
 
     if os.getenv('MONGO_URL') == '' or os.getenv('MONGO_URL') is None:
         os.environ['MONGO_URL'] = ''
-
-    print('DB_NAME: "{}"'.format(os.getenv('DB_NAME')))
