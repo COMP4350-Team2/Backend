@@ -23,7 +23,7 @@ def load_env_variables():
     # .env file
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cupboard_backend.settings')
     os.environ.setdefault('DJANGO_SECRET_KEY', 'django-insecure-{}'.format(generate_secret()))
-    os.environ.setdefault('DJANGO_PORT', '8000')
+    os.environ.setdefault('DJANGO_PORT', '6060')
     os.environ.setdefault('REACT_CLIENT_ORIGIN_URL', 'http://localhost:8080')
     os.environ.setdefault('CUPBOARD_TEST_CLIENT_ID', '')
     os.environ.setdefault('CUPBOARD_TEST_CLIENT_SECRET', '')
@@ -37,5 +37,3 @@ def load_env_variables():
     os.environ.setdefault('DB_NAME', 'DCupboardDB')
     os.environ.setdefault('DB_TEST_NAME', 'test_DCupboardDB')
     os.environ.setdefault('MONGO_URL', '')
-
-    print('DB Name {}'.format(os.getenv('DB_NAME')))
