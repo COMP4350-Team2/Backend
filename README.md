@@ -15,7 +15,7 @@
 [Link to Mobile Webapp](https://github.com/COMP4350-Team2/Mobile-WebApp)
 
 ## Prerequisites
-Have python veraion 3.12 or greater installed on machine
+Have python version >= 3.12 and < 3.12.13 installed on machine
 
 Install all the requirements by running:
 `pip install -r requirements.txt`
@@ -25,41 +25,48 @@ Install all the requirements by running:
 - Enter the required details. (Contact a member of the dev team for a copy of the proper file)
 
 ## Run
-Once all the Prerequsites and Dependencies are installed and the environment variables are set, run the following to apply all changes to the db:
-`python manage.py migrate`
-
-Then run the following to run the Django server on the specified PORT in the `.env` file.
+Run the following to run the Django server on the specified PORT in the `.env` file.
 `python manage.py runserver`
 
-The previous is for running a locally hosted instance, for runing in production on a hosted server in aws or elsewhere are requiered (not applicable for current development)
+The previous is for running a locally hosted instance, for running in production on a hosted server in aws or elsewhere are required (not applicable for current development).
 
-## API Usage
+## Cupboard API Usage
+
+### Get all ingredients
+```http
 GET /api/get_all_ingredients
-
+```
 Header parameters:
-   HTTP_AUTHORIZATION:"Bearer [auth0 token]" # replaace [auth0 token] with token provided after user completes auth0 login
+- HTTP_AUTHORIZATION: "Bearer [auth0 token]"
+  - Replace [auth0 token] with access token provided after user completes Auth0 login
 
-Respond Body:
-   {
-      "result":[
-        {
-            "name":"ingredient_1"
-            "type":"ingredient_type"
-        },
-        {
-            "name":"ingredient_2"
-            "type":"ingredint_type2"
-        }
-      ]
-   }
+Success Response:
+```
+{
+   "result": [
+      {
+         "name":"ingredient_1"
+         "type":"ingredient_type"
+      },
+      {
+         "name":"ingredient_2"
+         "type":"ingredint_type2"
+      }
+   ]
+}
+```
 
-
+### Create user
+```http
 POST /api/create_user
-
+```
 Header parameters:
-   HTTP_AUTHORIZATION:"Bearer [auth0 token]" # replaace [auth0 token] with token provided after user completes auth0 login
+- HTTP_AUTHORIZATION: "Bearer [auth0 token]"
+  - Replace [auth0 token] with access token provided after user completes Auth0 login
 
-Respond Body:
-   {
-      "result": "Item created successfully."
-   }
+Success Response:
+```
+{
+   "result": "Item created successfully."
+}
+```
