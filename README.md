@@ -70,3 +70,9 @@ Success Response:
    "result": "Item created successfully."
 }
 ```
+Or
+```
+{
+   "result": "Item already exists."
+}
+```
