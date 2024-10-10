@@ -6,13 +6,12 @@
 ## Cupboard Issue Tracking
 Our team issue tracking is available in Linear. Please see UMLearn submission for the link.
 
-## Architecture Diagrams
+## Architecture Diagram
 
-Backend
+Add architecture diagram
 
-Desktop Frontend
 
-Mobile Frontend
+
 
 
 
@@ -27,14 +26,11 @@ The Get started documentation is available in the README.md for each respective 
 
 ## Sequence Diagram
 
-Sequence Diagrams
+### Login/Registration
+![Login/Registration sequence diagram](/docs/images/sprint_1/login_registration_sequence_diagram.png)
 
-
-
-
-
-
-
+### Get All Ingredients
+![Get all ingredients sequence diagram](/docs/images/sprint_1/get_all_ingredients_sequence_diagram.png)
 
 ## API Documentation
 The API documentation is available at the bottom in the backend README.md.  
@@ -42,10 +38,18 @@ The API documentation is available at the bottom in the backend README.md.
 
 ## Testing Plan
 
+Add testing plan description
+
+
+
+
+
+
+
 ### Unit/Integration/Acceptance Test
 #### **Backend**:
 Code and Line Coverage:
-![Code and Line Coverage Image](/docs/sprint_1_coverage.png)
+![Code and Line Coverage Image](/docs/images/sprint_1/sprint_1_coverage.png)
 - Our APIs are in the `views.py` and it doesn’t have 100% coverage because: 
   - Line 41 is a validator and that is already tested in the `tests.py` via the public, private, and private-scoped class tests
   - Note: the test for create_user api for the case when email is not available in the payload was added later in the day on October 9, 2024. [Link to pull request](https://github.com/COMP4350-Team2/Backend/pull/13)
@@ -84,3 +88,10 @@ For the acceptance testing and their related user story, please look at the acce
 
 ## Reproducible environments
 Team Cupboard (Team 2) tested the development environment to Team 3
+
+Add testing results
+
+
+
+
+
