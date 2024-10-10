@@ -12,6 +12,8 @@ os.environ['TEST_RUN'] = 'true'
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 
+print(os.getenv['DEV_LAYER'])
+
 # Test payload
 TEST_KEY = os.getenv('TEST_KEY')
 TEST_VALID_TOKEN_PAYLOAD = {
