@@ -16,7 +16,7 @@ The Get started documentation is available in the README.md for each respective 
 [Desktop Get Started](https://github.com/COMP4350-Team2/Desktop-WebApp#requirements)  
 [Mobile Get Started](https://github.com/COMP4350-Team2/Mobile-Webapp#prerequisites)  
 
-## Sequence Diagram
+## Sequence Diagrams
 
 ### Login/Registration
 ![Login/Registration sequence diagram](/docs/images/sprint_1/login_registration_sequence_diagram.png)
