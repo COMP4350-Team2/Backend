@@ -34,6 +34,8 @@ AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 
 # Test payload
+VALID_PAYLOAD_TYPE = 'valid'
+INVALID_PAYLOAD_TYPE = 'invalid'
 TEST_KEY = os.getenv('TEST_KEY')
 TEST_VALID_TOKEN_PAYLOAD = {
     "iss": 'https://{}/'.format(AUTH0_DOMAIN),
@@ -47,9 +49,20 @@ TEST_VALID_TOKEN_PAYLOAD = {
     "permissions": [],
     "https://cupboard-teacup.com/email": "testing@cupboard.com",
 }
+TEST_INVALID_TOKEN_PAYLOAD = {
+    "iss": 'https://{}/'.format(AUTH0_DOMAIN),
+    "sub": "CupboardTest@clients",
+    "aud": AUTH0_API_IDENTIFIER,
+    "iat": time(),
+    "exp": time() + 3600,
+    "azp": "mK3brgMY0GIMox40xKWcUZBbv2Xs0YdG",
+    "scope": "read:messages",
+    "gty": "client-credentials",
+    "permissions": [],
+}
 
 
-def get_test_access_token() -> str:
+def get_test_access_token(token_type: str) -> str:
     """
     Gets the access_token to run the tests using simple encryption for
     mock/test payloads.
@@ -58,7 +71,11 @@ def get_test_access_token() -> str:
         Access_token for the test payload or mock payload depending on DEV_LAYER
         environment variable.
     """
-    return jwt.encode(TEST_VALID_TOKEN_PAYLOAD, TEST_KEY, algorithm='HS256')
+    if token_type == VALID_PAYLOAD_TYPE:
+        access_token = jwt.encode(TEST_VALID_TOKEN_PAYLOAD, TEST_KEY, algorithm='HS256')
+    else:
+        access_token = jwt.encode(TEST_INVALID_TOKEN_PAYLOAD, TEST_KEY, algorithm='HS256')
+    return access_token
 
 
 # DB Tests
@@ -316,7 +333,7 @@ class PrivateMessageApi(TestCase):
         """
         response = self.client.get(
             reverse('private'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token())
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
         )
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(
@@ -354,7 +371,7 @@ class PrivateScopedMessageApi(TestCase):
         """
         response = self.client.get(
             reverse('private_scoped'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token())
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
         )
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(
@@ -384,7 +401,7 @@ class GetAllIngredientsApi(TestCase):
         """
         response = self.client.get(
             reverse('get_all_ingredients'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token())
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
         )
 
         self.assertEqual(response.status_code, 200)
@@ -425,7 +442,7 @@ class CreateUser(TestCase):
         """
         response = self.client.post(
             reverse('create_user'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token())
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
         )
 
         self.assertEqual(response.status_code, 200)
@@ -438,7 +455,7 @@ class CreateUser(TestCase):
 
         response = self.client.post(
             reverse('create_user'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token())
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
         )
 
         self.assertEqual(response.status_code, 200)
@@ -446,5 +463,22 @@ class CreateUser(TestCase):
             response.json(),
             {
                 'message': EXISTS_MSG
+            }
+        )
+
+    def test_create_user_api_without_email_token_returns_500(self):
+        """
+        Testing the create user api with a valid token that does not contain email.
+        """
+        response = self.client.post(
+            reverse('create_user'),
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(INVALID_PAYLOAD_TYPE))
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': 'Username or email missing. Unable to create new user.'
             }
         )
