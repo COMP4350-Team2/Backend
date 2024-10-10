@@ -30,13 +30,22 @@ The API documentation is available at the bottom in the backend README.md.
 
 ## Testing Plan
 
-Add testing plan description
+### During Development
+Every time a refactor or change is made, developers are to test the code they added. Developers run the tests in a local environment. For the backend, the team chose to run the integration and unit tests. For the front end, manual acceptance tests are to be run for the feature being worked on. All this must be done before making a Pull Request (PR) to main.
 
+### During Code Review
+Reviewers should check out the branch and must run the app in their local environment to perform sanity checks and run tests locally. Manual tests should be run for front ends. Reviewers are also to check for test coverage and suggest any blind spots.
 
+### After Merging with Main
+Continuous Integration (CI) handles testing when a PR is made to the main branch. The backend CI runs the integration and unit tests. All tests must pass before PR is accepted. The frontend CIs attempt to build the code. Code must be built successfully before PR is accepted. After the branch is merged, the developer that made the PR must check the main branch runs.
 
+### Test Coverage
+The team chose to run all tests at every step. The frontends perform manual acceptance tests for the feature being implemented. The backend runs all integration tests and acceptance tests at every turn. Due to the limited functionality of the app in this sprint, the team decided to run all tests with caution. Furthermore, the team did not deem unit tests for the frontends and load tests for the backend necessary because of the limited scope of this sprint. However, the layering is made so that these tests can be easily added in the future as needed.  
 
-
-
+In the backend, we aimed for the following test coverage: 
+- 100% method coverage for API layer (views.py)
+- At least 80% line coverage for logic layer (views.py and queries.py) 
+- The integration tests perform 100% class coverage (all classes have at least 1 line of code tested) 
 
 ### Unit/Integration/Acceptance Test
 #### **Backend**:
