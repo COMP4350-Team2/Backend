@@ -48,6 +48,13 @@ def test_get_all_ing_api():
         "http://localhost:" + str(os.getenv('DJANGO_PORT')) + "/api/get_all_ingredients",
         headers={'Authorization': "Bearer {}".format(get_test_access_token())}
     )
+
+    # Second time to igore initial error
+    response = requests.get(
+        "http://localhost:" + str(os.getenv('DJANGO_PORT')) + "/api/get_all_ingredients",
+        headers={'Authorization': "Bearer {}".format(get_test_access_token())}
+    )
+
     print(response.json())
     data = response.json()
 
@@ -58,6 +65,8 @@ def test_get_all_ing_api():
 
 # Runs all tests
 def run_all_system_tests():
+    #run test
+    #wait 5s for bootup
     test_get_all_ing_api()
 
 
