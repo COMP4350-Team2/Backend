@@ -20,14 +20,14 @@ Mobile Frontend
 
 
 ## Get Started Documentation
-The Get started documentation is available in the README.md for each respective repository:
+The Get started documentation is available in the README.md for each respective repository:  
 [Backend Get Started](https://github.com/COMP4350-Team2/Backend?tab=readme-ov-file#prerequisites)  
 [Desktop Get Started](https://github.com/COMP4350-Team2/Desktop-WebApp#requirements)  
 [Mobile Get Started](https://github.com/COMP4350-Team2/Mobile-Webapp#prerequisites)  
 
 ## Sequence Diagram
 
-Add Sequence Diagrams
+Sequence Diagrams
 
 
 
@@ -43,7 +43,7 @@ The API documentation is available at the bottom in the backend README.md.
 ## Testing Plan
 
 ### Unit/Integration/Acceptance Test
-#### Backend
+#### **Backend**:
 Code and Line Coverage:
 ![Code and Line Coverage Image](/docs/sprint_1_coverage.png)
 - Our APIs are in the `views.py` and it doesn’t have 100% coverage because: 
@@ -51,7 +51,7 @@ Code and Line Coverage:
   - Note: the test for create_user api for the case when email is not available in the payload was added later in the day on October 9, 2024. [Link to pull request](https://github.com/COMP4350-Team2/Backend/pull/13)
 - Our logic code is in the `queries.py` and the `views.py` both of which have over 80% coverage 
 - Our Integration tests are with the APIs in the `views.py` as mentioned above
-#### Frontend
+#### **Frontend**:
 For this sprint, the team’s primary focus (as per the client’s expectations) was to implement Authorization, Authentication, and Accounting (AAA). With that implemented (using Auth0), the team only had the capacity to finish a part of one of their features. As a result, there were a total of two methods (in both frontends) that had logic. Both of these methods exist only in the Backend/Services classes that are used to fetch responses from our API endpoints. The two methods are as follows:
 - **User Creation**
 
