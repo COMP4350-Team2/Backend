@@ -8,15 +8,7 @@ Our team issue tracking is available in Linear. Please see UMLearn submission fo
 
 ## Architecture Diagram
 
-Add architecture diagram
-
-
-
-
-
-
-
-
+![Architecture Diagram](/docs/images/sprint_1/Sprint_1_Architecture.jpg)
 
 ## Get Started Documentation
 The Get started documentation is available in the README.md for each respective repository:  
