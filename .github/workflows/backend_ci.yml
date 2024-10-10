@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main 
+          ref: Jethro/Com-108/api_sys_test
       - run: python -m venv testVenv && echo "$env_file" > ".env" && source testVenv/bin/activate && pip install -r requirements.txt && pip install pyopenssl --upgrade && pip install --force-reinstall -v "cryptography==42.0.0" && python manage.py test
       - run: echo ls
       - run: source testVenv/bin/activate && python manage.py runserver & sleep 5 && ls && python sysTests.py
