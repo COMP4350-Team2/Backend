@@ -38,7 +38,7 @@ The API documentation is available at the bottom in the backend README.md.
 
 ### During Development
 
-Every time a refactor or change is made, developers are to test the code they added. Developers run the tests in a local environment. For the backend, the team chose to run the integration and unit tests. For the front end, manual acceptance tests are to be run for the feature being worked on. All this must be done before making a Pull Request (PR) to main.
+Every time a refactor or change is made, developers are to test the code they added. Developers run the tests in a local environment. For the backend, the team chose to run the integration and unit tests. For the frontend, manual acceptance tests are to be run for the feature being worked on. All this must be done before making a Pull Request (PR) to main.
 
 ### During Code Review
 
@@ -54,9 +54,9 @@ The team chose to run all tests at every step. The frontends perform manual acce
 
 In the backend, we aimed for the following test coverage:
 
-- 100% method coverage for API layer (views.py)
-- At least 80% line coverage for logic layer (views.py and queries.py)
-- The integration tests perform 100% class coverage (all classes have at least 1 line of code tested)
+- 100% method coverage for API layer. (views.py)
+- At least 80% line coverage for logic layer. (views.py and queries.py)
+- The integration tests perform 100% class coverage. (all classes have at least 1 line of code tested)
 
 ### Unit/Integration/Acceptance Test
 
@@ -66,10 +66,10 @@ Code and Line Coverage:
 ![Code and Line Coverage Image](/docs/images/sprint_1/sprint_1_coverage.png)
 
 - Our APIs are in the `views.py` and it doesn’t have 100% coverage because:
-  - Line 41 is a validator and that is already tested in the `tests.py` via the public, private, and private-scoped class tests
+  - Line 41 is a validator and that is already tested in the `tests.py` via the public, private, and private-scoped class tests.
   - Note: the test for create_user api for the case when email is not available in the payload was added later in the day on October 9, 2024. [Link to pull request](https://github.com/COMP4350-Team2/Backend/pull/13)
-- Our logic code is in the `queries.py` and the `views.py` both of which have over 80% coverage
-- Our Integration tests are with the APIs in the `views.py` as mentioned above
+- Our logic code is in the `queries.py` and the `views.py` both of which have over 80% coverage.
+- Our Integration tests are with the APIs in the `views.py` as mentioned above.
 
 #### **Frontend**:
 
@@ -83,7 +83,7 @@ For this sprint, the team’s primary focus (as per the client’s expectations)
 
   This method, as above, fetches a response from our API endpoint (localhost:6060/api/get_all_ingredients) which includes all the ingredients made available to the user. This method, as above, is tested in the back-end and therefore the team did not explicitly test it in the front-end.
 
-However, the team instead decided to follow the acceptance criteria for the User Stories the team was able to finish (present in both the front-ends’ README) and simulated (with instructions) the acceptance criteria. The expected behavior is also stated in the READMEs.
+However, the team instead decided to follow the acceptance criteria for the User Stories the team was able to finish (present in both the frontends’ README) and simulated (with instructions) the acceptance criteria. The expected behavior is also stated in the READMEs.
 
 ### Testing importance
 
