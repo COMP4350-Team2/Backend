@@ -113,7 +113,7 @@ For the acceptance testing and their related user story, please look at the acce
 
 ## Reproducible environments
 
-Team Cupboard (Team 2) tested the development environment to Team 3
+Team Cupboard (Team 2) tested the development environment of Team 3.
 
 #### **Build app**:
 
@@ -124,24 +124,24 @@ The instructions for building the apps varied in clarity.
   ![Docker compose error](/docs/images/sprint_1/docker-compose-error-1.png)
   ![Docker compose error](/docs/images/sprint_1/docker-compose-error-2.png)
 
-- Webapp: The instructions for the web app were detailed and coherent, making it easy to follow. The UI functions smoothly, and any errors—like server disconnections—are handled gracefully with informative error messages.
+- Webapp: The instructions for the web app were detailed and coherent, making it easy to follow. The UI functions smoothly, and any errors (i.e. server disconnections) are handled gracefully with informative error messages.
 
   ![Webapp](/docs/images/sprint_1/webapp-1.png)
   ![Webapp](/docs/images/sprint_1/webapp-2.png)
 
-- Android app: There were no specific instructions for starting the Android app, leading to confusion during the device configuration and startup process. The app built and started successfully; however, it couldn't run beyond the account registeration page, and unexpectedly exited. We didn't see any errors reported.
+- Android app: There were no specific instructions for starting the Android app, leading to confusion during the device configuration and startup process. The app built and started successfully however, it couldn't run beyond the account registeration page, and unexpectedly exited. We didn't see any errors reported.
 
   ![Android app](/docs/images/sprint_1/android-1.png)
 
-#### **Test apps**
+#### **Testing apps**
 
-Not all tests could be executed; however, those that ran were successful.
+Not all tests could be executed however, those that ran were successful.
 
-- Backend: The instructions for the required software were lacked. All unit tests passed, and we were unable to run integration tests due to the Docker build failure mentioned above.
+- Backend: The instructions for the required software were lacking. All unit tests passed, but we were unable to run integration tests due to the Docker build failure mentioned above.
 
   ![Webapp test](/docs/images/sprint_1/backend-unittest.png)
 
-- Webapp: All unit tests passed (100%), but we could not initiate the integration tests. Error is captured bellow:
+- Webapp: All unit tests passed (100%), but we could not initiate the integration tests. Error is captured below:
 
   ![Webapp test](/docs/images/sprint_1/webapp-unittest.png)
   ![Webapp test](/docs/images/sprint_1/webapp-integrationtest.png)
@@ -150,4 +150,4 @@ Not all tests could be executed; however, those that ran were successful.
 
 #### **Summary of Issues**
 
-There were a few issues as listed detailedly in each step above.
+There were a few issues as listed detailedly in above.
