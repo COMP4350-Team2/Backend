@@ -167,7 +167,7 @@ We aim to provide a response time of less than 1 second to 100 users concurrentl
 
 ## Initial Architecture
 ### Diagram:
-![Diagram](/docs/COMP4350_Architecture.jpg)
+![Diagram](/docs/images/sprint_0/COMP4350_Architecture.jpg)
 
 ### Architecture Rationale
 Team Teacup decided upon a 3-tier architecture by dividing the codespaces and flow into *UI*, *Logic* and *Data* layers. The 3-tier architecture is familiar to the team and is well-suited for the project. A large part of the project involves create, read, update, and delete (CRUD) operations being done on items in the data layer. This means the 3-tier architecture would be convenient to work with. Although the diagram shows a single instance of the *API Server* in the *Logic* layer, the technology used (*AWS Elastic Beanstalk*) allows automatic scaling in response to a large request volume. This service allows our logic layer to be simplified as shown. Similarly, a relational database management system service (*Microsoft Azure*) is used because it provides automatic *horizontal and vertical scaling* in response to incoming requests. The team will likely use a *horizontal scaling* approach to the database since the team values response time over consistency. That is, users will see *eventual consistency* on their interfaces. User login and authentication will be delegated by the *API Server* to *Auth0*. *Auth0* provides excellent scaling and is compatible with many interfaces and technologies. We chose the two front ends in the *UI* layer to be desktop and mobile since this software is to be used inside and outside the house. 
