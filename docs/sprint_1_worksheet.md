@@ -115,9 +115,9 @@ For the acceptance testing and their related user story, please look at the acce
 
 Team Cupboard (Team 2) tested the development environment to Team 3
 
-1. Build apps:
+#### **Build app**:
 
-   The instructions for building the apps varied in clarity.
+The instructions for building the apps varied in clarity.
 
 - Backend: The prerequisites, such as Docker, are recommended to be explicitly listed. While the instructions were straightforward once the tools were set up, we encountered an issue with building the Docker container, resulting in the following error:
 
@@ -133,9 +133,9 @@ Team Cupboard (Team 2) tested the development environment to Team 3
 
   ![Android app](/docs/images/sprint_1/android-1.png)
 
-2. Test apps:
+#### **Test apps**
 
-   Not all tests could be executed; however, those that ran were successful.
+Not all tests could be executed; however, those that ran were successful.
 
 - Backend: The instructions for the required software were lacked. All unit tests passed, and we were unable to run integration tests due to the Docker build failure mentioned above.
 
@@ -148,6 +148,6 @@ Team Cupboard (Team 2) tested the development environment to Team 3
 
 - Android app: No tests were found in the Android project, and there were no instructions provided for running tests.
 
-3. Summary of Issues:
+#### **Summary of Issues**
 
-   There were a few issues as listed detailedly in each step above.
+There were a few issues as listed detailedly in each step above.
