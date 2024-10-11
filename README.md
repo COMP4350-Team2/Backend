@@ -5,8 +5,8 @@
 - **Language:** python
 - **Platform:** AWS Elastic Beanstalk
 ### Database
-- **Engine:** PostgreSQL
-- **Platform:** MS Azure
+- **Engine:** Djongo
+- **Platform:** Mongo Atlas
 ### Authentication
 - **Platform:** Auth0
 
@@ -15,28 +15,48 @@
 [Link to Mobile Webapp](https://github.com/COMP4350-Team2/Mobile-WebApp)
 
 ## Prerequisites
+Have python version >= 3.12 and < 3.12.13 installed on machine
+
 Install all the requirements by running:
 `pip install -r requirements.txt`
 
 ## Environment Variables Instructions
 - Download `SAMPLE.env` and rename it to `.env`. 
-- Enter the required details.
+- Enter the required details. (Contact a member of the dev team for a copy of the proper file)
 
 ## Run
-Once all the Prerequsites and Dependencies are installed and the environment variables are set, run the following to apply all changes to the db:
-`python manage.py migrate`
-
-Then run the following to run the Django server on the specified PORT in the `.env` file.
+Run the following to run the Django server on the specified PORT in the `.env` file.
 `python manage.py runserver`
 
-## API Usage
+The previous is for running a locally hosted instance, for running in production on a hosted server in aws or elsewhere are required (not applicable for current development).
+
+## Cupboard API Usage
+
+### Get all ingredients
+```http
 GET /api/get_all_ingredients
-
+```
 Header parameters:
-   key-name: value format ????
+- HTTP_AUTHORIZATION: "Bearer [auth0 token]"
+  - Replace [auth0 token] with access token provided after user completes Auth0 login
 
-Body: What's required? Possibly we only have GET requests now so there won't be body yet
+Success Response:
+```
+{
+   "result": [
+      {
+         "name":"ingredient_1"
+         "type":"ingredient_type"
+      },
+      {
+         "name":"ingredient_2"
+         "type":"ingredint_type2"
+      }
+   ]
+}
+```
 
+<<<<<<< HEAD
 Respond Body: #if json, preferably json :giggle_giggle, face_with_hand_over_mouth:
    {
       "result":[
@@ -81,3 +101,25 @@ the item can be found in the db
        'ingredient':[True or False],
        'unit':[True or False]
     }
+=======
+### Create user
+```http
+POST /api/create_user
+```
+Header parameters:
+- HTTP_AUTHORIZATION: "Bearer [auth0 token]"
+  - Replace [auth0 token] with access token provided after user completes Auth0 login
+
+Success Response:
+```
+{
+   "result": "Item created successfully."
+}
+```
+Or
+```
+{
+   "result": "Item already exists."
+}
+```
+>>>>>>> ae7daf6a291682f35df22f730c210209647d304b
