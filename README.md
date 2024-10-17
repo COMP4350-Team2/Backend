@@ -56,52 +56,6 @@ Success Response:
 }
 ```
 
-<<<<<<< HEAD
-Respond Body: #if json, preferably json :giggle_giggle, face_with_hand_over_mouth:
-   {
-      "result":[
-        {
-            "name":"ingredient_1"
-            "type":"ingredient_type"
-        },
-        {
-            "name":"ingredient_2"
-            "type":"ingredint_type2"
-        }
-      ]
-   }
-
-POST /api/add_ingredient
-
-Header parameters:
-   key-name: value format ????
-
-Body:
-    {
-        'username':'testUser',
-        'listName':'testList',
-        'ingredient':'testIngredient',
-        'amount':'20',
-        'unit':'testUnit' 
-    }
-
-Respond Body: #if json, preferably json :giggle_giggle, face_with_hand_over_mouth:
-Output Format for success:
-    {
-       "result":"success",
-    }
-
-Output Format for failure
-each of the entries after "result" is either True or False depending of if
-the item can be found in the db
-    {
-       "result":"failure",
-       'username':[True or False],
-       'listName':[True or False],
-       'ingredient':[True or False],
-       'unit':[True or False]
-    }
-=======
 ### Create user
 ```http
 POST /api/create_user
@@ -122,4 +76,3 @@ Or
    "result": "Item already exists."
 }
 ```
->>>>>>> ae7daf6a291682f35df22f730c210209647d304b

@@ -168,3 +168,44 @@ def create_user(request: Request) -> JsonResponse:
         status = 500
 
     return JsonResponse(dict(message=response), status=status)
+
+@api_view(['POST'])
+@require_auth(None)
+def get_all_ingredients(request: Request) -> JsonResponse:
+    """
+    Gets all possible ingredients in db
+
+    Args:
+        request: The rest framework Request object with access token
+
+    Returns:
+        A json object with the ingredients as a result.
+        Output Format:
+        {
+            "result": [
+                {
+                    "name":"ingredient_1"
+                    "type":"ingredient_type"
+                },
+                {
+                    "name":"ingredient_2"
+                    "type":"ingredint_type2"
+                }
+            ]
+        }
+    """
+
+    body = json.loads(request.body)
+    body['']
+    # Runs the query for getting all ingredients
+    all_ingredients = queries_get_all_ingredients()
+    converted_ingredients = []
+    for ing in all_ingredients:
+        converted_ingredients.append(json.loads(str(ing)))
+    return JsonResponse(
+        {
+            'result': (
+                converted_ingredients
+            )
+        }
+    )
