@@ -4,7 +4,8 @@ from cupboard_app.models import (
     Ingredient,
     ListName,
     Measurement,
-    User
+    User,
+    UserListIngredients
 )
 
 CREATE_SUCCESS_MSG = 'Item created successfully.'
@@ -267,3 +268,25 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
         }
 
     return ingredient_dict
+
+def get_user_lists_ingredients(username: str, id: int = None) -> QuerySet:
+    """
+    Gets all lists for the specific user from the database.
+
+    Args:
+        username: User's username
+        id: User ID
+
+    Returns:
+        QuerySet of all the lists for the specific user.
+    """
+    if id:
+        result = UserListIngredients.objects.filter(
+            user__id=id
+        )
+    else:
+        result = UserListIngredients.objects.filter(
+            user__username=username
+        )
+
+    return result
