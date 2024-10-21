@@ -269,6 +269,7 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
 
     return ingredient_dict
 
+
 def get_user_lists_ingredients(username: str, id: int = None) -> QuerySet:
     """
     Gets all lists for the specific user from the database.
@@ -290,6 +291,7 @@ def get_user_lists_ingredients(username: str, id: int = None) -> QuerySet:
         )
 
     return result
+
 
 def update_list_ingredient(
     username: str,
@@ -340,9 +342,10 @@ def update_list_ingredient(
                 else:
                     # ingredient exists so update ingredient
                     for i in user_list.ingredients:
-                        # if unit is the same just change amount, if unit is different create new ingredient
+                        # if unit is the same just change amount
                         if i['ingredientId'] == search_id and i['unitId'] == unit_id:
                             i['amount'] = amount
+                        # if unit is different create new ingredient
                         elif i['ingredientId'] == search_id and i['unitId'] != unit_id:
                             user_list.ingredients.append(list_ingredient)
                 user_list.save()
