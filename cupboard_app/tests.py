@@ -50,15 +50,8 @@ TEST_VALID_TOKEN_PAYLOAD = {
     "https://cupboard-teacup.com/email": "testing@cupboard.com",
 }
 TEST_INVALID_TOKEN_PAYLOAD = {
-    "iss": 'https://{}/'.format(AUTH0_DOMAIN),
-    "sub": "CupboardTest@clients",
-    "aud": AUTH0_API_IDENTIFIER,
-    "iat": time(),
-    "exp": time() + 3600,
-    "azp": "mK3brgMY0GIMox40xKWcUZBbv2Xs0YdG",
-    "scope": "read:messages",
-    "gty": "client-credentials",
-    "permissions": [],
+    **TEST_VALID_TOKEN_PAYLOAD,
+    "https://cupboard-teacup.com/email": None,
 }
 
 

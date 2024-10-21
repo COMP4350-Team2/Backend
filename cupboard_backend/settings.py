@@ -13,8 +13,6 @@ import os
 from pathlib import Path
 
 import dns.resolver
-from pymongo.server_api import ServerApi
-from pymongo import MongoClient
 
 # Avoids reading /etc/resolv.conf and uses Google's public DNS server
 dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
@@ -24,6 +22,9 @@ dns.resolver.default_resolver.nameservers = ['8.8.8.8']
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Initialize environment variables
+DB_NAME = os.getenv('DB_NAME')
+DB_TEST_NAME = os.getenv('DB_TEST_NAME')
+MONGO_URL = os.getenv('MONGO_URL')
 REACT_CLIENT_ORIGIN_URL = os.getenv('REACT_CLIENT_ORIGIN_URL')
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if os.getenv('DEBUG_ENABLE') == 'false':
@@ -31,21 +32,10 @@ if os.getenv('DEBUG_ENABLE') == 'false':
 else:
     DEBUG = True
 
-# Get uri from environment, create client
-db_name = os.getenv('DB_NAME')
-db_test_name = os.getenv('DB_TEST_NAME')
-uri = os.getenv('MONGO_URL')
-client = MongoClient(uri, server_api=ServerApi('1'))
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 ALLOWED_HOSTS = ['*']
-
-
-CORS_ALLOWED_ORIGINS = [
-    REACT_CLIENT_ORIGIN_URL,
-]
 
 
 # Application definition
@@ -99,13 +89,13 @@ WSGI_APPLICATION = 'cupboard_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': db_name,
+        'NAME': DB_NAME,
         'CLIENT': {
-            'host': uri,
+            'host': MONGO_URL,
         },
         'ENFORCE_SCHEMA': False,
         'TEST': {
-            'NAME': db_test_name,
+            'NAME': DB_TEST_NAME,
         },
     }
 }
@@ -151,3 +141,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+CORS_ALLOWED_ORIGINS = [
+    REACT_CLIENT_ORIGIN_URL,
+]
