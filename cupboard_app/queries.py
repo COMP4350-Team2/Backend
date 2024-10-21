@@ -340,9 +340,11 @@ def update_list_ingredient(
                 else:
                     # ingredient exists so update ingredient
                     for i in user_list.ingredients:
-                        if i['ingredientId'] == search_id:
+                        # if unit is the same just change amount, if unit is different create new ingredient
+                        if i['ingredientId'] == search_id and i['unitId'] == unit_id:
                             i['amount'] = amount
-                            i['unitId'] = unit_id
+                        elif i['ingredientId'] == search_id and i['unitId'] != unit_id:
+                            user_list.ingredients.append(list_ingredient)
                 user_list.save()
                 result = UPDATE_SUCCESS_MSG
             else:
