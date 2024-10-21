@@ -22,6 +22,8 @@ dns.resolver.default_resolver.nameservers = ['8.8.8.8']
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Initialize environment variables
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 DB_NAME = os.getenv('DB_NAME')
 DB_TEST_NAME = os.getenv('DB_TEST_NAME')
 MONGO_URL = os.getenv('MONGO_URL')
@@ -48,6 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'rest_framework',
+    'rest_framework_simplejwt',
     'cupboard_app',
 ]
 
@@ -146,3 +150,28 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     REACT_CLIENT_ORIGIN_URL,
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTTokenUserAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'EXCEPTION_HANDLER': 'cupboard_app.views.api_exception_handler',
+}
+
+
+SIMPLE_JWT = {
+    'ALGORITHM': 'RS256',
+    'AUDIENCE': AUTH0_API_IDENTIFIER,
+    'ISSUER': f'https://{AUTH0_DOMAIN}/',
+    'JWK_URL': f'https://{AUTH0_DOMAIN}/.well-known/jwks.json',
+    'USER_ID_CLAIM': 'sub',
+    'JTI_CLAIM': None,
+    'TOKEN_TYPE_CLAIM': None,
+}
