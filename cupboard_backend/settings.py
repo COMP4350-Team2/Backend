@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'drf_spectacular',
     'rest_framework',
     'rest_framework_simplejwt',
     'cupboard_app',
@@ -153,6 +154,7 @@ CORS_ALLOWED_ORIGINS = [
 
 
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTTokenUserAuthentication',
     ],
@@ -174,4 +176,16 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'sub',
     'JTI_CLAIM': None,
     'TOKEN_TYPE_CLAIM': None,
+}
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Cupboard API',
+    'DESCRIPTION': (
+        'The official Cupboard API documentation.'
+        'Cupboard is the ultimate kitchen companion that takes the hassle '
+        'out of meal planning and grocery management!'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
