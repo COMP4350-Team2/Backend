@@ -182,7 +182,7 @@ SIMPLE_JWT = {
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Cupboard API',
     'DESCRIPTION': (
-        'The official Cupboard API documentation.'
+        'The official Cupboard API documentation. '
         'Cupboard is the ultimate kitchen companion that takes the hassle '
         'out of meal planning and grocery management!'
     ),

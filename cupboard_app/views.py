@@ -1,10 +1,10 @@
-import json
-
-from django.http import JsonResponse
+from drf_spectacular.utils import (
+    extend_schema
+)
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.views import exception_handler
+from rest_framework.views import APIView, exception_handler
 
 from utils.api_helper import (
     get_auth_username_from_payload,
@@ -13,13 +13,18 @@ from utils.api_helper import (
 from utils.permissions import (
     HasMessagesPermission
 )
+from cupboard_app.models import Message
 from cupboard_app.queries import (
-    get_all_ingredients as queries_get_all_ingredients,
-    create_user as queries_create_user,
+    get_all_ingredients,
+    create_user
+)
+from cupboard_app.serializers import (
+    MessageSerializer,
+    IngredientSerializer
 )
 
 
-def api_exception_handler(exc, context=None) -> JsonResponse:
+def api_exception_handler(exc, context=None) -> Response:
     """
     API Exception handler.
 
@@ -44,119 +49,113 @@ def api_exception_handler(exc, context=None) -> JsonResponse:
     return response
 
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def public(request: Request) -> JsonResponse:
-    """
-    Example of public api request.
+class PublicMessageAPIView(APIView):
+    permission_classes = [AllowAny]
+    text = "Hello from a public endpoint! You don't need to be authenticated to see this."
 
-    Args:
-        request: The rest framework Request object
-
-    Returns:
-        A json object with the message from public.
-    """
-    response = "Hello from a public endpoint! You don't need to be authenticated to see this."
-    return JsonResponse(dict(message=response))
-
-
-@api_view(['GET'])
-def private(request: Request) -> JsonResponse:
-    """
-    Example of private api request. A valid access token is required to access this route
-
-    Args:
-        request: The rest framework Request object with access token
-
-    Returns:
-        A json object with the message from private.
-    """
-    response = "Hello from a private endpoint! You need to be authenticated to see this."
-    return JsonResponse(dict(message=response))
+    @extend_schema(
+        request=None,
+        responses={
+            200: MessageSerializer,
+            401: MessageSerializer
+        }
+    )
+    def get(self, request: Request) -> Response:
+        """
+        This is an example of a public message API request.
+        """
+        message = Message(message=self.text)
+        serializer = MessageSerializer(message)
+        return Response(serializer.data)
 
 
-@api_view(['GET'])
-@permission_classes([HasMessagesPermission])
-def private_scoped(request: Request) -> JsonResponse:
-    """
-    Example of private-scoped api request. A valid access token and an appropriate scope
-    are required to access this route.
+class PrivateMessageAPIView(APIView):
+    text = "Hello from a private endpoint! You need to be authenticated to see this."
 
-    Args:
-        request: The rest framework Request object with access token containing a scope
-                "read:messages".
+    @extend_schema(
+        request=None,
+        responses={
+            200: MessageSerializer,
+            401: MessageSerializer
+        }
+    )
+    def get(self, request: Request) -> Response:
+        """
+        This is an example of a private message API request.
+        A valid access token is required to access this route.
+        """
+        message = Message(message=self.text)
+        serializer = MessageSerializer(message)
+        return Response(serializer.data)
 
-    Returns:
-        A json object with the message from private-scoped.
-    """
-    response = (
+
+class PrivateScopedMessageAPIView(APIView):
+    permission_classes = [HasMessagesPermission]
+    text = (
         "Hello from a private endpoint! You need to be authenticated "
-        "and have a scope of read:messages to see this."
-    )
-    return JsonResponse(dict(message=response))
-
-
-# API Views - Get requests
-@api_view(['GET'])
-def get_all_ingredients(request: Request) -> JsonResponse:
-    """
-    Gets all possible ingredients in db
-
-    Args:
-        request: The rest framework Request object with access token
-
-    Returns:
-        A json object with the ingredients as a result.
-        Output Format:
-        {
-            "result": [
-                {
-                    "name":"ingredient_1"
-                    "type":"ingredient_type"
-                },
-                {
-                    "name":"ingredient_2"
-                    "type":"ingredint_type2"
-                }
-            ]
-        }
-    """
-    # Runs the query for getting all ingredients
-    all_ingredients = queries_get_all_ingredients()
-    converted_ingredients = []
-    for ing in all_ingredients:
-        converted_ingredients.append(json.loads(str(ing)))
-    return JsonResponse(
-        {
-            'result': (
-                converted_ingredients
-            )
-        }
+        "and have a permission of read:messages to see this."
     )
 
+    @extend_schema(
+        request=None,
+        responses={
+            201: MessageSerializer,
+            401: MessageSerializer
+        }
+    )
+    def get(self, request: Request) -> Response:
+        """
+        This is an example of a private scoped message API request.
+        A valid access token and an appropriate permissions
+        are required to access this route.
+        """
+        message = Message(message=self.text)
+        serializer = MessageSerializer(message)
+        return Response(serializer.data)
 
-# API Views - Post requests
-@api_view(['POST'])
-def create_user(request: Request) -> JsonResponse:
-    """
-    Create a new user in the database based on auth0 user
 
-    Args:
-        request: The rest framework Request object with access token
+class AllIngredientsAPIView(APIView):
+    @extend_schema(
+        request=None,
+        responses={
+            200: IngredientSerializer,
+            401: MessageSerializer
+        }
+    )
+    def get(self, request: Request) -> Response:
+        """
+        Returns a list of all ingredients in database.
+        """
+        all_ingredients = get_all_ingredients()
+        serializer = IngredientSerializer(all_ingredients, many=True)
+        return Response({"result": serializer.data})
 
-    Returns:
-        A json object with the message of the create user result.
-    """
-    # Extract username and email
-    username = get_auth_username_from_payload(request=request)
-    email = get_auth_email_from_payload(request=request)
 
-    if email and username:
-        # Try creating user in the db
-        response = queries_create_user(username=username, email=email)
-        status = 200
-    else:
-        response = 'Username or email missing. Unable to create new user.'
-        status = 500
+class UserAPIView(APIView):
+    @extend_schema(
+        request=None,
+        responses={
+            200: MessageSerializer,
+            401: MessageSerializer,
+            500: MessageSerializer,
+        }
+    )
+    def post(self, request: Request) -> Response:
+        """
+        Create a new user in the database based on Auth0 access token.
+        """
+        # Extract username and email from the access token
+        username = get_auth_username_from_payload(request=request)
+        email = get_auth_email_from_payload(request=request)
 
-    return JsonResponse(dict(message=response), status=status)
+        if email and username:
+            # Try creating user in the db
+            response = create_user(username=username, email=email)
+            status = 200
+        else:
+            response = 'Username or email missing. Unable to create new user.'
+            status = 500
+
+        message = Message(message=response)
+        serializer = MessageSerializer(message)
+        return Response(serializer.data, status=status)

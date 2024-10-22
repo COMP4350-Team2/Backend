@@ -374,7 +374,7 @@ class PrivateScopedMessageApi(TestCase):
             {
                 'message': (
                     'Hello from a private endpoint! '
-                    'You need to be authenticated and have a scope of '
+                    'You need to be authenticated and have a permission of '
                     'read:messages to see this.'
                 )
             }
@@ -419,7 +419,7 @@ class CreateUser(TestCase):
         """
         Testing the create user api without a token
         """
-        response = self.client.post(reverse('create_user'))
+        response = self.client.post(reverse('user'))
         self.assertEqual(response.status_code, 401)
         self.assertDictEqual(
             response.json(), {'message': 'Authentication credentials were not provided.'}
@@ -430,7 +430,7 @@ class CreateUser(TestCase):
         Testing the create user api with a invalid token
         """
         response = self.client.post(
-            reverse('create_user'),
+            reverse('user'),
             HTTP_AUTHORIZATION='Bearer invalid-token'
         )
         self.assertEqual(response.status_code, 401)
@@ -448,7 +448,7 @@ class CreateUser(TestCase):
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
         response = self.client.post(
-            reverse('create_user'),
+            reverse('user'),
             HTTP_AUTHORIZATION="Bearer valid-token"
         )
 
@@ -461,7 +461,7 @@ class CreateUser(TestCase):
         )
 
         response = self.client.post(
-            reverse('create_user'),
+            reverse('user'),
             HTTP_AUTHORIZATION="Bearer valid-token"
         )
 
@@ -481,7 +481,7 @@ class CreateUser(TestCase):
         mock_decode.return_value = TEST_INVALID_TOKEN_PAYLOAD
 
         response = self.client.post(
-            reverse('create_user'),
+            reverse('user'),
             HTTP_AUTHORIZATION="Bearer valid-token"
         )
 
