@@ -13,8 +13,6 @@ import os
 from pathlib import Path
 
 import dns.resolver
-from pymongo.server_api import ServerApi
-from pymongo import MongoClient
 
 # Avoids reading /etc/resolv.conf and uses Google's public DNS server
 dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
@@ -24,6 +22,11 @@ dns.resolver.default_resolver.nameservers = ['8.8.8.8']
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Initialize environment variables
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
+DB_NAME = os.getenv('DB_NAME')
+DB_TEST_NAME = os.getenv('DB_TEST_NAME')
+MONGO_URL = os.getenv('MONGO_URL')
 REACT_CLIENT_ORIGIN_URL = os.getenv('REACT_CLIENT_ORIGIN_URL')
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if os.getenv('DEBUG_ENABLE') == 'false':
@@ -31,21 +34,10 @@ if os.getenv('DEBUG_ENABLE') == 'false':
 else:
     DEBUG = True
 
-# Get uri from environment, create client
-db_name = os.getenv('DB_NAME')
-db_test_name = os.getenv('DB_TEST_NAME')
-uri = os.getenv('MONGO_URL')
-client = MongoClient(uri, server_api=ServerApi('1'))
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 ALLOWED_HOSTS = ['*']
-
-
-CORS_ALLOWED_ORIGINS = [
-    REACT_CLIENT_ORIGIN_URL,
-]
 
 
 # Application definition
@@ -58,6 +50,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'drf_spectacular',
+    'rest_framework',
+    'rest_framework_simplejwt',
     'cupboard_app',
 ]
 
@@ -99,13 +94,13 @@ WSGI_APPLICATION = 'cupboard_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': db_name,
+        'NAME': DB_NAME,
         'CLIENT': {
-            'host': uri,
+            'host': MONGO_URL,
         },
         'ENFORCE_SCHEMA': False,
         'TEST': {
-            'NAME': db_test_name,
+            'NAME': DB_TEST_NAME,
         },
     }
 }
@@ -151,3 +146,46 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+CORS_ALLOWED_ORIGINS = [
+    REACT_CLIENT_ORIGIN_URL,
+]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTTokenUserAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'EXCEPTION_HANDLER': 'cupboard_app.views.api_exception_handler',
+}
+
+
+SIMPLE_JWT = {
+    'ALGORITHM': 'RS256',
+    'AUDIENCE': AUTH0_API_IDENTIFIER,
+    'ISSUER': f'https://{AUTH0_DOMAIN}/',
+    'JWK_URL': f'https://{AUTH0_DOMAIN}/.well-known/jwks.json',
+    'USER_ID_CLAIM': 'sub',
+    'JTI_CLAIM': None,
+    'TOKEN_TYPE_CLAIM': None,
+}
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Cupboard API',
+    'DESCRIPTION': (
+        'The official Cupboard API documentation. '
+        'Cupboard is the ultimate kitchen companion that takes the hassle '
+        'out of meal planning and grocery management!'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}

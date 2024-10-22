@@ -31,48 +31,8 @@ Run the following to run the Django server on the specified PORT in the `.env` f
 The previous is for running a locally hosted instance, for running in production on a hosted server in aws or elsewhere are required (not applicable for current development).
 
 ## Cupboard API Usage
+For the official API documentation, run the backend and go to one of the following links in your browser:  
+Swagger UI: http://localhost:6060/doc/  
+Redoc UI: http://localhost:6060/redoc/
 
-### Get all ingredients
-```http
-GET /api/get_all_ingredients
-```
-Header parameters:
-- HTTP_AUTHORIZATION: "Bearer [auth0 token]"
-  - Replace [auth0 token] with access token provided after user completes Auth0 login
-
-Success Response:
-```
-{
-   "result": [
-      {
-         "name":"ingredient_1"
-         "type":"ingredient_type"
-      },
-      {
-         "name":"ingredient_2"
-         "type":"ingredint_type2"
-      }
-   ]
-}
-```
-
-### Create user
-```http
-POST /api/create_user
-```
-Header parameters:
-- HTTP_AUTHORIZATION: "Bearer [auth0 token]"
-  - Replace [auth0 token] with access token provided after user completes Auth0 login
-
-Success Response:
-```
-{
-   "result": "Item created successfully."
-}
-```
-Or
-```
-{
-   "result": "Item already exists."
-}
-```
+To test the user authentication required endpoints, click the authorize button and put your Auth0 access token.

@@ -43,26 +43,8 @@ def load_env_variables():
     if os.getenv('REACT_CLIENT_ORIGIN_URL') == '' or os.getenv('REACT_CLIENT_ORIGIN_URL') is None:
         os.environ['REACT_CLIENT_ORIGIN_URL'] = 'http://localhost:8080'
 
-    if os.getenv('CUPBOARD_TEST_CLIENT_ID') == '' or os.getenv('CUPBOARD_TEST_CLIENT_ID') is None:
-        os.environ['CUPBOARD_TEST_CLIENT_ID'] = ''
-
-    if (
-        os.getenv('CUPBOARD_TEST_CLIENT_SECRET') == ''
-        or os.getenv('CUPBOARD_TEST_CLIENT_SECRET') is None
-    ):
-        os.environ['CUPBOARD_TEST_CLIENT_SECRET'] = ''
-
-    if os.getenv('DEV_LAYER') == '' or os.getenv('DEV_LAYER') is None:
-        os.environ['DEV_LAYER'] = 'mock'
-
     if os.getenv('DEBUG_ENABLE') == '' or os.getenv('DEBUG_ENABLE') is None:
         os.environ['DEBUG_ENABLE'] = 'true'
-
-    if os.getenv('TEST_RUN') == '' or os.getenv('TEST_RUN') is None:
-        os.environ['TEST_RUN'] = 'true'
-
-    if os.getenv('TEST_KEY') == '' or os.getenv('TEST_KEY') is None:
-        os.environ['TEST_KEY'] = 'cupboard_secret'
 
     if (
         os.getenv('AUTHLIB_INSECURE_TRANSPORT') == ''
