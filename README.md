@@ -31,7 +31,7 @@ Run the following to run the Django server on the specified PORT in the `.env` f
 The previous is for running a locally hosted instance, for running in production on a hosted server in aws or elsewhere are required (not applicable for current development).
 
 ## Cupboard API Usage
-For the official API documentation, run the backend and go to one of the following links in your browser:
+For the official API documentation, run the backend and go to one of the following links in your browser:  
 Swagger UI: http://localhost:6060/doc/  
 Redoc UI: http://localhost:6060/redoc/
 
