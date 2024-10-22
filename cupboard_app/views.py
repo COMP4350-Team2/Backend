@@ -18,6 +18,7 @@ from cupboard_app.utils import (
 )
 from cupboard_app.queries import (
     get_all_ingredients as queries_get_all_ingredients,
+    update_list_ingredient as queries_update_list_ingredient,
     create_user as queries_create_user,
 )
 
@@ -169,43 +170,49 @@ def create_user(request: Request) -> JsonResponse:
 
     return JsonResponse(dict(message=response), status=status)
 
+
 @api_view(['POST'])
 @require_auth(None)
-def get_all_ingredients(request: Request) -> JsonResponse:
+def add_ingredient_to_list(request: Request) -> JsonResponse:
     """
-    Gets all possible ingredients in db
+    adds an ingredient to a list
 
     Args:
-        request: The rest framework Request object with access token
+        request: The rest framework Request post object containing json in the following format
+        {
+            username: [USERNAME],
+            listName: [LISTNAME],
+            ingredient: [INGREDIENT],
+            amount: [AMOUNT/QUANTITY],
+            unit: [MEASURMENT UNIT]
+        }
 
     Returns:
-        A json object with the ingredients as a result.
+        A json object with the result of the operation.
         Output Format:
         {
-            "result": [
-                {
-                    "name":"ingredient_1"
-                    "type":"ingredient_type"
-                },
-                {
-                    "name":"ingredient_2"
-                    "type":"ingredint_type2"
-                }
-            ]
+            "result": [RESULT MSG]
         }
     """
 
     body = json.loads(request.body)
-    body['']
+
+    if(
+        'username' in body
+        and 'listName' in body
+        and 'ingredient' in body
+        and 'amount' in body
+        and 'unit' in body
+    ):
+        result = queries_update_list_ingredient(body['username'], body['listName'], body['ingredient'], body['amount'], body['unit'])
+    else:
+        result = "Required value misssing from sent request, please ensure all items are sent in the following format: {\n  username: [USERNAME],\n  listName: [LISTNAME],\n  ingredient: [INGREDIENT],\n  amount: [AMOUNT/QUANTITY],\n  unit: [MEASURMENT UNIT]\n}"
     # Runs the query for getting all ingredients
-    all_ingredients = queries_get_all_ingredients()
-    converted_ingredients = []
-    for ing in all_ingredients:
-        converted_ingredients.append(json.loads(str(ing)))
+   
     return JsonResponse(
         {
-            'result': (
-                converted_ingredients
-            )
+            'result': result
         }
     )
+
+

@@ -10,7 +10,8 @@ from cupboard_app.models import (
     Ingredient,
     ListName,
     Measurement,
-    User
+    User,
+    UserListIngredients
 )
 from cupboard_app.queries import (
     CREATE_SUCCESS_MSG,
@@ -415,6 +416,44 @@ class GetAllIngredientsApi(TestCase):
             }
         )
 
+class AddIngredientToListApi(TestCase):
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        User.objects.create(username = "testuser", email="test@test.com")
+        ListName.objects.create(listName="testlist")
+        create_ingredient("test_ing", "test_type")
+        create_measurement("test_unit")
+        UserListIngredients.objects.create(user=User.objects.get(username="testuser"), listName=ListName.objects.get(listName="testlist"))
+        Ingredient.objects.create(name="testing2", type="TEST2")
+
+    def test_add_ingredient_to_list(self):
+        """
+        Testing adding an ingredient to an existing list
+        """
+        response = self.client.post(
+            reverse('add_ingredient_to_list'),
+            json.dumps(
+                {
+                    'username': 'testuser',
+                    'listName': 'testlist',
+                    'ingredient': 'test_ing',
+                    'amount': 5,
+                    'unit': 'test_unit'
+                }
+            ),
+            content_type="application/json",
+            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(
+            response.json(),
+            {
+                'result': 'Item updated successfully.'
+            }
+        )
 
 class CreateUser(TestCase):
     def test_create_user_without_token_returns_unauthorized(self):
