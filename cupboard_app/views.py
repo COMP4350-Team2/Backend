@@ -1,5 +1,8 @@
 from drf_spectacular.utils import (
-    extend_schema
+    extend_schema,
+    inline_serializer,
+    OpenApiExample,
+    OpenApiResponse
 )
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -15,12 +18,32 @@ from utils.permissions import (
 )
 from cupboard_app.models import Message
 from cupboard_app.queries import (
+    CREATE_SUCCESS_MSG,
+    EXISTS_MSG,
     get_all_ingredients,
     create_user
 )
 from cupboard_app.serializers import (
     MessageSerializer,
     IngredientSerializer
+)
+
+
+# OpenAPI response types
+auth_failed_response = OpenApiResponse(
+    response=MessageSerializer,
+    examples=[
+        OpenApiExample(
+            name='Authentication not provided',
+            value={"message": "Authentication credentials were not provided."},
+            status_codes=["401"]
+        ),
+        OpenApiExample(
+            name='Invalid token',
+            value={'message': "Given token not valid for any token type"},
+            status_codes=["401"]
+        )
+    ]
 )
 
 
@@ -49,6 +72,7 @@ def api_exception_handler(exc, context=None) -> Response:
     return response
 
 
+@extend_schema(tags=['Messages'])
 class PublicMessageAPIView(APIView):
     permission_classes = [AllowAny]
     text = "Hello from a public endpoint! You don't need to be authenticated to see this."
@@ -56,8 +80,16 @@ class PublicMessageAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: MessageSerializer,
-            401: MessageSerializer
+            200: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Success',
+                        value={'message': text},
+                        status_codes=[200]
+                    )
+                ]
+            )
         }
     )
     def get(self, request: Request) -> Response:
@@ -69,14 +101,24 @@ class PublicMessageAPIView(APIView):
         return Response(serializer.data)
 
 
+@extend_schema(tags=['Messages'])
 class PrivateMessageAPIView(APIView):
     text = "Hello from a private endpoint! You need to be authenticated to see this."
 
     @extend_schema(
         request=None,
         responses={
-            200: MessageSerializer,
-            401: MessageSerializer
+            200: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Success',
+                        value={'message': text},
+                        status_codes=[200]
+                    )
+                ]
+            ),
+            401: auth_failed_response
         }
     )
     def get(self, request: Request) -> Response:
@@ -89,6 +131,7 @@ class PrivateMessageAPIView(APIView):
         return Response(serializer.data)
 
 
+@extend_schema(tags=['Messages'])
 class PrivateScopedMessageAPIView(APIView):
     permission_classes = [HasMessagesPermission]
     text = (
@@ -99,8 +142,17 @@ class PrivateScopedMessageAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            201: MessageSerializer,
-            401: MessageSerializer
+            200: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Success',
+                        value={'message': text},
+                        status_codes=[200]
+                    )
+                ]
+            ),
+            401: auth_failed_response
         }
     )
     def get(self, request: Request) -> Response:
@@ -114,12 +166,37 @@ class PrivateScopedMessageAPIView(APIView):
         return Response(serializer.data)
 
 
+@extend_schema(tags=['Ingredients'])
 class AllIngredientsAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: IngredientSerializer,
-            401: MessageSerializer
+            200: OpenApiResponse(
+                response=inline_serializer(
+                    name='AllIngredientsResponse',
+                    fields={
+                        'result': IngredientSerializer(many=True),
+                    }
+                ),
+                examples=[
+                    OpenApiExample(
+                        name='Success',
+                        value={
+                            "result": [
+                                {
+                                    "name": "ingredient_1",
+                                    "type": "ingredient_type"
+                                },
+                                {
+                                    "name": "ingredient_2",
+                                    "type": "ingredint_type2"
+                                }
+                            ]
+                        }
+                    )
+                ]
+            ),
+            401: auth_failed_response
         }
     )
     def get(self, request: Request) -> Response:
@@ -131,13 +208,37 @@ class AllIngredientsAPIView(APIView):
         return Response({"result": serializer.data})
 
 
+@extend_schema(tags=['User'])
 class UserAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: MessageSerializer,
-            401: MessageSerializer,
-            500: MessageSerializer,
+            200: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='User Created',
+                        value={'message': CREATE_SUCCESS_MSG},
+                        status_codes=[200]
+                    ),
+                    OpenApiExample(
+                        name='User Exists',
+                        value={'message': EXISTS_MSG},
+                        status_codes=[200]
+                    ),
+                ]
+            ),
+            401: auth_failed_response,
+            500: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Unable to create user',
+                        value={'message': 'Username or email missing. Unable to create new user.'},
+                        status_codes=[500]
+                    )
+                ]
+            ),
         }
     )
     def post(self, request: Request) -> Response:
