@@ -336,7 +336,7 @@ def update_list_ingredient(
         unit: The unit of measure for the ingredient
     """
     result = UPDATE_FAILED_MSG
-    if(True):
+    try:
         list_ingredient = create_list_ingredient(
             ingredient=ingredient,
             amount=amount,
@@ -370,8 +370,7 @@ def update_list_ingredient(
                 result = DOES_NOT_EXIST_MSG
         else:
             result = f'{UPDATE_FAILED_MSG} Ingredient does not exist.'
-    #except Exception as e:
-    #    print("Exception Occured: " + str(e))
-    #    result = UPDATE_FAILED_MSG
+    except Exception:
+        result = UPDATE_FAILED_MSG
 
     return result

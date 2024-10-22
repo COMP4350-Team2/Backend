@@ -425,7 +425,7 @@ class AddIngredientToListApi(TestCase):
         ListName.objects.create(listName="testlist")
         create_ingredient("test_ing", "test_type")
         create_measurement("test_unit")
-        UserListIngredients.objects.create(user=User.objects.get(username="testuser"), listName=ListName.objects.get(listName="testlist"))
+        UserListIngredients.objects.create(user=User.objects.get(username="testuser"), listName=ListName.objects.get(listName="testlist"), ingredients=[])
         Ingredient.objects.create(name="testing2", type="TEST2")
 
     def test_add_ingredient_to_list(self):
@@ -448,12 +448,17 @@ class AddIngredientToListApi(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        #ensures correct response given by view response
         self.assertDictEqual(
             response.json(),
             {
                 'result': 'Item updated successfully.'
             }
         )
+        #ensures the item was actually added to the list
+        modifiedList = UserListIngredients.objects.filter( user__username="testuser", listName__listName="testlist").first()
+        self.assertEqual([{'amount': 5, 'ingredientId': 1, 'unitId': 1}],modifiedList.ingredients)
+
 
 class CreateUser(TestCase):
     def test_create_user_without_token_returns_unauthorized(self):
