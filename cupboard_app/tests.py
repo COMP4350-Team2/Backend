@@ -1,10 +1,11 @@
 import os
 import json
 from time import time
+from unittest.mock import patch
 
-import jwt
 from django.test import TestCase
 from rest_framework.reverse import reverse
+from rest_framework_simplejwt.backends import TokenBackend
 
 from cupboard_app.models import (
     Ingredient,
@@ -37,7 +38,6 @@ AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 # Test payload
 VALID_PAYLOAD_TYPE = 'valid'
 INVALID_PAYLOAD_TYPE = 'invalid'
-TEST_KEY = os.getenv('TEST_KEY')
 TEST_VALID_TOKEN_PAYLOAD = {
     "iss": 'https://{}/'.format(AUTH0_DOMAIN),
     "sub": "CupboardTest@clients",
@@ -47,36 +47,13 @@ TEST_VALID_TOKEN_PAYLOAD = {
     "azp": "mK3brgMY0GIMox40xKWcUZBbv2Xs0YdG",
     "scope": "read:messages",
     "gty": "client-credentials",
-    "permissions": [],
+    "permissions": ["read:messages"],
     "https://cupboard-teacup.com/email": "testing@cupboard.com",
 }
 TEST_INVALID_TOKEN_PAYLOAD = {
-    "iss": 'https://{}/'.format(AUTH0_DOMAIN),
-    "sub": "CupboardTest@clients",
-    "aud": AUTH0_API_IDENTIFIER,
-    "iat": time(),
-    "exp": time() + 3600,
-    "azp": "mK3brgMY0GIMox40xKWcUZBbv2Xs0YdG",
-    "scope": "read:messages",
-    "gty": "client-credentials",
-    "permissions": [],
+    **TEST_VALID_TOKEN_PAYLOAD,
+    "https://cupboard-teacup.com/email": None,
 }
-
-
-def get_test_access_token(token_type: str) -> str:
-    """
-    Gets the access_token to run the tests using simple encryption for
-    mock/test payloads.
-
-    Returns:
-        Access_token for the test payload or mock payload depending on DEV_LAYER
-        environment variable.
-    """
-    if token_type == VALID_PAYLOAD_TYPE:
-        access_token = jwt.encode(TEST_VALID_TOKEN_PAYLOAD, TEST_KEY, algorithm='HS256')
-    else:
-        access_token = jwt.encode(TEST_INVALID_TOKEN_PAYLOAD, TEST_KEY, algorithm='HS256')
-    return access_token
 
 
 # DB Tests
@@ -317,6 +294,9 @@ class PrivateMessageApi(TestCase):
         """
         response = self.client.get(reverse('private'))
         self.assertEqual(response.status_code, 401)
+        self.assertDictEqual(
+            response.json(), {'message': 'Authentication credentials were not provided.'}
+        )
 
     def test_private_api_with_invalid_token_returns_unauthorized(self):
         """
@@ -327,14 +307,20 @@ class PrivateMessageApi(TestCase):
             HTTP_AUTHORIZATION='Bearer invalid-token'
         )
         self.assertEqual(response.status_code, 401)
+        self.assertDictEqual(
+            response.json(), {'message': "Given token not valid for any token type"}
+        )
 
-    def test_private_api_with_valid_token_returns_ok(self):
+    @patch.object(TokenBackend, 'decode')
+    def test_private_api_with_valid_token_returns_ok(self, mock_decode):
         """
         Testing the private api with a valid token
         """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
         response = self.client.get(
             reverse('private'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
+            HTTP_AUTHORIZATION="Bearer valid-token"
         )
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(
@@ -355,6 +341,9 @@ class PrivateScopedMessageApi(TestCase):
         """
         response = self.client.get(reverse('private_scoped'))
         self.assertEqual(response.status_code, 401)
+        self.assertDictEqual(
+            response.json(), {'message': 'Authentication credentials were not provided.'}
+        )
 
     def test_private_scoped_api_with_invalid_token_returns_unauthorized(self):
         """
@@ -365,14 +354,20 @@ class PrivateScopedMessageApi(TestCase):
             HTTP_AUTHORIZATION="Bearer invalid-token"
         )
         self.assertEqual(response.status_code, 401)
+        self.assertDictEqual(
+            response.json(), {'message': "Given token not valid for any token type"}
+        )
 
-    def test_private_scoped_api_with_valid_token_returns_ok(self):
+    @patch.object(TokenBackend, 'decode')
+    def test_private_scoped_api_with_valid_token_returns_ok(self, mock_decode):
         """
         Testing the private_scoped api with a valid token
         """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
         response = self.client.get(
             reverse('private_scoped'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
+            HTTP_AUTHORIZATION="Bearer valid-token"
         )
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(
@@ -380,7 +375,7 @@ class PrivateScopedMessageApi(TestCase):
             {
                 'message': (
                     'Hello from a private endpoint! '
-                    'You need to be authenticated and have a scope of '
+                    'You need to be authenticated and have a permission of '
                     'read:messages to see this.'
                 )
             }
@@ -395,14 +390,17 @@ class GetAllIngredientsApi(TestCase):
         Ingredient.objects.create(name="testing", type="TEST")
         Ingredient.objects.create(name="testing2", type="TEST2")
 
-    def test_get_all_ingredients(self):
+    @patch.object(TokenBackend, 'decode')
+    def test_get_all_ingredients(self, mock_decode):
         """
         Testing get_all_ingredients retrieves all the ingredients
         from the database
         """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
         response = self.client.get(
             reverse('get_all_ingredients'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
+            HTTP_AUTHORIZATION="Bearer valid-token"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -428,10 +426,13 @@ class AddIngredientToListApi(TestCase):
         UserListIngredients.objects.create(user=User.objects.get(username="testuser"), listName=ListName.objects.get(listName="testlist"), ingredients=[])
         Ingredient.objects.create(name="testing2", type="TEST2")
 
-    def test_add_ingredient_to_list(self):
+    @patch.object(TokenBackend, 'decode')
+    def test_add_ingredient_to_list(self, mock_decode):
         """
         Testing adding an ingredient to an existing list
         """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
         response = self.client.post(
             reverse('add_ingredient_to_list'),
             json.dumps(
@@ -444,7 +445,7 @@ class AddIngredientToListApi(TestCase):
                 }
             ),
             content_type="application/json",
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
+            HTTP_AUTHORIZATION="Bearer valid-token"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -459,34 +460,110 @@ class AddIngredientToListApi(TestCase):
         modifiedList = UserListIngredients.objects.filter( user__username="testuser", listName__listName="testlist").first()
         self.assertEqual([{'amount': 5, 'ingredientId': 1, 'unitId': 1}],modifiedList.ingredients)
 
+    @patch.object(TokenBackend, 'decode')
+    def test_add_ingredient_to_list_missing_data(self, mock_decode):
+        """
+        Testing adding an ingredient to an existing list when one of the required pieces of information are missing
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse('add_ingredient_to_list'),
+            json.dumps(
+                {
+                    'listName': 'testlist',
+                    'ingredient': 'test_ing',
+                    'amount': 5,
+                    'unit': 'test_unit'
+                }
+            ),
+            content_type="application/json",
+            HTTP_AUTHORIZATION="Bearer valid-token"
+        )
+
+        self.assertEqual(response.status_code, 500)
+        #ensures correct response given by view response
+        self.assertDictEqual(
+            response.json(),
+            {
+                'result': "Required value misssing from sent request, please ensure all items are sent in the following format: {\n  username: [USERNAME],\n  listName: [LISTNAME],\n  ingredient: [INGREDIENT],\n  amount: [AMOUNT/QUANTITY],\n  unit: [MEASURMENT UNIT]\n}"
+            }
+        )
+        #ensures the item was actually added to the list
+        modifiedList = UserListIngredients.objects.filter( user__username="testuser", listName__listName="testlist").first()
+        self.assertEqual([{'amount': 5, 'ingredientId': 1, 'unitId': 1}],modifiedList.ingredients)
+
+    @patch.object(TokenBackend, 'decode')
+    def test_add_ingredient_to_list_incorect_data(self, mock_decode):
+        """
+        Testing adding an ingredient to an existing list with an incorrect value (ie user that does not actually exist)
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse('add_ingredient_to_list'),
+            json.dumps(
+                {
+                    'username': 'testuser',
+                    'listName': 'testlist',
+                    'ingredient': 'test_ing',
+                    'amount': 5,
+                    'unit': 'test_unit'
+                }
+            ),
+            content_type="application/json",
+            HTTP_AUTHORIZATION="Bearer valid-token"
+        )
+
+        self.assertEqual(response.status_code, 500)
+        #ensures correct response given by view response
+        self.assertDictEqual(
+            response.json(),
+            {
+                'result': "Required value misssing from sent request, please ensure all items are sent in the following format: {\n  username: [USERNAME],\n  listName: [LISTNAME],\n  ingredient: [INGREDIENT],\n  amount: [AMOUNT/QUANTITY],\n  unit: [MEASURMENT UNIT]\n}"
+            }
+        )
+        #ensures the item was actually added to the list
+        modifiedList = UserListIngredients.objects.filter( user__username="testuser", listName__listName="testlist").first()
+        self.assertEqual([{'amount': 5, 'ingredientId': 1, 'unitId': 1}],modifiedList.ingredients)
+
 
 class CreateUser(TestCase):
     def test_create_user_without_token_returns_unauthorized(self):
         """
         Testing the create user api without a token
         """
-        response = self.client.post(reverse('create_user'))
+        response = self.client.post(reverse('user'))
         self.assertEqual(response.status_code, 401)
+        self.assertDictEqual(
+            response.json(), {'message': 'Authentication credentials were not provided.'}
+        )
 
     def test_create_user_api_with_invalid_token_returns_unauthorized(self):
         """
         Testing the create user api with a invalid token
         """
         response = self.client.post(
-            reverse('create_user'),
+            reverse('user'),
             HTTP_AUTHORIZATION='Bearer invalid-token'
         )
         self.assertEqual(response.status_code, 401)
+        self.assertDictEqual(
+            response.json(), {'message': "Given token not valid for any token type"}
+        )
 
-    def test_create_user_api_with_valid_token_returns_ok(self):
+    @patch.object(TokenBackend, 'decode')
+    def test_create_user_api_with_valid_token_returns_ok(self, mock_decode):
         """
         Testing the create user api with a valid token.
         We run the same request twice to check response when user already
         exists in the db.
         """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
         response = self.client.post(
-            reverse('create_user'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
+            reverse('user'),
+            HTTP_AUTHORIZATION="Bearer valid-token"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -498,8 +575,8 @@ class CreateUser(TestCase):
         )
 
         response = self.client.post(
-            reverse('create_user'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(VALID_PAYLOAD_TYPE))
+            reverse('user'),
+            HTTP_AUTHORIZATION="Bearer valid-token"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -510,13 +587,16 @@ class CreateUser(TestCase):
             }
         )
 
-    def test_create_user_api_without_email_token_returns_500(self):
+    @patch.object(TokenBackend, 'decode')
+    def test_create_user_api_without_email_token_returns_500(self, mock_decode):
         """
         Testing the create user api with a valid token that does not contain email.
         """
+        mock_decode.return_value = TEST_INVALID_TOKEN_PAYLOAD
+
         response = self.client.post(
-            reverse('create_user'),
-            HTTP_AUTHORIZATION="Bearer {}".format(get_test_access_token(INVALID_PAYLOAD_TYPE))
+            reverse('user'),
+            HTTP_AUTHORIZATION="Bearer valid-token"
         )
 
         self.assertEqual(response.status_code, 500)

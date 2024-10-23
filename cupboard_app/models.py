@@ -3,7 +3,12 @@ import json
 from django.db import models
 
 
-# Create your models here.
+class Message():
+    # Not a database model, object for messages serializer
+    def __init__(self, message=''):
+        self.message = message
+
+
 class Ingredient(models.Model):
     name = models.CharField(max_length=30, unique=True)
     type = models.CharField(max_length=30)
