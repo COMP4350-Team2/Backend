@@ -1,3 +1,4 @@
+import json
 from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
@@ -6,7 +7,6 @@ from drf_spectacular.utils import (
 )
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.jsonresponse import JsonResponse
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView, exception_handler
 
@@ -23,7 +23,10 @@ from cupboard_app.queries import (
     CREATE_SUCCESS_MSG,
     EXISTS_MSG,
     get_all_ingredients,
-    create_user
+    create_user,
+    UPDATE_SUCCESS_MSG,
+    UPDATE_FAILED_MSG,
+    DOES_NOT_EXIST_MSG,
 )
 from cupboard_app.serializers import (
     MessageSerializer,
@@ -170,6 +173,11 @@ class PrivateScopedMessageAPIView(APIView):
 
 @extend_schema(tags=['List_Item'])
 class ListItemAPIView(APIView):
+    missingMsg = "Required value misssing from sent request,"
+    missingMsg += "please ensure all items are sent in the following format:"
+    missingMsg += "{\n  username: [USERNAME],\n  listName: [LISTNAME],\n  ingredient: "
+    missingMsg += "[INGREDIENT],\n  amount: [AMOUNT/QUANTITY],\n  unit: [MEASURMENT UNIT]\n}"
+
     @extend_schema(
         request=None,
         responses={
@@ -177,13 +185,18 @@ class ListItemAPIView(APIView):
                 response=MessageSerializer,
                 examples=[
                     OpenApiExample(
-                        name='Item Added',
+                        name='Item Updated',
                         value={'message': UPDATE_SUCCESS_MSG},
                         status_codes=[200]
                     ),
                     OpenApiExample(
-                        name='User Exists',
-                        value={'message': EXISTS_MSG},
+                        name='Referenced Value Does Not Exist',
+                        value={'message': DOES_NOT_EXIST_MSG},
+                        status_codes=[200]
+                    ),
+                    OpenApiExample(
+                        name='Ingredient Does Not Exist',
+                        value={'message': f'{UPDATE_FAILED_MSG} Ingredient does not exist.'},
                         status_codes=[200]
                     ),
                 ]
@@ -193,15 +206,15 @@ class ListItemAPIView(APIView):
                 response=MessageSerializer,
                 examples=[
                     OpenApiExample(
-                        name='Unable to create user',
-                        value={'message': 'Username or email missing. Unable to create new user.'},
+                        name='Required Value Missing',
+                        value={'message': missingMsg},
                         status_codes=[500]
                     )
                 ]
             ),
         }
     )
-    def post(self, request: Request) -> JsonResponse:
+    def post(self, request: Request) -> Response:
         """
         adds an ingredient to a list
 
@@ -219,29 +232,37 @@ class ListItemAPIView(APIView):
             A json object with the result of the operation.
             Output Format:
             {
-                "result": [RESULT MSG]
+                "message": [RESULT MSG]
             }
         """
-
+        missingMsg = "Required value misssing from sent request,"
+        missingMsg += "please ensure all items are sent in the following format:"
+        missingMsg += "{\n  username: [USERNAME],\n  listName: [LISTNAME],\n  ingredient: "
+        missingMsg += "[INGREDIENT],\n  amount: [AMOUNT/QUANTITY],\n  unit: [MEASURMENT UNIT]\n}"
         body = json.loads(request.body)
 
-        if(
+        if (
             'username' in body
             and 'listName' in body
             and 'ingredient' in body
             and 'amount' in body
             and 'unit' in body
         ):
-            result = update_list_ingredient(body['username'], body['listName'], body['ingredient'], body['amount'], body['unit'])
+            result = update_list_ingredient(
+                body['username'],
+                body['listName'],
+                body['ingredient'],
+                body['amount'],
+                body['unit']
+            )
+            status = 200
         else:
-            result = "Required value misssing from sent request, please ensure all items are sent in the following format: {\n  username: [USERNAME],\n  listName: [LISTNAME],\n  ingredient: [INGREDIENT],\n  amount: [AMOUNT/QUANTITY],\n  unit: [MEASURMENT UNIT]\n}"
-        # Runs the query for getting all ingredients
-    
-        return JsonResponse(
-            {
-                'result': result
-            }
-        )
+            result = missingMsg
+            status = 500
+
+        message = Message(message=result)
+        serializer = MessageSerializer(message)
+        return Response(serializer.data, status=status)
 
 
 @extend_schema(tags=['Ingredients'])
