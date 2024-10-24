@@ -4,7 +4,8 @@ from cupboard_app.models import (
     Ingredient,
     ListName,
     Measurement,
-    User
+    User,
+    UserListIngredients
 )
 
 CREATE_SUCCESS_MSG = 'Item created successfully.'
@@ -267,3 +268,109 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
         }
 
     return ingredient_dict
+
+
+def create_user_list_ingredients(
+    username: str,
+    listName: str,
+    ingredients: list[dict] = []
+) -> str:
+    """
+    Creates a user list in the UserListIngredients dimension table.
+
+    Args:
+        username: User's username
+        listName: List name.
+        ingredient: The array of dictionaries with ingredient information to add.
+
+    Returns:
+        Success message if the save was successful.
+        Fail message or exists message if save was unsuccessful.
+    """
+    result = CREATE_SUCCESS_MSG
+    try:
+        user = get_user(username=username)
+        list = get_list(listName=listName)
+        if user is not None and list is not None:
+            # Check if list exists
+            if UserListIngredients.objects.filter(
+                user__username=username,
+                listName__listName=listName
+            ).exists():
+                result = EXISTS_MSG
+            else:
+                UserListIngredients.objects.create(
+                    user=user,
+                    listName=list,
+                    ingredients=ingredients
+                )
+        else:
+            result = CREATE_FAILED_MSG
+    except Exception:
+        result = CREATE_FAILED_MSG
+
+    return result
+
+
+def update_list_ingredient(
+    username: str,
+    listName: str,
+    ingredient: str,
+    amount: int | float,
+    unit: str
+) -> str:
+    """
+    Updates an ingredient in the user's list.
+
+    If ingredient exists in the user's list, then update the given ingredient's
+    amount and unit in the passed amount and unit.
+
+    If ingredient does not exist in the user's list, then add new ingredient
+    dictionary to user's list.
+
+    Args:
+        username: User's username
+        listName: Name of the list
+        ingredient: Name of the ingredient
+        amount: Quantity of the ingredient
+        unit: The unit of measure for the ingredient
+    """
+    result = UPDATE_FAILED_MSG
+    try:
+        list_ingredient = create_list_ingredient(
+            ingredient=ingredient,
+            amount=amount,
+            unit=unit
+        )
+        if list_ingredient:
+            # Check list exists
+            user_list = UserListIngredients.objects.filter(
+                user__username=username,
+                listName__listName=listName
+            ).first()
+            if user_list:
+                search_id = list_ingredient.get('ingredientId')
+                unit_id = list_ingredient.get('unitId')
+                # Check if ingredient exists
+                if not any(
+                    dictionary.get('ingredientId', None) == search_id
+                    for dictionary in user_list.ingredients
+                ):
+                    # ingredient does not exist so insert
+                    user_list.ingredients.append(list_ingredient)
+                else:
+                    # ingredient exists so update ingredient
+                    for i in user_list.ingredients:
+                        if i['ingredientId'] == search_id:
+                            i['amount'] = amount
+                            i['unitId'] = unit_id
+                user_list.save()
+                result = UPDATE_SUCCESS_MSG
+            else:
+                result = DOES_NOT_EXIST_MSG
+        else:
+            result = f'{UPDATE_FAILED_MSG} Ingredient does not exist.'
+    except Exception:
+        result = UPDATE_FAILED_MSG
+
+    return result

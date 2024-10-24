@@ -11,7 +11,8 @@ from cupboard_app.models import (
     Ingredient,
     ListName,
     Measurement,
-    User
+    User,
+    UserListIngredients
 )
 from cupboard_app.queries import (
     CREATE_SUCCESS_MSG,
@@ -28,7 +29,9 @@ from cupboard_app.queries import (
     create_user,
     get_all_users,
     get_user,
-    create_list_ingredient
+    create_list_ingredient,
+    UPDATE_FAILED_MSG,
+    DOES_NOT_EXIST_MSG
 )
 
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
@@ -412,6 +415,181 @@ class GetAllIngredientsApi(TestCase):
                 ]
             }
         )
+
+
+class AddIngredientToListApi(TestCase):
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        User.objects.create(username="testuser", email="test@test.com")
+        ListName.objects.create(listName="testlist")
+        create_ingredient("test_ing", "test_type")
+        create_measurement("test_unit")
+        UserListIngredients.objects.create(
+            user=User.objects.get(username="testuser"),
+            listName=ListName.objects.get(listName="testlist"),
+            ingredients=[]
+        )
+        Ingredient.objects.create(name="testing2", type="TEST2")
+
+    @patch.object(TokenBackend, 'decode')
+    def test_add_ingredient_to_list(self, mock_decode):
+        """
+        Testing adding an ingredient to an existing list
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse('list_item'),
+            json.dumps(
+                {
+                    'username': 'testuser',
+                    'listName': 'testlist',
+                    'ingredient': 'test_ing',
+                    'amount': 5,
+                    'unit': 'test_unit'
+                }
+            ),
+            content_type="application/json",
+            HTTP_AUTHORIZATION="Bearer valid-token"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        # ensures correct response given by view response
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': 'Item updated successfully.'
+            }
+        )
+        # ensures the item was actually added to the list
+        modifiedList = UserListIngredients.objects.filter(
+            user__username="testuser",
+            listName__listName="testlist"
+        ).first()
+        self.assertEqual(
+            [{'amount': 5, 'ingredientId': 1, 'unitId': 1}],
+            modifiedList.ingredients
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_add_ingredient_to_list_missing_data(self, mock_decode):
+        """
+        Testing adding an ingredient to an existing list when one
+        of the required pieces of information are missing
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse('list_item'),
+            json.dumps(
+                {
+                    'listName': 'testlist',
+                    'ingredient': 'test_ing',
+                    'amount': 5,
+                    'unit': 'test_unit'
+                }
+            ),
+            content_type="application/json",
+            HTTP_AUTHORIZATION="Bearer valid-token"
+        )
+
+        self.assertEqual(response.status_code, 500)
+        # ensures correct response given by view response
+        # msg created to follow flake8 format
+        result = "Required value misssing from sent request,"
+        result += "please ensure all items are sent in the following format:"
+        result += "{\n  username: [USERNAME],\n  listName: [LISTNAME],\n  ingredient: "
+        result += "[INGREDIENT],\n  amount: [AMOUNT/QUANTITY],\n  unit: [MEASURMENT UNIT]\n}"
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': result
+            }
+        )
+
+        # ensures the list items have not been changed
+        modifiedList = UserListIngredients.objects.filter(
+            user__username="testuser",
+            listName__listName="testlist"
+        ).first()
+        self.assertEqual([], modifiedList.ingredients)
+
+    @patch.object(TokenBackend, 'decode')
+    def test_add_ingredient_to_list_incorect_data(self, mock_decode):
+        """
+        Testing adding an ingredient to an existing list with an
+        incorrect value (ie user that does not actually exist)
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse('list_item'),
+            json.dumps(
+                {
+                    'username': 'testuser_invalid',
+                    'listName': 'testlist',
+                    'ingredient': 'test_ing',
+                    'amount': 5,
+                    'unit': 'test_unit'
+                }
+            ),
+            content_type="application/json",
+            HTTP_AUTHORIZATION="Bearer valid-token"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        # ensures correct response given by view response
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': DOES_NOT_EXIST_MSG
+            }
+        )
+        # ensures the list items have not been changed
+        modifiedList = UserListIngredients.objects.filter(
+            user__username="testuser",
+            listName__listName="testlist"
+        ).first()
+        self.assertEqual([], modifiedList.ingredients)
+
+    @patch.object(TokenBackend, 'decode')
+    def test_add_ingredient_to_list_nonexisting_ing(self, mock_decode):
+        """
+        Testing adding an ingredient to an existing list with an ingredient
+        that does not acutally exist
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse('list_item'),
+            json.dumps(
+                {
+                    'username': 'testuser',
+                    'listName': 'testlist',
+                    'ingredient': 'test_ing_fake',
+                    'amount': 5,
+                    'unit': 'test_unit'
+                }
+            ),
+            content_type="application/json",
+            HTTP_AUTHORIZATION="Bearer valid-token"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        # ensures correct response given by view response
+        self.assertDictEqual(
+            response.json(),
+            {
+                'message': f'{UPDATE_FAILED_MSG} Ingredient does not exist.'
+            }
+        )
+        # ensures the list items have not been changed
+        modifiedList = UserListIngredients.objects.filter(
+            user__username="testuser", listName__listName="testlist"
+        ).first()
+        self.assertEqual([], modifiedList.ingredients)
 
 
 class CreateUser(TestCase):
