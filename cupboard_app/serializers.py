@@ -13,6 +13,12 @@ from cupboard_app.models import (
 class MessageSerializer(serializers.Serializer):
     message = serializers.CharField()
 
+class UserListIngredientsSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    listName = serializers.CharField()
+    ingredient = serializers.CharField()
+    amount = serializers.FloatField()
+    unit = serializers.CharField()
 
 class IngredientSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

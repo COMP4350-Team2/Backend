@@ -20,17 +20,18 @@ from utils.permissions import (
 from cupboard_app.models import Message
 from cupboard_app.queries import (
     update_list_ingredient,
-    CREATE_SUCCESS_MSG,
-    EXISTS_MSG,
     get_all_ingredients,
     create_user,
-    UPDATE_SUCCESS_MSG,
-    UPDATE_FAILED_MSG,
+    CREATE_SUCCESS_MSG,
     DOES_NOT_EXIST_MSG,
+    EXISTS_MSG,
+    UPDATE_SUCCESS_MSG,
+    UPDATE_FAILED_MSG
 )
 from cupboard_app.serializers import (
     MessageSerializer,
-    IngredientSerializer
+    IngredientSerializer,
+    UserListIngredientsSerializer
 )
 
 
@@ -171,15 +172,15 @@ class PrivateScopedMessageAPIView(APIView):
         return Response(serializer.data)
 
 
-@extend_schema(tags=['List_Item'])
-class ListItemAPIView(APIView):
-    missingMsg = "Required value misssing from sent request,"
-    missingMsg += "please ensure all items are sent in the following format:"
-    missingMsg += "{\n  username: [USERNAME],\n  listName: [LISTNAME],\n  ingredient: "
-    missingMsg += "[INGREDIENT],\n  amount: [AMOUNT/QUANTITY],\n  unit: [MEASURMENT UNIT]\n}"
-
+@extend_schema(tags=['User_List_Ingredients'])
+class UserListIngredientsAPIView(APIView):
+    missing_msg = "Required value missing from sent request,"
+    missing_msg += "please ensure all items are sent in the following format:"
+    missing_msg += "{username: [USERNAME], listName: [LISTNAME], ingredient: "
+    missing_msg += "[INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}"
+    #Create serializer and add it in reqquest body
     @extend_schema(
-        request=None,
+        request=UserListIngredientsSerializer,
         responses={
             200: OpenApiResponse(
                 response=MessageSerializer,
@@ -207,39 +208,18 @@ class ListItemAPIView(APIView):
                 examples=[
                     OpenApiExample(
                         name='Required Value Missing',
-                        value={'message': missingMsg},
+                        value={'message': missing_msg},
                         status_codes=[500]
                     )
                 ]
             ),
         }
     )
-    def post(self, request: Request) -> Response:
+    def put(self, request: Request) -> Response:
         """
         adds an ingredient to a list
-
-        Args:
-            request: The rest framework Request post object containing json in the following format
-            {
-                username: [USERNAME],
-                listName: [LISTNAME],
-                ingredient: [INGREDIENT],
-                amount: [AMOUNT/QUANTITY],
-                unit: [MEASURMENT UNIT]
-            }
-
-        Returns:
-            A json object with the result of the operation.
-            Output Format:
-            {
-                "message": [RESULT MSG]
-            }
         """
-        missingMsg = "Required value misssing from sent request,"
-        missingMsg += "please ensure all items are sent in the following format:"
-        missingMsg += "{\n  username: [USERNAME],\n  listName: [LISTNAME],\n  ingredient: "
-        missingMsg += "[INGREDIENT],\n  amount: [AMOUNT/QUANTITY],\n  unit: [MEASURMENT UNIT]\n}"
-        body = json.loads(request.body)
+        body = request.data
 
         if (
             'username' in body
@@ -257,7 +237,7 @@ class ListItemAPIView(APIView):
             )
             status = 200
         else:
-            result = missingMsg
+            result = self.missing_msg
             status = 500
 
         message = Message(message=result)

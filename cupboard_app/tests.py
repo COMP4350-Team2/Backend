@@ -15,8 +15,6 @@ from cupboard_app.models import (
     UserListIngredients
 )
 from cupboard_app.queries import (
-    CREATE_SUCCESS_MSG,
-    EXISTS_MSG,
     create_ingredient,
     get_all_ingredients,
     get_ingredient,
@@ -31,7 +29,9 @@ from cupboard_app.queries import (
     get_user,
     create_list_ingredient,
     UPDATE_FAILED_MSG,
-    DOES_NOT_EXIST_MSG
+    DOES_NOT_EXIST_MSG,
+    CREATE_SUCCESS_MSG,
+    EXISTS_MSG
 )
 
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
@@ -440,7 +440,7 @@ class AddIngredientToListApi(TestCase):
         """
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
-        response = self.client.post(
+        response = self.client.put(
             reverse('list_item'),
             json.dumps(
                 {
@@ -464,13 +464,13 @@ class AddIngredientToListApi(TestCase):
             }
         )
         # ensures the item was actually added to the list
-        modifiedList = UserListIngredients.objects.filter(
+        modified_list = UserListIngredients.objects.filter(
             user__username="testuser",
             listName__listName="testlist"
         ).first()
         self.assertEqual(
             [{'amount': 5, 'ingredientId': 1, 'unitId': 1}],
-            modifiedList.ingredients
+            modified_list.ingredients
         )
 
     @patch.object(TokenBackend, 'decode')
@@ -498,10 +498,10 @@ class AddIngredientToListApi(TestCase):
         self.assertEqual(response.status_code, 500)
         # ensures correct response given by view response
         # msg created to follow flake8 format
-        result = "Required value misssing from sent request,"
+        result = "Required value missing from sent request,"
         result += "please ensure all items are sent in the following format:"
-        result += "{\n  username: [USERNAME],\n  listName: [LISTNAME],\n  ingredient: "
-        result += "[INGREDIENT],\n  amount: [AMOUNT/QUANTITY],\n  unit: [MEASURMENT UNIT]\n}"
+        result += "{username: [USERNAME], listName: [LISTNAME], ingredient: "
+        result += "[INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}"
         self.assertDictEqual(
             response.json(),
             {
@@ -510,11 +510,11 @@ class AddIngredientToListApi(TestCase):
         )
 
         # ensures the list items have not been changed
-        modifiedList = UserListIngredients.objects.filter(
+        modified_list = UserListIngredients.objects.filter(
             user__username="testuser",
             listName__listName="testlist"
         ).first()
-        self.assertEqual([], modifiedList.ingredients)
+        self.assertEqual([], modified_list.ingredients)
 
     @patch.object(TokenBackend, 'decode')
     def test_add_ingredient_to_list_incorect_data(self, mock_decode):
@@ -548,11 +548,11 @@ class AddIngredientToListApi(TestCase):
             }
         )
         # ensures the list items have not been changed
-        modifiedList = UserListIngredients.objects.filter(
+        modified_list = UserListIngredients.objects.filter(
             user__username="testuser",
             listName__listName="testlist"
         ).first()
-        self.assertEqual([], modifiedList.ingredients)
+        self.assertEqual([], modified_list.ingredients)
 
     @patch.object(TokenBackend, 'decode')
     def test_add_ingredient_to_list_nonexisting_ing(self, mock_decode):
@@ -586,10 +586,10 @@ class AddIngredientToListApi(TestCase):
             }
         )
         # ensures the list items have not been changed
-        modifiedList = UserListIngredients.objects.filter(
+        modified_list = UserListIngredients.objects.filter(
             user__username="testuser", listName__listName="testlist"
         ).first()
-        self.assertEqual([], modifiedList.ingredients)
+        self.assertEqual([], modified_list.ingredients)
 
 
 class CreateUser(TestCase):
