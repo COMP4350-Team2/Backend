@@ -1,4 +1,3 @@
-import json
 from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
@@ -31,7 +30,7 @@ from cupboard_app.queries import (
 from cupboard_app.serializers import (
     MessageSerializer,
     IngredientSerializer,
-    UserListIngredientsSerializer
+    UserListIngredientsViewSerializer
 )
 
 
@@ -178,9 +177,9 @@ class UserListIngredientsAPIView(APIView):
     missing_msg += "please ensure all items are sent in the following format:"
     missing_msg += "{username: [USERNAME], listName: [LISTNAME], ingredient: "
     missing_msg += "[INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}"
-    #Create serializer and add it in reqquest body
+
     @extend_schema(
-        request=UserListIngredientsSerializer,
+        request=UserListIngredientsViewSerializer,
         responses={
             200: OpenApiResponse(
                 response=MessageSerializer,
@@ -203,14 +202,14 @@ class UserListIngredientsAPIView(APIView):
                 ]
             ),
             401: auth_failed_response,
-            500: OpenApiResponse(
+            405: OpenApiResponse(
                 response=MessageSerializer,
                 examples=[
                     OpenApiExample(
                         name='Required Value Missing',
                         value={'message': missing_msg},
-                        status_codes=[500]
-                    )
+                        status_codes=[405]
+                    ),
                 ]
             ),
         }
@@ -238,7 +237,7 @@ class UserListIngredientsAPIView(APIView):
             status = 200
         else:
             result = self.missing_msg
-            status = 500
+            status = 405
 
         message = Message(message=result)
         serializer = MessageSerializer(message)

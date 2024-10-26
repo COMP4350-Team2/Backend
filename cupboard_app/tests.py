@@ -481,7 +481,7 @@ class AddIngredientToListApi(TestCase):
         """
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
-        response = self.client.post(
+        response = self.client.put(
             reverse('list_item'),
             json.dumps(
                 {
@@ -495,7 +495,7 @@ class AddIngredientToListApi(TestCase):
             HTTP_AUTHORIZATION="Bearer valid-token"
         )
 
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 405)
         # ensures correct response given by view response
         # msg created to follow flake8 format
         result = "Required value missing from sent request,"
@@ -524,7 +524,7 @@ class AddIngredientToListApi(TestCase):
         """
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
-        response = self.client.post(
+        response = self.client.put(
             reverse('list_item'),
             json.dumps(
                 {
@@ -562,7 +562,7 @@ class AddIngredientToListApi(TestCase):
         """
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
-        response = self.client.post(
+        response = self.client.put(
             reverse('list_item'),
             json.dumps(
                 {
