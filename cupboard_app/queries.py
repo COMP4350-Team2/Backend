@@ -323,7 +323,7 @@ def update_list_ingredient(
             amount=amount,
             unit=unit
         )
-        if list_ingredient:
+        if list_ingredient and ingredient is not None and amount is not None and unit is not None:
             # Check list exists
             user_list = UserListIngredients.objects.filter(
                 user__username=username,
@@ -356,5 +356,47 @@ def update_list_ingredient(
             result = f'{UPDATE_FAILED_MSG} Ingredient does not exist.'
     except Exception:
         result = UPDATE_FAILED_MSG
+
+    return result
+
+
+def create_user_list_ingredients(
+    username: str,
+    listName: str,
+    ingredients: list[dict] = []
+) -> str:
+    """
+    Creates a user list in the UserListIngredients dimension table.
+
+    Args:
+        username: User's username
+        listName: List name.
+        ingredient: The array of dictionaries with ingredient information to add.
+
+    Returns:
+        Success message if the save was successful.
+        Fail message or exists message if save was unsuccessful.
+    """
+    result = CREATE_SUCCESS_MSG
+    try:
+        user = get_user(username=username)
+        list = get_list(listName=listName)
+        if user is not None and list is not None:
+            # Check if list exists
+            if UserListIngredients.objects.filter(
+                user__username=username,
+                listName__listName=listName
+            ).exists():
+                result = EXISTS_MSG
+            else:
+                UserListIngredients.objects.create(
+                    user=user,
+                    listName=list,
+                    ingredients=ingredients
+                )
+        else:
+            result = CREATE_FAILED_MSG
+    except Exception:
+        result = CREATE_FAILED_MSG
 
     return result
