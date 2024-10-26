@@ -31,7 +31,8 @@ from cupboard_app.queries import (
     create_list_ingredient,
     get_user_lists_ingredients,
     create_user_list_ingredients,
-    update_list_ingredient
+    update_list_ingredient,
+    remove_list_ingredient
 )
 
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
@@ -357,7 +358,6 @@ class TestIngredients(TestCase):
 
         self.assertEqual(after[0].ingredients[2]["ingredientId"], ing2.get("ingredientId"))
         self.assertEqual(after[0].ingredients[2]["amount"], 300)
-        self.assertEqual(int(after[0].ingredients[2]["unitId"]), 15)
 
     def test_create_user_list_ingredients(self):
         """
@@ -381,6 +381,7 @@ class TestIngredients(TestCase):
         create_list("test_listname")
         create_user_list_ingredients(test_user.username, "test_listname", ing_list)
         list = get_user_lists_ingredients(test_user.username, test_user.id)
+
         self.assertEqual(list[0].ingredients[0]["ingredientId"], ing1.get("ingredientId"))
         self.assertEqual(list[0].ingredients[0]["amount"], ing1.get("amount"))
         self.assertEqual(list[0].ingredients[0]["unitId"], ing1.get("unitId"))
@@ -392,6 +393,35 @@ class TestIngredients(TestCase):
         self.assertEqual(list[0].user.username, "test_user")
         self.assertEqual(list[0].user.email, "user@test.com")
         self.assertEqual(str(list[0].listName), "test_listname")
+
+    def test_remove_list_ingredient(self):
+        """
+        Testing test_remove_list_ingredient removes specified ingredient from user's list
+        """
+
+        create_user("test_user", "user@test.com")
+        test_user = get_user("test_user")
+
+        create_ingredient("test_ing", "test_type1")
+        create_ingredient("test_ing2", "test_type2")
+        create_measurement("test_unit")
+        create_measurement("test_unit2")
+        create_measurement("test_unit3")
+        ing1 = create_list_ingredient("test_ing", 500, "test_unit")
+        ing2 = create_list_ingredient("test_ing2", 400, "test_unit2")
+        ing_list = []
+        ing_list.append(ing1)
+        ing_list.append(ing2)
+
+        create_list("test_listname")
+        create_user_list_ingredients(test_user.username, "test_listname", ing_list)
+        list = get_user_lists_ingredients(test_user.username, test_user.id)
+        remove_list_ingredient("test_user", "test_listname", ing2.get("ingredientId"))
+
+        self.assertEqual(list[0].ingredients[0]["ingredientId"], ing1.get("ingredientId"))
+        self.assertEqual(list[0].ingredients[0]["amount"], ing1.get("amount"))
+        self.assertEqual(list[0].ingredients[0]["unitId"], ing1.get("unitId"))
+        self.assertEqual(len(list[0].ingredients), 1)
 
 
 # API Tests

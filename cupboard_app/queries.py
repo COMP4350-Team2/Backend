@@ -400,3 +400,36 @@ def create_user_list_ingredients(
         result = CREATE_FAILED_MSG
 
     return result
+
+
+def remove_list_ingredient(
+    username: str,
+    listName: str,
+    ingredientId: str
+) -> str:
+    """
+    Removes an ingredient in the user's list.
+
+    Args:
+        username: User's username
+        listName: Name of the list
+        ingredientId: Id of the ingredient
+    """
+    result = UPDATE_FAILED_MSG
+
+    # Check list exists
+    user_list = UserListIngredients.objects.filter(
+        user__username=username,
+        listName__listName=listName
+    ).first()
+    if user_list:
+        # Check if ingredient exists, if so delete it
+        for dictionary in user_list.ingredients:
+            if dictionary.get('ingredientId', None) == ingredientId:
+                user_list.ingredients.remove(dictionary)
+        user_list.save()
+        result = UPDATE_SUCCESS_MSG
+    else:
+        result = DOES_NOT_EXIST_MSG
+
+    return result
