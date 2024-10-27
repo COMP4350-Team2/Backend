@@ -13,14 +13,6 @@ def main():
     # Reads the .env file and loads all the values
     load_env_variables()
 
-    # Checks if this is a test
-    if sys.argv[1:2] == ["test"]:
-        # Running tests
-        os.environ['TEST_RUN'] = 'true'
-    else:
-        # Not a test run
-        os.environ['TEST_RUN'] = 'false'
-
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
