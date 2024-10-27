@@ -18,9 +18,9 @@ from cupboard_app.queries import (
     create_ingredient,
     get_all_ingredients,
     get_ingredient,
-    create_list,
-    get_all_lists,
-    get_list,
+    create_list_name,
+    get_all_list_names,
+    get_list_name,
     create_measurement,
     get_all_measurements,
     get_measurement,
@@ -115,42 +115,42 @@ class TestIngredients(TestCase):
         self.assertEqual(test_ingredient2, Ingredient.objects.get(name="test_ingredient2"))
         self.assertEqual(test_ingredient3, None)
 
-    def test_create_list(self):
+    def test_create_list_name(self):
         """
         Testing create_list creates a list
         in the database
         """
-        create_list("test_listname")
-        self.assertEqual(ListName.objects.filter(listName="test_listname").exists(), True)
+        create_list_name("test_listname")
+        self.assertEqual(ListName.objects.filter(list_name="test_listname").exists(), True)
 
-    def test_get_all_lists(self):
+    def test_get_all_list_names(self):
         """
-        Testing get_all_lists retrieves all listNames
+        Testing get_all_list_names retrieves all list_names
         in the database
         """
-        create_list("test_listname")
-        create_list("test_listname2")
-        create_list("test_listname3")
-        all_lists = get_all_lists()
+        create_list_name("test_listname")
+        create_list_name("test_listname2")
+        create_list_name("test_listname3")
+        all_lists = get_all_list_names()
         self.assertEqual(len(all_lists), 3)
         self.assertEqual("test_listname", str(all_lists[0]))
         self.assertEqual("test_listname2", str(all_lists[1]))
         self.assertEqual("test_listname3", str(all_lists[2]))
 
-    def test_get_list(self):
+    def test_get_list_name(self):
         """
-        Testing get_list returns an ingredient
+        Testing get_list_name returns an ingredient
         from the database
         """
-        create_list("test_listname")
-        create_list("test_listname2")
-        test_list = get_list("test_listname")
-        temp_list = ListName.objects.get(listName="test_listname2")
-        test_list2 = get_list("test_ingredient2", temp_list.id)
-        test_list3 = get_list("doesnt_exist")
+        create_list_name("test_listname")
+        create_list_name("test_listname2")
+        test_list = get_list_name("test_listname")
+        temp_list = ListName.objects.get(list_name="test_listname2")
+        test_list2 = get_list_name("test_ingredient2", temp_list.id)
+        test_list3 = get_list_name("doesnt_exist")
 
-        self.assertEqual(test_list, ListName.objects.get(listName="test_listname"))
-        self.assertEqual(test_list2, ListName.objects.get(listName="test_listname2"))
+        self.assertEqual(test_list, ListName.objects.get(list_name="test_listname"))
+        self.assertEqual(test_list2, ListName.objects.get(list_name="test_listname2"))
         self.assertEqual(test_list3, None)
 
     def test_create_measurement(self):
@@ -282,7 +282,7 @@ class TestIngredients(TestCase):
         create_ingredient("test_ing", "test_type1")
         create_measurement("test_unit")
         ing1 = create_list_ingredient("test_ing", 500, "test_unit")
-        create_list("test_listname")
+        create_list_name("test_listname")
         create_user_list_ingredients("test_user", "test_listname", ing1)
         result = get_user_lists_ingredients(test_user.username, test_user.id)
         user_lists = []
@@ -319,7 +319,7 @@ class TestIngredients(TestCase):
         ing_list.append(ing1)
         ing_list.append(ing2)
 
-        create_list("test_listname")
+        create_list_name("test_listname")
         create_user_list_ingredients("test_user", "test_listname", ing_list)
         get_user_lists_ingredients(test_user.username, test_user.id)
 
@@ -338,7 +338,7 @@ class TestIngredients(TestCase):
         self.assertEqual(after[0].ingredients[2]["ingredientId"], ing2.get("ingredientId"))
         self.assertEqual(after[0].ingredients[2]["amount"], 300)
 
-        create_list("empty_listname")
+        create_list_name("empty_listname")
         empty_ing = []
         create_user_list_ingredients(test_user.username, "empty_listname", empty_ing)
         after = get_user_lists_ingredients(test_user.username, test_user.id)
@@ -365,7 +365,7 @@ class TestIngredients(TestCase):
         ing_list.append(ing1)
         ing_list.append(ing2)
 
-        create_list("test_listname")
+        create_list_name("test_listname")
         create_user_list_ingredients(test_user.username, "test_listname", ing_list)
         list = get_user_lists_ingredients(test_user.username, test_user.id)
 
@@ -379,24 +379,24 @@ class TestIngredients(TestCase):
 
         self.assertEqual(list[0].user.username, "test_user")
         self.assertEqual(list[0].user.email, "user@test.com")
-        self.assertEqual(str(list[0].listName), "test_listname")
+        self.assertEqual(str(list[0].list_name), "test_listname")
 
-        create_list("empty_listname")
+        create_list_name("empty_listname")
         empty_ing = []
         create_user_list_ingredients(test_user.username, "empty_listname", empty_ing)
 
-        create_list("empty_listname2")
+        create_list_name("empty_listname2")
         create_user_list_ingredients(test_user.username, "empty_listname2", None)
 
         self.assertEqual(len(list[1].ingredients), 0)
         self.assertEqual(list[1].user.username, "test_user")
         self.assertEqual(list[1].user.email, "user@test.com")
-        self.assertEqual(str(list[1].listName), "empty_listname")
+        self.assertEqual(str(list[1].list_name), "empty_listname")
 
         self.assertEqual(list[2].ingredients, None)
         self.assertEqual(list[2].user.username, "test_user")
         self.assertEqual(list[2].user.email, "user@test.com")
-        self.assertEqual(str(list[2].listName), "empty_listname2")
+        self.assertEqual(str(list[2].list_name), "empty_listname2")
 
     def test_remove_list_ingredient(self):
         """
@@ -417,7 +417,7 @@ class TestIngredients(TestCase):
         ing_list.append(ing1)
         ing_list.append(ing2)
 
-        create_list("test_listname")
+        create_list_name("test_listname")
         create_user_list_ingredients(test_user.username, "test_listname", ing_list)
         list = get_user_lists_ingredients(test_user.username, test_user.id)
         remove_list_ingredient("test_user", "test_listname", ing2.get("ingredientId"))
@@ -582,12 +582,12 @@ class AddIngredientToListApi(TestCase):
         Sets up a test database with test values
         """
         User.objects.create(username="testuser", email="test@test.com")
-        ListName.objects.create(listName="testlist")
+        ListName.objects.create(list_name="testlist")
         create_ingredient("test_ing", "test_type")
         create_measurement("test_unit")
         UserListIngredients.objects.create(
             user=User.objects.get(username="testuser"),
-            listName=ListName.objects.get(listName="testlist"),
+            list_name=ListName.objects.get(list_name="testlist"),
             ingredients=[]
         )
         Ingredient.objects.create(name="testing2", type="TEST2")
@@ -604,7 +604,7 @@ class AddIngredientToListApi(TestCase):
             json.dumps(
                 {
                     'username': 'testuser',
-                    'listName': 'testlist',
+                    'list_name': 'testlist',
                     'ingredient': 'test_ing',
                     'amount': 5,
                     'unit': 'test_unit'
@@ -625,7 +625,7 @@ class AddIngredientToListApi(TestCase):
         # ensures the item was actually added to the list
         modified_list = UserListIngredients.objects.filter(
             user__username="testuser",
-            listName__listName="testlist"
+            list_name__list_name="testlist"
         ).first()
         self.assertEqual(
             [{'amount': 5, 'ingredientId': 1, 'unitId': 1}],
@@ -644,7 +644,7 @@ class AddIngredientToListApi(TestCase):
             reverse('user_list_ingredients'),
             json.dumps(
                 {
-                    'listName': 'testlist',
+                    'list_name': 'testlist',
                     'ingredient': 'test_ing',
                     'amount': 5,
                     'unit': 'test_unit'
@@ -659,7 +659,7 @@ class AddIngredientToListApi(TestCase):
         # msg created to follow flake8 format
         result = "Required value missing from sent request, "
         result += "please ensure all items are sent in the following format: "
-        result += "{username: [USERNAME], listName: [LISTNAME], ingredient: "
+        result += "{username: [USERNAME], list_name: [LISTNAME], ingredient: "
         result += "[INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}"
         self.assertDictEqual(
             response.json(),
@@ -671,7 +671,7 @@ class AddIngredientToListApi(TestCase):
         # ensures the list items have not been changed
         modified_list = UserListIngredients.objects.filter(
             user__username="testuser",
-            listName__listName="testlist"
+            list_name__list_name="testlist"
         ).first()
         self.assertEqual([], modified_list.ingredients)
 
@@ -688,7 +688,7 @@ class AddIngredientToListApi(TestCase):
             json.dumps(
                 {
                     'username': 'testuser_invalid',
-                    'listName': 'testlist',
+                    'list_name': 'testlist',
                     'ingredient': 'test_ing',
                     'amount': 5,
                     'unit': 'test_unit'
@@ -709,7 +709,7 @@ class AddIngredientToListApi(TestCase):
         # ensures the list items have not been changed
         modified_list = UserListIngredients.objects.filter(
             user__username="testuser",
-            listName__listName="testlist"
+            list_name__list_name="testlist"
         ).first()
         self.assertEqual([], modified_list.ingredients)
 
@@ -726,7 +726,7 @@ class AddIngredientToListApi(TestCase):
             json.dumps(
                 {
                     'username': 'testuser',
-                    'listName': 'testlist',
+                    'list_name': 'testlist',
                     'ingredient': 'test_ing_fake',
                     'amount': 5,
                     'unit': 'test_unit'
@@ -746,7 +746,7 @@ class AddIngredientToListApi(TestCase):
         )
         # ensures the list items have not been changed
         modified_list = UserListIngredients.objects.filter(
-            user__username="testuser", listName__listName="testlist"
+            user__username="testuser", list_name__list_name="testlist"
         ).first()
         self.assertEqual([], modified_list.ingredients)
 

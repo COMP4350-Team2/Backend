@@ -175,7 +175,7 @@ class PrivateScopedMessageAPIView(APIView):
 class UserListIngredientsAPIView(APIView):
     missing_msg = "Required value missing from sent request, "
     missing_msg += "please ensure all items are sent in the following format: "
-    missing_msg += "{username: [USERNAME], listName: [LISTNAME], ingredient: "
+    missing_msg += "{username: [USERNAME], list_name: [LISTNAME], ingredient: "
     missing_msg += "[INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}"
 
     @extend_schema(
@@ -222,14 +222,14 @@ class UserListIngredientsAPIView(APIView):
 
         if (
             'username' in body
-            and 'listName' in body
+            and 'list_name' in body
             and 'ingredient' in body
             and 'amount' in body
             and 'unit' in body
         ):
             result = update_list_ingredient(
                 body['username'],
-                body['listName'],
+                body['list_name'],
                 body['ingredient'],
                 body['amount'],
                 body['unit']

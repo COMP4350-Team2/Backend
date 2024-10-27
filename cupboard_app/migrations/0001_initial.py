@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                         verbose_name='ID'
                     )
                 ),
-                ('listName', models.CharField(max_length=30, unique=True)),
+                ('list_name', models.CharField(max_length=30, unique=True)),
             ],
         ),
         migrations.CreateModel(
@@ -88,7 +88,7 @@ class Migration(migrations.Migration):
                 ),
                 ('ingredients', models.JSONField()),
                 (
-                    'listName',
+                    'list_name',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to='cupboard_app.listname'
