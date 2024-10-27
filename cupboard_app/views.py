@@ -18,14 +18,19 @@ from utils.permissions import (
 )
 from cupboard_app.models import Message
 from cupboard_app.queries import (
-    CREATE_SUCCESS_MSG,
-    EXISTS_MSG,
+    update_list_ingredient,
     get_all_ingredients,
-    create_user
+    create_user,
+    CREATE_SUCCESS_MSG,
+    DOES_NOT_EXIST_MSG,
+    EXISTS_MSG,
+    UPDATE_SUCCESS_MSG,
+    UPDATE_FAILED_MSG
 )
 from cupboard_app.serializers import (
     MessageSerializer,
-    IngredientSerializer
+    IngredientSerializer,
+    UserListIngredientsViewSerializer
 )
 
 
@@ -164,6 +169,79 @@ class PrivateScopedMessageAPIView(APIView):
         message = Message(message=self.text)
         serializer = MessageSerializer(message)
         return Response(serializer.data)
+
+
+@extend_schema(tags=['User_List_Ingredients'])
+class UserListIngredientsAPIView(APIView):
+    missing_msg = "Required value missing from sent request,"
+    missing_msg += "please ensure all items are sent in the following format:"
+    missing_msg += "{username: [USERNAME], listName: [LISTNAME], ingredient: "
+    missing_msg += "[INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}"
+
+    @extend_schema(
+        request=UserListIngredientsViewSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Item Updated',
+                        value={'message': UPDATE_SUCCESS_MSG},
+                        status_codes=[200]
+                    ),
+                    OpenApiExample(
+                        name='Referenced Value Does Not Exist',
+                        value={'message': DOES_NOT_EXIST_MSG},
+                        status_codes=[200]
+                    ),
+                    OpenApiExample(
+                        name='Ingredient Does Not Exist',
+                        value={'message': f'{UPDATE_FAILED_MSG} Ingredient does not exist.'},
+                        status_codes=[200]
+                    ),
+                ]
+            ),
+            401: auth_failed_response,
+            405: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Required Value Missing',
+                        value={'message': missing_msg},
+                        status_codes=[405]
+                    ),
+                ]
+            ),
+        }
+    )
+    def put(self, request: Request) -> Response:
+        """
+        adds an ingredient to a list
+        """
+        body = request.data
+
+        if (
+            'username' in body
+            and 'listName' in body
+            and 'ingredient' in body
+            and 'amount' in body
+            and 'unit' in body
+        ):
+            result = update_list_ingredient(
+                body['username'],
+                body['listName'],
+                body['ingredient'],
+                body['amount'],
+                body['unit']
+            )
+            status = 200
+        else:
+            result = self.missing_msg
+            status = 405
+
+        message = Message(message=result)
+        serializer = MessageSerializer(message)
+        return Response(serializer.data, status=status)
 
 
 @extend_schema(tags=['Ingredients'])
