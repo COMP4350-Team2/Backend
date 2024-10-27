@@ -657,8 +657,8 @@ class AddIngredientToListApi(TestCase):
         self.assertEqual(response.status_code, 405)
         # ensures correct response given by view response
         # msg created to follow flake8 format
-        result = "Required value missing from sent request,"
-        result += "please ensure all items are sent in the following format:"
+        result = "Required value missing from sent request, "
+        result += "please ensure all items are sent in the following format: "
         result += "{username: [USERNAME], listName: [LISTNAME], ingredient: "
         result += "[INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}"
         self.assertDictEqual(

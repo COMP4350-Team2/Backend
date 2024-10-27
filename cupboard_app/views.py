@@ -171,10 +171,10 @@ class PrivateScopedMessageAPIView(APIView):
         return Response(serializer.data)
 
 
-@extend_schema(tags=['User_List_Ingredients'])
+@extend_schema(tags=["User's List"])
 class UserListIngredientsAPIView(APIView):
-    missing_msg = "Required value missing from sent request,"
-    missing_msg += "please ensure all items are sent in the following format:"
+    missing_msg = "Required value missing from sent request, "
+    missing_msg += "please ensure all items are sent in the following format: "
     missing_msg += "{username: [USERNAME], listName: [LISTNAME], ingredient: "
     missing_msg += "[INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}"
 
@@ -216,7 +216,7 @@ class UserListIngredientsAPIView(APIView):
     )
     def put(self, request: Request) -> Response:
         """
-        adds an ingredient to a list
+        Adds an ingredient to a user's list.
         """
         body = request.data
 

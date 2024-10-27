@@ -73,12 +73,12 @@ def get_ingredient(name: str, id: int = None) -> Ingredient | None:
     return result
 
 
-def create_list(listName: str) -> str:
+def create_list(list_name: str) -> str:
     """
     Creates a list in the list dimension table.
 
     Args:
-        listName: List name
+        list_name: List name
 
     Returns:
         Success message if the save was successful.
@@ -86,10 +86,10 @@ def create_list(listName: str) -> str:
     """
     result = CREATE_SUCCESS_MSG
     try:
-        if ListName.objects.filter(listName=listName).exists():
+        if ListName.objects.filter(listName=list_name).exists():
             result = EXISTS_MSG
         else:
-            ListName.objects.get_or_create(listName=listName)
+            ListName.objects.get_or_create(listName=list_name)
     except Exception:
         result = CREATE_FAILED_MSG
 
@@ -106,12 +106,12 @@ def get_all_lists() -> QuerySet:
     return ListName.objects.all()
 
 
-def get_list(listName: str, id: int = None) -> ListName | None:
+def get_list(list_name: str, id: int = None) -> ListName | None:
     """
     Gets the specific list object from the database.
 
     Args:
-        listName: List name
+        list_name: List name
         id: List ID
 
     Returns:
@@ -121,7 +121,7 @@ def get_list(listName: str, id: int = None) -> ListName | None:
         if id:
             result = ListName.objects.get(id=id)
         else:
-            result = ListName.objects.get(listName=listName)
+            result = ListName.objects.get(listName=list_name)
     except ListName.DoesNotExist:
         result = None
 
@@ -296,7 +296,7 @@ def get_user_lists_ingredients(username: str, id: int = None) -> QuerySet:
 
 def update_list_ingredient(
     username: str,
-    listName: str,
+    list_name: str,
     ingredient: str,
     amount: int | float,
     unit: str
@@ -315,7 +315,7 @@ def update_list_ingredient(
 
     Args:
         username: User's username
-        listName: Name of the list
+        list_name: Name of the list
         ingredient: Name of the ingredient
         amount: Quantity of the ingredient
         unit: The unit of measure for the ingredient
@@ -335,7 +335,7 @@ def update_list_ingredient(
             # Check list exists
             user_list = UserListIngredients.objects.filter(
                 user__username=username,
-                listName__listName=listName
+                listName__listName=list_name
             ).first()
             if user_list:
                 search_id = list_ingredient.get('ingredientId')
@@ -370,7 +370,7 @@ def update_list_ingredient(
 
 def create_user_list_ingredients(
     username: str,
-    listName: str,
+    list_name: str,
     ingredients: list[dict] = []
 ) -> str:
     """
@@ -378,7 +378,7 @@ def create_user_list_ingredients(
 
     Args:
         username: User's username
-        listName: List name.
+        list_name: List name.
         ingredient: The array of dictionaries with ingredient information to add.
 
     Returns:
@@ -388,12 +388,12 @@ def create_user_list_ingredients(
     result = CREATE_SUCCESS_MSG
     try:
         user = get_user(username=username)
-        list = get_list(listName=listName)
+        list = get_list(list_name=list_name)
         if user is not None and list is not None:
             # Check if list exists
             if UserListIngredients.objects.filter(
                 user__username=username,
-                listName__listName=listName
+                listName__listName=list_name
             ).exists():
                 result = EXISTS_MSG
             else:
@@ -412,7 +412,7 @@ def create_user_list_ingredients(
 
 def remove_list_ingredient(
     username: str,
-    listName: str,
+    list_name: str,
     ingredient_id: str
 ) -> str:
     """
@@ -420,7 +420,7 @@ def remove_list_ingredient(
 
     Args:
         username: User's username
-        listName: Name of the list
+        list_name: Name of the list
         ingredient_id: Id of the ingredient
 
     Returns:
@@ -432,7 +432,7 @@ def remove_list_ingredient(
     # Check list exists
     user_list = UserListIngredients.objects.filter(
         user__username=username,
-        listName__listName=listName
+        listName__listName=list_name
     ).first()
     if user_list and user_list.ingredients:
         # Check if ingredient exists, if so delete it
