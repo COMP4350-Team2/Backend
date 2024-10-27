@@ -345,12 +345,10 @@ class TestIngredients(TestCase):
         self.assertEqual(after[1].ingredients[0]["amount"], ing1.get("amount"))
         self.assertEqual(after[1].ingredients[0]["unitId"], ing1.get("unitId"))
 
-
     def test_create_user_list_ingredients(self):
         """
         Testing create_user_list_ingredients creates a user list
         """
-
         create_user("test_user", "user@test.com")
         test_user = get_user("test_user")
 

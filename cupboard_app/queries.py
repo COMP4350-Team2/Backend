@@ -16,6 +16,7 @@ EXISTS_MSG = 'Item already exists.'
 DOES_NOT_EXIST_MSG = 'Item does not exist.'
 HAS_NO_ING_MSG = 'List has no ingredients.'
 
+
 def create_ingredient(name: str, type: str) -> str:
     """
     Creates an ingredient in the ingredient dimension table.
@@ -303,10 +304,10 @@ def update_list_ingredient(
     """
     Updates an ingredient in the user's list.
 
-    If ingredient exists in the user's list and has the same unit, 
+    If ingredient exists in the user's list and has the same unit,
     then update the given ingredient's amount and unit in the passed amount and unit.
 
-    If ingredient exists in the user's list and has a different unit, 
+    If ingredient exists in the user's list and has a different unit,
     then add new ingredient dictionary to user's list.
 
     If ingredient does not exist in the user's list, then add new ingredient
@@ -342,7 +343,8 @@ def update_list_ingredient(
                 # Check if ingredient exists
                 if (len(user_list.ingredients) > 0 and user_list.ingredients):
                     if not any(
-                        dictionary.get('ingredientId', None) == search_id and dictionary.get('unitId', None) == unit_id
+                        dictionary.get('ingredientId', None) == search_id
+                        and dictionary.get('unitId', None) == unit_id
                         for dictionary in user_list.ingredients
                     ):
                         # ingredient does not exist so insert
@@ -429,7 +431,7 @@ def remove_list_ingredient(
         username: User's username
         listName: Name of the list
         ingredient_id: Id of the ingredient
-    
+
     Returns:
         Success message if the save was successful.
         Fail message, exists or empty list message if save was unsuccessful.
