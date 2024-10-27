@@ -263,9 +263,9 @@ class TestIngredients(TestCase):
         self.assertEqual(
             ing1,
             {
-                "ingredientId": ing1.get("ingredientId"),
+                "ingredient_id": ing1.get("ingredient_id"),
                 "amount": 500,
-                "unitId": ing1.get("unitId")
+                "unit_id": ing1.get("unit_id")
             }
         )
         self.assertEqual(ing2, None)
@@ -274,7 +274,7 @@ class TestIngredients(TestCase):
 
     def test_get_user_lists_ingredients(self):
         """
-        Testing test_get_user_lists_ingredients returns all lists from a user
+        Testing get_user_lists_ingredients returns all lists from a user
         """
         create_user("test_user", "user@test.com")
         test_user = get_user("test_user")
@@ -327,15 +327,15 @@ class TestIngredients(TestCase):
         update_list_ingredient("test_user", "test_listname", "test_ing2", 300, "test_unit3")
         after = get_user_lists_ingredients(test_user.username, test_user.id)
 
-        self.assertEqual(after[0].ingredients[0]["ingredientId"], ing1.get("ingredientId"))
+        self.assertEqual(after[0].ingredients[0]["ingredient_id"], ing1.get("ingredient_id"))
         self.assertEqual(after[0].ingredients[0]["amount"], 25)
-        self.assertEqual(after[0].ingredients[0]["unitId"], ing1.get("unitId"))
+        self.assertEqual(after[0].ingredients[0]["unit_id"], ing1.get("unit_id"))
 
-        self.assertEqual(after[0].ingredients[1]["ingredientId"], ing2.get("ingredientId"))
+        self.assertEqual(after[0].ingredients[1]["ingredient_id"], ing2.get("ingredient_id"))
         self.assertEqual(after[0].ingredients[1]["amount"], ing2.get("amount"))
-        self.assertEqual(after[0].ingredients[1]["unitId"], ing2.get("unitId"))
+        self.assertEqual(after[0].ingredients[1]["unit_id"], ing2.get("unit_id"))
 
-        self.assertEqual(after[0].ingredients[2]["ingredientId"], ing2.get("ingredientId"))
+        self.assertEqual(after[0].ingredients[2]["ingredient_id"], ing2.get("ingredient_id"))
         self.assertEqual(after[0].ingredients[2]["amount"], 300)
 
         create_list_name("empty_listname")
@@ -343,9 +343,9 @@ class TestIngredients(TestCase):
         create_user_list_ingredients(test_user.username, "empty_listname", empty_ing)
         after = get_user_lists_ingredients(test_user.username, test_user.id)
         update_list_ingredient("test_user", "empty_listname", "test_ing", 500, "test_unit")
-        self.assertEqual(after[1].ingredients[0]["ingredientId"], ing1.get("ingredientId"))
+        self.assertEqual(after[1].ingredients[0]["ingredient_id"], ing1.get("ingredient_id"))
         self.assertEqual(after[1].ingredients[0]["amount"], ing1.get("amount"))
-        self.assertEqual(after[1].ingredients[0]["unitId"], ing1.get("unitId"))
+        self.assertEqual(after[1].ingredients[0]["unit_id"], ing1.get("unit_id"))
 
     def test_create_user_list_ingredients(self):
         """
@@ -369,13 +369,13 @@ class TestIngredients(TestCase):
         create_user_list_ingredients(test_user.username, "test_listname", ing_list)
         list = get_user_lists_ingredients(test_user.username, test_user.id)
 
-        self.assertEqual(list[0].ingredients[0]["ingredientId"], ing1.get("ingredientId"))
+        self.assertEqual(list[0].ingredients[0]["ingredient_id"], ing1.get("ingredient_id"))
         self.assertEqual(list[0].ingredients[0]["amount"], ing1.get("amount"))
-        self.assertEqual(list[0].ingredients[0]["unitId"], ing1.get("unitId"))
+        self.assertEqual(list[0].ingredients[0]["unit_id"], ing1.get("unit_id"))
 
-        self.assertEqual(list[0].ingredients[1]["ingredientId"], ing2.get("ingredientId"))
+        self.assertEqual(list[0].ingredients[1]["ingredient_id"], ing2.get("ingredient_id"))
         self.assertEqual(list[0].ingredients[1]["amount"], ing2.get("amount"))
-        self.assertEqual(list[0].ingredients[1]["unitId"], ing2.get("unitId"))
+        self.assertEqual(list[0].ingredients[1]["unit_id"], ing2.get("unit_id"))
 
         self.assertEqual(list[0].user.username, "test_user")
         self.assertEqual(list[0].user.email, "user@test.com")
@@ -420,11 +420,11 @@ class TestIngredients(TestCase):
         create_list_name("test_listname")
         create_user_list_ingredients(test_user.username, "test_listname", ing_list)
         list = get_user_lists_ingredients(test_user.username, test_user.id)
-        remove_list_ingredient("test_user", "test_listname", ing2.get("ingredientId"))
+        remove_list_ingredient("test_user", "test_listname", ing2.get("ingredient_id"))
 
-        self.assertEqual(list[0].ingredients[0]["ingredientId"], ing1.get("ingredientId"))
+        self.assertEqual(list[0].ingredients[0]["ingredient_id"], ing1.get("ingredient_id"))
         self.assertEqual(list[0].ingredients[0]["amount"], ing1.get("amount"))
-        self.assertEqual(list[0].ingredients[0]["unitId"], ing1.get("unitId"))
+        self.assertEqual(list[0].ingredients[0]["unit_id"], ing1.get("unit_id"))
         self.assertEqual(len(list[0].ingredients), 1)
 
 
@@ -432,7 +432,7 @@ class TestIngredients(TestCase):
 class PublicMessageApi(TestCase):
     def test_public_api_returns(self):
         """
-        Testing the public api
+        Testing the public API
         """
         response = self.client.get(reverse('public'))
 
@@ -451,7 +451,7 @@ class PublicMessageApi(TestCase):
 class PrivateMessageApi(TestCase):
     def test_private_api_without_token_returns_unauthorized(self):
         """
-        Testing the private api without a token
+        Testing the private API without a token
         """
         response = self.client.get(reverse('private'))
         self.assertEqual(response.status_code, 401)
@@ -461,7 +461,7 @@ class PrivateMessageApi(TestCase):
 
     def test_private_api_with_invalid_token_returns_unauthorized(self):
         """
-        Testing the private api with a invalid token
+        Testing the private API with a invalid token
         """
         response = self.client.get(
             reverse('private'),
@@ -475,7 +475,7 @@ class PrivateMessageApi(TestCase):
     @patch.object(TokenBackend, 'decode')
     def test_private_api_with_valid_token_returns_ok(self, mock_decode):
         """
-        Testing the private api with a valid token
+        Testing the private API with a valid token
         """
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
@@ -498,7 +498,7 @@ class PrivateMessageApi(TestCase):
 class PrivateScopedMessageApi(TestCase):
     def test_private_scoped_api_without_token_returns_unauthorized(self):
         """
-        Testing the private_scoped api without a token
+        Testing the private_scoped API without a token
         """
         response = self.client.get(reverse('private_scoped'))
         self.assertEqual(response.status_code, 401)
@@ -508,7 +508,7 @@ class PrivateScopedMessageApi(TestCase):
 
     def test_private_scoped_api_with_invalid_token_returns_unauthorized(self):
         """
-        Testing the private_scoped api with a invalid token
+        Testing the private_scoped API with a invalid token
         """
         response = self.client.get(
             reverse('private_scoped'),
@@ -522,7 +522,7 @@ class PrivateScopedMessageApi(TestCase):
     @patch.object(TokenBackend, 'decode')
     def test_private_scoped_api_with_valid_token_returns_ok(self, mock_decode):
         """
-        Testing the private_scoped api with a valid token
+        Testing the private_scoped API with a valid token
         """
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
@@ -628,7 +628,7 @@ class AddIngredientToListApi(TestCase):
             list_name__list_name="testlist"
         ).first()
         self.assertEqual(
-            [{'amount': 5, 'ingredientId': 1, 'unitId': 1}],
+            [{'amount': 5, 'ingredient_id': 1, 'unit_id': 1}],
             modified_list.ingredients
         )
 
