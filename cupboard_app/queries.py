@@ -14,10 +14,9 @@ CREATE_FAILED_MSG = 'Failed to create item.'
 UPDATE_FAILED_MSG = 'Failed to update item.'
 EXISTS_MSG = 'Item already exists.'
 DOES_NOT_EXIST_MSG = 'Item does not exist.'
-HAS_NO_ING_MSG = 'List has no ingredients.'
 
 
-def create_ingredient(name: str, type: str) -> str:
+def create_ingredient(name: str, type: str) -> Ingredient:
     """
     Creates an ingredient in the ingredient dimension table.
 
@@ -26,19 +25,11 @@ def create_ingredient(name: str, type: str) -> str:
         type: Ingredient type
 
     Returns:
-        Success message if the save was successful.
-        Fail message or exists message if save was unsuccessful.
+        Ingredient object if new ingredient created or
+        ingredient already existed in the database.
     """
-    result = CREATE_SUCCESS_MSG
-    try:
-        if Ingredient.objects.filter(name=name).exists():
-            result = EXISTS_MSG
-        else:
-            Ingredient.objects.get_or_create(name=name, type=type)
-    except Exception:
-        result = CREATE_FAILED_MSG
-
-    return result
+    obj, new_created = Ingredient.objects.get_or_create(name=name, type=type)
+    return obj
 
 
 def get_all_ingredients() -> QuerySet:
@@ -73,27 +64,19 @@ def get_ingredient(name: str, id: int = None) -> Ingredient | None:
     return result
 
 
-def create_list_name(list_name: str) -> str:
+def create_list_name(list_name: str) -> ListName:
     """
-    Creates a list name in the database.
+    Creates a list name in the listName dimension table.
 
     Args:
         list_name: List name
 
     Returns:
-        Success message if the save was successful.
-        Fail message or exists message if save was unsuccessful.
+        ListName object if new list name created successfully or
+        list name already existed in the database.
     """
-    result = CREATE_SUCCESS_MSG
-    try:
-        if ListName.objects.filter(list_name=list_name).exists():
-            result = EXISTS_MSG
-        else:
-            ListName.objects.get_or_create(list_name=list_name)
-    except Exception:
-        result = CREATE_FAILED_MSG
-
-    return result
+    obj, new_created = ListName.objects.get_or_create(list_name=list_name)
+    return obj
 
 
 def get_all_list_names() -> QuerySet:
@@ -128,7 +111,7 @@ def get_list_name(list_name: str, id: int = None) -> ListName | None:
     return result
 
 
-def create_measurement(unit: str) -> str:
+def create_measurement(unit: str) -> Measurement:
     """
     Creates a measurement unit in the measurement dimension table.
 
@@ -136,19 +119,11 @@ def create_measurement(unit: str) -> str:
         unit: The unit to add
 
     Returns:
-        Success message if the save was successful.
-        Fail message or exists message if save was unsuccessful.
+        Measurement object if new measurement created successfully or
+        measurement already existed in the database.
     """
-    result = CREATE_SUCCESS_MSG
-    try:
-        if Measurement.objects.filter(unit=unit).exists():
-            result = EXISTS_MSG
-        else:
-            Measurement.objects.get_or_create(unit=unit)
-    except Exception:
-        result = CREATE_FAILED_MSG
-
-    return result
+    obj, new_created = Measurement.objects.get_or_create(unit=unit)            
+    return obj
 
 
 def get_all_measurements() -> QuerySet:
@@ -183,7 +158,7 @@ def get_measurement(unit: str, id: int = None) -> Measurement | None:
     return result
 
 
-def create_user(username: str, email: str) -> str:
+def create_user(username: str, email: str) -> User:
     """
     Creates a user in the user dimension table.
 
@@ -192,19 +167,11 @@ def create_user(username: str, email: str) -> str:
         email: User's email address
 
     Returns:
-        Success message if the save was successful.
-        Fail message or exists message if save was unsuccessful.
+        User object if new user created successfully or
+        user already existed in the database.
     """
-    result = CREATE_SUCCESS_MSG
-    try:
-        if User.objects.filter(username=username).exists():
-            result = EXISTS_MSG
-        else:
-            User.objects.get_or_create(username=username, email=email)
-    except Exception:
-        result = CREATE_FAILED_MSG
-
-    return result
+    obj, new_created = User.objects.get_or_create(username=username, email=email)
+    return obj
 
 
 def get_all_users() -> QuerySet:
@@ -252,20 +219,28 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
 
     Returns:
         The ingredient dictionary in the form of:
-        {"ingredient_id": id, "amount": amount, "unit_id": id}
+        {
+            "ingredient_id": id,
+            "ingredient_name": name,
+            "amount": amount,
+            "unit_id": id,
+            "unit": unit
+        }
     """
     ingredient_dict = None
     ingredient = get_ingredient(name=ingredient)
     unit = get_measurement(unit=unit)
     if (
-        ingredient is not None
-        and unit is not None
+        ingredient
+        and unit
         and (isinstance(amount, int) or isinstance(amount, float))
     ):
         ingredient_dict = {
-            "ingredient_id": ingredient.id,
-            "amount": amount,
-            "unit_id": unit.id
+            'ingredient_id': ingredient.id,
+            'ingredient_name': ingredient.name,
+            'amount': amount,
+            'unit_id': unit.id,
+            'unit': unit.unit
         }
 
     return ingredient_dict
@@ -342,6 +317,7 @@ def update_list_ingredient(
                 unit_id = list_ingredient.get('unit_id')
                 # Check if ingredient exists
                 if not user_list.ingredients:
+                    # Empty list so set the list
                     user_list.ingredients = [list_ingredient]
                 elif not any(
                     dictionary.get('ingredient_id', None) == search_id
@@ -372,7 +348,7 @@ def create_user_list_ingredients(
     username: str,
     list_name: str,
     ingredients: list[dict] = []
-) -> str:
+) -> UserListIngredients:
     """
     Creates a user list in the UserListIngredients dimension table.
 
@@ -382,54 +358,41 @@ def create_user_list_ingredients(
         ingredient: The array of dictionaries with ingredient information to add.
 
     Returns:
-        Success message if the save was successful.
-        Fail message or exists message if save was unsuccessful.
+        UserListIngredients object if new UserListIngredients created successfully or
+        UserListIngredients already existed in the database.
+        Raises exception if the user or listName does not exist or problems with
+        creating a new UserListIngredients object
     """
-    result = CREATE_SUCCESS_MSG
-    try:
-        user = get_user(username=username)
-        list = get_list_name(list_name=list_name)
-        if user is not None and list is not None:
-            # Check if list exists
-            if UserListIngredients.objects.filter(
-                user__username=username,
-                list_name__list_name=list_name
-            ).exists():
-                result = EXISTS_MSG
-            else:
-                UserListIngredients.objects.create(
-                    user=user,
-                    list_name=list,
-                    ingredients=ingredients
-                )
-        else:
-            result = CREATE_FAILED_MSG
-    except Exception:
-        result = CREATE_FAILED_MSG
+    user = User.objects.get(username=username)
+    list = ListName.objects.get(list_name=list_name)
 
-    return result
+    obj, new_created = UserListIngredients.objects.get_or_create(
+        user=user,
+        list_name=list,
+        ingredients=ingredients
+    )
+
+    return obj
 
 
 def remove_list_ingredient(
     username: str,
     list_name: str,
-    ingredient_id: str
-) -> str:
+    ingredient: str,
+    unit: str
+) -> UserListIngredients:
     """
     Removes an ingredient in the user's list.
 
     Args:
         username: User's username
         list_name: Name of the list
-        ingredient_id: Id of the ingredient
+        ingredient: Ingredient name
+        unit: The unit of measure for the ingredient
 
     Returns:
-        Success message if the save was successful.
-        Fail message, exists or empty list message if save was unsuccessful.
+        The updated list.
     """
-    result = UPDATE_FAILED_MSG
-
-    # Check list exists
     user_list = UserListIngredients.objects.filter(
         user__username=username,
         list_name__list_name=list_name
@@ -437,11 +400,13 @@ def remove_list_ingredient(
     if user_list and user_list.ingredients:
         # Check if ingredient exists, if so delete it
         for dictionary in user_list.ingredients:
-            if dictionary.get('ingredient_id', None) == ingredient_id:
+            if (
+                dictionary.get('ingredient_name', None) == ingredient
+                and dictionary.get('unit', None) == unit
+            ):
                 user_list.ingredients.remove(dictionary)
         user_list.save()
-        result = UPDATE_SUCCESS_MSG
-    else:
-        result = DOES_NOT_EXIST_MSG
+
+    result = user_list
 
     return result

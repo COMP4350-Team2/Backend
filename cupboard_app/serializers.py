@@ -16,7 +16,7 @@ class MessageSerializer(serializers.Serializer):
 
 class UserListIngredientsViewSerializer(serializers.Serializer):
     username = serializers.CharField()
-    listName = serializers.CharField()
+    list_name = serializers.CharField()
     ingredient = serializers.CharField()
     amount = serializers.FloatField()
     unit = serializers.CharField()
@@ -28,10 +28,10 @@ class IngredientSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['name', 'type']
 
 
-class ListNameSerializer(serializers.HyperlinkedModelSerializer):
+class list_nameSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = ListName
-        fields = ['listName']
+        fields = ['list_name']
 
 
 class MeasurementSerializer(serializers.HyperlinkedModelSerializer):
@@ -49,10 +49,10 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 class UserListIngredientsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = UserListIngredients
-        fields = ['user', 'listName', 'ingredients']
+        fields = ['user', 'list_name', 'ingredients']
 
 
 class RecipeSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Recipe
-        fields = ['user', 'recipeName', 'steps', 'ingredients']
+        fields = ['user', 'recipe_name', 'steps', 'ingredients']

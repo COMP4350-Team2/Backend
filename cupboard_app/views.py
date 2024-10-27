@@ -4,6 +4,7 @@ from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiResponse
 )
+from rest_framework.exceptions import APIException
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -13,25 +14,32 @@ from utils.api_helper import (
     get_auth_username_from_payload,
     get_auth_email_from_payload
 )
-from utils.permissions import (
-    HasMessagesPermission
-)
+from utils.permissions import HasMessagesPermission
+from cupboard_app.exceptions import MissingInformation
 from cupboard_app.models import Message
 from cupboard_app.queries import (
-    update_list_ingredient,
-    get_all_ingredients,
     create_user,
-    CREATE_SUCCESS_MSG,
+    create_user_list_ingredients,
+    get_all_ingredients,
+    update_list_ingredient,    
     DOES_NOT_EXIST_MSG,
-    EXISTS_MSG,
     UPDATE_SUCCESS_MSG,
     UPDATE_FAILED_MSG
 )
 from cupboard_app.serializers import (
     MessageSerializer,
     IngredientSerializer,
+    UserSerializer,
+    UserListIngredientsSerializer,
     UserListIngredientsViewSerializer
 )
+
+
+NO_AUTH = {'message': 'Authentication credentials were not provided.'}
+INVALID_TOKEN = {'message': 'Given token not valid for any token type'}
+PERMISSION_DENIED = {
+    'message': 'Permission denied. You do not have permission to perform this action.'
+}
 
 
 # OpenAPI response types
@@ -40,13 +48,23 @@ auth_failed_response = OpenApiResponse(
     examples=[
         OpenApiExample(
             name='Authentication not provided',
-            value={"message": "Authentication credentials were not provided."},
-            status_codes=["401"]
+            value=NO_AUTH,
+            status_codes=['401']
         ),
         OpenApiExample(
             name='Invalid token',
-            value={'message': "Given token not valid for any token type"},
-            status_codes=["401"]
+            value=INVALID_TOKEN,
+            status_codes=['401']
+        )
+    ]
+)
+auth_no_permissions_response = OpenApiResponse(
+    response=MessageSerializer,
+    examples=[
+        OpenApiExample(
+            name='Permission denied',
+            value=PERMISSION_DENIED,
+            status_codes=['403']
         )
     ]
 )
@@ -64,16 +82,13 @@ def api_exception_handler(exc, context=None) -> Response:
         A json object with the error message
     """
     response = exception_handler(exc, context=context)
-    if response.status_code == 403:
-        response.data = {
-            'error': 'insufficient_permissions',
-            'error_description': response.data.get('detail', 'API Error'),
-            'message': 'Permission denied'
-        }
+    if response and response.status_code == 403:
+        response.data = PERMISSION_DENIED
     elif response and isinstance(response.data, dict):
         response.data = {'message': response.data.get('detail', 'API Error')}
     else:
-        response.data = {'message': 'API Error'}
+        data = {'message': 'API Error'}
+        response = Response(data, status=500)
     return response
 
 
@@ -108,7 +123,7 @@ class PublicMessageAPIView(APIView):
 
 @extend_schema(tags=['Messages'])
 class PrivateMessageAPIView(APIView):
-    text = "Hello from a private endpoint! You need to be authenticated to see this."
+    text = 'Hello from a private endpoint! You need to be authenticated to see this.'
 
     @extend_schema(
         request=None,
@@ -140,8 +155,8 @@ class PrivateMessageAPIView(APIView):
 class PrivateScopedMessageAPIView(APIView):
     permission_classes = [HasMessagesPermission]
     text = (
-        "Hello from a private endpoint! You need to be authenticated "
-        "and have a permission of read:messages to see this."
+        'Hello from a private endpoint! You need to be authenticated '
+        'and have a permission of read:messages to see this.'
     )
 
     @extend_schema(
@@ -157,7 +172,8 @@ class PrivateScopedMessageAPIView(APIView):
                     )
                 ]
             ),
-            401: auth_failed_response
+            401: auth_failed_response,
+            403: auth_no_permissions_response
         }
     )
     def get(self, request: Request) -> Response:
@@ -173,10 +189,72 @@ class PrivateScopedMessageAPIView(APIView):
 
 @extend_schema(tags=["User's List"])
 class UserListIngredientsAPIView(APIView):
-    missing_msg = "Required value missing from sent request, "
-    missing_msg += "please ensure all items are sent in the following format: "
-    missing_msg += "{username: [USERNAME], list_name: [LISTNAME], ingredient: "
-    missing_msg += "[INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}"
+    MISSING_CREATE_USER_LIST_MSG = 'list_name missing in the body.'
+    MISSING_ADD_INGREDIENT_MSG = (
+        'Required value missing from sent request, '
+        'please ensure all items are sent in the following format: '
+        '{list_name: [LISTNAME], ingredient: [INGREDIENT], '
+        'amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}'
+    )
+
+    @extend_schema(
+        request=inline_serializer(
+            name='AllIngredientsResponse',
+            fields={
+                'result': IngredientSerializer(many=True),
+            }
+        ),
+        responses={
+            200: OpenApiResponse(
+                response=UserListIngredientsSerializer,
+                examples=[
+                    OpenApiExample(
+                        name="User's List Created",
+                        value={
+                            'result': {
+                                'user': 'test_user',
+                                'list_name': 'test_list',
+                                'ingredients': []
+                            }
+                        },
+                        status_codes=[200]
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Required Value Missing',
+                        value={'message': MISSING_ADD_INGREDIENT_MSG},
+                        status_codes=[400]
+                    ),
+                ]
+            ),
+            401: auth_failed_response,
+        }
+    )
+    def post(self, request: Request) -> Response:
+        """
+        Create a new UserListIngredients in the database.
+        """
+        # Extract username from the access token
+        username = get_auth_username_from_payload(request=request)
+        body = request.data
+
+        if (
+            username
+            and 'list_name' in body
+        ):
+            list = create_user_list_ingredients(
+                username,
+                body['list_name']
+            )
+            serializer = UserListIngredientsSerializer(list)
+        else:
+            raise MissingInformation(self.MISSING_CREATE_USER_LIST_MSG)
+
+        return Response({'result': serializer.data}, status=200)
 
     @extend_schema(
         request=UserListIngredientsViewSerializer,
@@ -201,34 +279,36 @@ class UserListIngredientsAPIView(APIView):
                     ),
                 ]
             ),
-            401: auth_failed_response,
-            405: OpenApiResponse(
+            400: OpenApiResponse(
                 response=MessageSerializer,
                 examples=[
                     OpenApiExample(
                         name='Required Value Missing',
-                        value={'message': missing_msg},
-                        status_codes=[405]
+                        value={'message': MISSING_ADD_INGREDIENT_MSG},
+                        status_codes=[400]
                     ),
                 ]
             ),
+            401: auth_failed_response,
         }
     )
     def put(self, request: Request) -> Response:
         """
         Adds an ingredient to a user's list.
         """
+        # Extract username from the access token
+        username = get_auth_username_from_payload(request=request)
         body = request.data
 
         if (
-            'username' in body
+            username
             and 'list_name' in body
             and 'ingredient' in body
             and 'amount' in body
             and 'unit' in body
         ):
             result = update_list_ingredient(
-                body['username'],
+                username,
                 body['list_name'],
                 body['ingredient'],
                 body['amount'],
@@ -236,8 +316,7 @@ class UserListIngredientsAPIView(APIView):
             )
             status = 200
         else:
-            result = self.missing_msg
-            status = 405
+            raise MissingInformation(self.MISSING_ADD_INGREDIENT_MSG)
 
         message = Message(message=result)
         serializer = MessageSerializer(message)
@@ -260,14 +339,14 @@ class AllIngredientsAPIView(APIView):
                     OpenApiExample(
                         name='Success',
                         value={
-                            "result": [
+                            'result': [
                                 {
-                                    "name": "ingredient_1",
-                                    "type": "ingredient_type"
+                                    'name': 'ingredient_1',
+                                    'type': 'ingredient_type'
                                 },
                                 {
-                                    "name": "ingredient_2",
-                                    "type": "ingredint_type2"
+                                    'name': 'ingredient_2',
+                                    'type': 'ingredint_type2'
                                 }
                             ]
                         }
@@ -283,40 +362,41 @@ class AllIngredientsAPIView(APIView):
         """
         all_ingredients = get_all_ingredients()
         serializer = IngredientSerializer(all_ingredients, many=True)
-        return Response({"result": serializer.data})
+        return Response({'result': serializer.data})
 
 
 @extend_schema(tags=['User'])
 class UserAPIView(APIView):
+    MISSING_USER_INFO = 'Username or email missing. Unable to create new user.'
     @extend_schema(
         request=None,
         responses={
-            200: OpenApiResponse(
-                response=MessageSerializer,
+            201: OpenApiResponse(
+                response=UserSerializer,
                 examples=[
                     OpenApiExample(
                         name='User Created',
-                        value={'message': CREATE_SUCCESS_MSG},
-                        status_codes=[200]
-                    ),
-                    OpenApiExample(
-                        name='User Exists',
-                        value={'message': EXISTS_MSG},
-                        status_codes=[200]
+                        value={
+                            'result': {
+                                'username': 'test_user',
+                                'email': 'test_user@domain.com'
+                            }
+                        },
+                        status_codes=[201]
                     ),
                 ]
             ),
-            401: auth_failed_response,
-            500: OpenApiResponse(
+            400: OpenApiResponse(
                 response=MessageSerializer,
                 examples=[
                     OpenApiExample(
                         name='Unable to create user',
-                        value={'message': 'Username or email missing. Unable to create new user.'},
-                        status_codes=[500]
+                        value={'message': MISSING_USER_INFO},
+                        status_codes=[400]
                     )
                 ]
             ),
+            401: auth_failed_response,
         }
     )
     def post(self, request: Request) -> Response:
@@ -328,13 +408,10 @@ class UserAPIView(APIView):
         email = get_auth_email_from_payload(request=request)
 
         if email and username:
-            # Try creating user in the db
-            response = create_user(username=username, email=email)
-            status = 200
+            # Create user in the db
+            user = create_user(username=username, email=email)
+            serializer = UserSerializer(user)
         else:
-            response = 'Username or email missing. Unable to create new user.'
-            status = 500
+            raise MissingInformation(self.MISSING_USER_INFO)
 
-        message = Message(message=response)
-        serializer = MessageSerializer(message)
-        return Response(serializer.data, status=status)
+        return Response({'result': serializer.data}, status=201)
