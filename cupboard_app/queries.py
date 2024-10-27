@@ -14,7 +14,7 @@ CREATE_FAILED_MSG = 'Failed to create item.'
 UPDATE_FAILED_MSG = 'Failed to update item.'
 EXISTS_MSG = 'Item already exists.'
 DOES_NOT_EXIST_MSG = 'Item does not exist.'
-
+HAS_NO_ING_MSG = 'List has no ingredients.'
 
 def create_ingredient(name: str, type: str) -> str:
     """
@@ -333,23 +333,26 @@ def update_list_ingredient(
                 search_id = list_ingredient.get('ingredientId')
                 unit_id = list_ingredient.get('unitId')
                 # Check if ingredient exists
-                if not any(
-                    dictionary.get('ingredientId', None) == search_id
-                    for dictionary in user_list.ingredients
-                ):
-                    # ingredient does not exist so insert
-                    user_list.ingredients.append(list_ingredient)
+                if len(user_list.ingredients > 0):
+                    if not any(
+                        dictionary.get('ingredientId', None) == search_id
+                        for dictionary in user_list.ingredients
+                    ):
+                        # ingredient does not exist so insert
+                        user_list.ingredients.append(list_ingredient)
+                    else:
+                        # ingredient exists so update ingredient
+                        for i in user_list.ingredients:
+                            # if unit is the same just change amount
+                            if i['ingredientId'] == search_id and i['unitId'] == unit_id:
+                                i['amount'] = amount
+                            # if unit is different create new ingredient
+                            elif i['ingredientId'] == search_id and i['unitId'] != unit_id:
+                                user_list.ingredients.append(list_ingredient)
+                    user_list.save()
+                    result = UPDATE_SUCCESS_MSG
                 else:
-                    # ingredient exists so update ingredient
-                    for i in user_list.ingredients:
-                        # if unit is the same just change amount
-                        if i['ingredientId'] == search_id and i['unitId'] == unit_id:
-                            i['amount'] = amount
-                        # if unit is different create new ingredient
-                        elif i['ingredientId'] == search_id and i['unitId'] != unit_id:
-                            user_list.ingredients.append(list_ingredient)
-                user_list.save()
-                result = UPDATE_SUCCESS_MSG
+                    result = HAS_NO_ING_MSG
             else:
                 result = DOES_NOT_EXIST_MSG
         else:
@@ -423,12 +426,15 @@ def remove_list_ingredient(
         listName__listName=listName
     ).first()
     if user_list:
-        # Check if ingredient exists, if so delete it
-        for dictionary in user_list.ingredients:
-            if dictionary.get('ingredientId', None) == ingredientId:
-                user_list.ingredients.remove(dictionary)
-        user_list.save()
-        result = UPDATE_SUCCESS_MSG
+        if len(user_list.ingredients > 0):
+            # Check if ingredient exists, if so delete it
+            for dictionary in user_list.ingredients:
+                if dictionary.get('ingredientId', None) == ingredientId:
+                    user_list.ingredients.remove(dictionary)
+            user_list.save()
+            result = UPDATE_SUCCESS_MSG
+        else: 
+            result = HAS_NO_ING_MSG
     else:
         result = DOES_NOT_EXIST_MSG
 
