@@ -393,7 +393,7 @@ class TestIngredients(TestCase):
         self.assertEqual(list[1].user.email, "user@test.com")
         self.assertEqual(str(list[1].listName), "empty_listname")
 
-        self.assertEqual(len(list[2].ingredients), 0)
+        self.assertEqual(list[2].ingredients, None)
         self.assertEqual(list[2].user.username, "test_user")
         self.assertEqual(list[2].user.email, "user@test.com")
         self.assertEqual(str(list[2].listName), "empty_listname2")

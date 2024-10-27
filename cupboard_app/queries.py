@@ -341,25 +341,23 @@ def update_list_ingredient(
                 search_id = list_ingredient.get('ingredientId')
                 unit_id = list_ingredient.get('unitId')
                 # Check if ingredient exists
-                if (len(user_list.ingredients) > 0 and user_list.ingredients):
-                    if not any(
-                        dictionary.get('ingredientId', None) == search_id
-                        and dictionary.get('unitId', None) == unit_id
-                        for dictionary in user_list.ingredients
-                    ):
-                        # ingredient does not exist so insert
-                        user_list.ingredients.append(list_ingredient)
-                    else:
-                        # ingredient exists so update ingredient
-                        for i in user_list.ingredients:
-                            # if unit is the same just change amount
-                            if i['ingredientId'] == search_id and i['unitId'] == unit_id:
-                                i['amount'] = amount
-                    user_list.save()
-                    result = UPDATE_SUCCESS_MSG
-                else:
+                if not user_list.ingredients:
                     user_list.ingredients = [list_ingredient]
-                    user_list.save()
+                elif not any(
+                    dictionary.get('ingredientId', None) == search_id
+                    and dictionary.get('unitId', None) == unit_id
+                    for dictionary in user_list.ingredients
+                ):
+                    # ingredient does not exist so insert
+                    user_list.ingredients.append(list_ingredient)
+                else:
+                    # ingredient exists so update ingredient
+                    for i in user_list.ingredients:
+                        # if unit is the same just change amount
+                        if i['ingredientId'] == search_id and i['unitId'] == unit_id:
+                            i['amount'] = amount
+                user_list.save()
+                result = UPDATE_SUCCESS_MSG                            
             else:
                 result = DOES_NOT_EXIST_MSG
         else:
@@ -399,18 +397,11 @@ def create_user_list_ingredients(
             ).exists():
                 result = EXISTS_MSG
             else:
-                if ingredients is not None:
-                    UserListIngredients.objects.create(
-                        user=user,
-                        listName=list,
-                        ingredients=ingredients
-                    )
-                else:
-                    UserListIngredients.objects.create(
-                        user=user,
-                        listName=list,
-                        ingredients=[]
-                    )
+                UserListIngredients.objects.create(
+                    user=user,
+                    listName=list,
+                    ingredients=ingredients
+                )
         else:
             result = CREATE_FAILED_MSG
     except Exception:
