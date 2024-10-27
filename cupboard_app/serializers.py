@@ -14,6 +14,14 @@ class MessageSerializer(serializers.Serializer):
     message = serializers.CharField()
 
 
+class UserListIngredientsViewSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    listName = serializers.CharField()
+    ingredient = serializers.CharField()
+    amount = serializers.FloatField()
+    unit = serializers.CharField()
+
+
 class IngredientSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Ingredient
