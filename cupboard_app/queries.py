@@ -318,6 +318,10 @@ def update_list_ingredient(
         ingredient: Name of the ingredient
         amount: Quantity of the ingredient
         unit: The unit of measure for the ingredient
+
+    Returns:
+        Success message if the save was successful.
+        Fail message or exists message if save was unsuccessful.
     """
     result = UPDATE_FAILED_MSG
     try:
@@ -336,7 +340,7 @@ def update_list_ingredient(
                 search_id = list_ingredient.get('ingredientId')
                 unit_id = list_ingredient.get('unitId')
                 # Check if ingredient exists
-                if len(user_list.ingredients > 0 and user_list.ingredients is not None):
+                if (len(user_list.ingredients) > 0 and user_list.ingredients):
                     if not any(
                         dictionary.get('ingredientId', None) == search_id and dictionary.get('unitId', None) == unit_id
                         for dictionary in user_list.ingredients
@@ -408,7 +412,7 @@ def create_user_list_ingredients(
 def remove_list_ingredient(
     username: str,
     listName: str,
-    ingredientId: str
+    ingredient_id: str
 ) -> str:
     """
     Removes an ingredient in the user's list.
@@ -416,7 +420,11 @@ def remove_list_ingredient(
     Args:
         username: User's username
         listName: Name of the list
-        ingredientId: Id of the ingredient
+        ingredient_id: Id of the ingredient
+    
+    Returns:
+        Success message if the save was successful.
+        Fail message, exists or empty list message if save was unsuccessful.
     """
     result = UPDATE_FAILED_MSG
 
@@ -425,16 +433,13 @@ def remove_list_ingredient(
         user__username=username,
         listName__listName=listName
     ).first()
-    if user_list:
-        if len(user_list.ingredients > 0 and user_list.ingredients is not None):
-            # Check if ingredient exists, if so delete it
-            for dictionary in user_list.ingredients:
-                if dictionary.get('ingredientId', None) == ingredientId:
-                    user_list.ingredients.remove(dictionary)
-            user_list.save()
-            result = UPDATE_SUCCESS_MSG
-        else: 
-            result = HAS_NO_ING_MSG
+    if user_list and user_list.ingredients:
+        # Check if ingredient exists, if so delete it
+        for dictionary in user_list.ingredients:
+            if dictionary.get('ingredientId', None) == ingredient_id:
+                user_list.ingredients.remove(dictionary)
+        user_list.save()
+        result = UPDATE_SUCCESS_MSG
     else:
         result = DOES_NOT_EXIST_MSG
 
