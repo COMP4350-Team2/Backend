@@ -441,7 +441,7 @@ class AddIngredientToListApi(TestCase):
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('list_item'),
+            reverse('user_list_ingredients'),
             json.dumps(
                 {
                     'username': 'testuser',
@@ -482,7 +482,7 @@ class AddIngredientToListApi(TestCase):
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('list_item'),
+            reverse('user_list_ingredients'),
             json.dumps(
                 {
                     'listName': 'testlist',
@@ -525,7 +525,7 @@ class AddIngredientToListApi(TestCase):
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('list_item'),
+            reverse('user_list_ingredients'),
             json.dumps(
                 {
                     'username': 'testuser_invalid',
@@ -563,7 +563,7 @@ class AddIngredientToListApi(TestCase):
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('list_item'),
+            reverse('user_list_ingredients'),
             json.dumps(
                 {
                     'username': 'testuser',
