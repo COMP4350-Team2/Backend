@@ -303,9 +303,12 @@ def update_list_ingredient(
     """
     Updates an ingredient in the user's list.
 
-    If ingredient exists in the user's list, then update the given ingredient's
-    amount and unit in the passed amount and unit.
+    If ingredient exists in the user's list and has the same unit, 
+    then update the given ingredient's amount and unit in the passed amount and unit.
 
+    If ingredient exists in the user's list and has a different unit, 
+    then add new ingredient dictionary to user's list.
+    
     If ingredient does not exist in the user's list, then add new ingredient
     dictionary to user's list.
 
