@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
@@ -18,13 +19,13 @@ from utils.permissions import HasMessagesPermission
 from cupboard_app.exceptions import MissingInformation
 from cupboard_app.models import Message
 from cupboard_app.queries import (
+    create_list_name,
     create_user,
     create_user_list_ingredients,
     get_all_ingredients,
-    update_list_ingredient,    
-    DOES_NOT_EXIST_MSG,
-    UPDATE_SUCCESS_MSG,
-    UPDATE_FAILED_MSG
+    update_list_ingredient,
+    DOES_NOT_EXIST,
+    INVALID_USER_LIST
 )
 from cupboard_app.serializers import (
     MessageSerializer,
@@ -33,7 +34,6 @@ from cupboard_app.serializers import (
     UserListIngredientsSerializer,
     UserListIngredientsViewSerializer
 )
-
 
 NO_AUTH = {'message': 'Authentication credentials were not provided.'}
 INVALID_TOKEN = {'message': 'Given token not valid for any token type'}
@@ -86,7 +86,11 @@ def api_exception_handler(exc, context=None) -> Response:
         response.data = PERMISSION_DENIED
     elif response and isinstance(response.data, dict):
         response.data = {'message': response.data.get('detail', 'API Error')}
+    elif isinstance(exc, ValueError) or isinstance(exc, ObjectDoesNotExist):
+        data = {'message': str(exc)}
+        response = Response(data, status=500)
     else:
+        print(exc)
         data = {'message': 'API Error'}
         response = Response(data, status=500)
     return response
@@ -226,7 +230,7 @@ class UserListIngredientsAPIView(APIView):
                 examples=[
                     OpenApiExample(
                         name='Required Value Missing',
-                        value={'message': MISSING_ADD_INGREDIENT_MSG},
+                        value={'message': MISSING_CREATE_USER_LIST_MSG},
                         status_codes=[400]
                     ),
                 ]
@@ -242,10 +246,11 @@ class UserListIngredientsAPIView(APIView):
         username = get_auth_username_from_payload(request=request)
         body = request.data
 
-        if (
-            username
-            and 'list_name' in body
-        ):
+        if (username and 'list_name' in body):
+            # Check listName object exists, if not add
+            create_list_name(list_name=body['list_name'])
+
+            # Create the list
             list = create_user_list_ingredients(
                 username,
                 body['list_name']
@@ -264,19 +269,9 @@ class UserListIngredientsAPIView(APIView):
                 examples=[
                     OpenApiExample(
                         name='Item Updated',
-                        value={'message': UPDATE_SUCCESS_MSG},
+                        value={'message': 'Nice'},
                         status_codes=[200]
-                    ),
-                    OpenApiExample(
-                        name='Referenced Value Does Not Exist',
-                        value={'message': DOES_NOT_EXIST_MSG},
-                        status_codes=[200]
-                    ),
-                    OpenApiExample(
-                        name='Ingredient Does Not Exist',
-                        value={'message': f'{UPDATE_FAILED_MSG} Ingredient does not exist.'},
-                        status_codes=[200]
-                    ),
+                    )
                 ]
             ),
             400: OpenApiResponse(
@@ -290,6 +285,26 @@ class UserListIngredientsAPIView(APIView):
                 ]
             ),
             401: auth_failed_response,
+            500: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='User List not found',
+                        value={'message': INVALID_USER_LIST},
+                        status_codes=[500]
+                    ),
+                    OpenApiExample(
+                        name='Ingredient not found',
+                        value={'message': f'Ingredient {DOES_NOT_EXIST}'},
+                        status_codes=[500]
+                    ),
+                    OpenApiExample(
+                        name='Unit not found',
+                        value={'message': f'Measurement {DOES_NOT_EXIST}'},
+                        status_codes=[500]
+                    ),
+                ]
+            )
         }
     )
     def put(self, request: Request) -> Response:
@@ -307,20 +322,18 @@ class UserListIngredientsAPIView(APIView):
             and 'amount' in body
             and 'unit' in body
         ):
-            result = update_list_ingredient(
+            list = update_list_ingredient(
                 username,
                 body['list_name'],
                 body['ingredient'],
                 body['amount'],
                 body['unit']
             )
-            status = 200
+            serializer = UserListIngredientsSerializer(list)
         else:
             raise MissingInformation(self.MISSING_ADD_INGREDIENT_MSG)
 
-        message = Message(message=result)
-        serializer = MessageSerializer(message)
-        return Response(serializer.data, status=status)
+        return Response({'result': serializer.data}, status=200)
 
 
 @extend_schema(tags=['Ingredients'])

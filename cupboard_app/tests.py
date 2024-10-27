@@ -32,18 +32,18 @@ from cupboard_app.queries import (
     create_user_list_ingredients,
     update_list_ingredient,
     remove_list_ingredient,
-    UPDATE_FAILED_MSG,
-    DOES_NOT_EXIST_MSG
+    DOES_NOT_EXIST,
+    INVALID_USER_LIST
 )
 from cupboard_app.views import (
-    NO_AUTH,
-    INVALID_TOKEN,
-    PERMISSION_DENIED,
     PublicMessageAPIView,
     PrivateMessageAPIView,
     PrivateScopedMessageAPIView,
     UserAPIView,
-    UserListIngredientsAPIView
+    UserListIngredientsAPIView,
+    INVALID_TOKEN,
+    NO_AUTH,
+    PERMISSION_DENIED
 )
 
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
@@ -265,9 +265,6 @@ class TestIngredients(TestCase):
         create_ingredient('test_ing2', 'test_type2')
         create_measurement('test_unit')
         ing1 = create_list_ingredient('test_ing', 500, 'test_unit')
-        ing2 = create_list_ingredient('test_ing2', 500, 'none')
-        ing3 = create_list_ingredient('test_ing2', 'none', 'test_unit')
-        ing4 = create_list_ingredient('none', 500, 'test_unit')
         self.assertEqual(
             ing1,
             {
@@ -278,9 +275,14 @@ class TestIngredients(TestCase):
                 'unit': ing1.get('unit')
             }
         )
-        self.assertEqual(ing2, None)
-        self.assertEqual(ing3, None)
-        self.assertEqual(ing4, None)
+        with self.assertRaises(Measurement.DoesNotExist):
+            create_list_ingredient('test_ing2', 500, 'none')
+
+        with self.assertRaises(ValueError):
+            create_list_ingredient('test_ing2', 'none', 'test_unit')
+
+        with self.assertRaises(Ingredient.DoesNotExist):
+            create_list_ingredient('none', 500, 'test_unit')
 
     def test_get_user_lists_ingredients(self):
         """
@@ -320,10 +322,17 @@ class TestIngredients(TestCase):
         ing2 = create_list_ingredient('test_ing2', 400, 'test_unit2')
 
         # Invalid cases
-        create_list_ingredient(None, None, None)
-        create_list_ingredient('test_ing2', None, None)
-        create_list_ingredient(None, 400, None)
-        create_list_ingredient(None, None, 'test_unit2')
+        with self.assertRaises(Ingredient.DoesNotExist):
+            create_list_ingredient(None, None, None),
+
+        with self.assertRaises(Measurement.DoesNotExist):
+            create_list_ingredient('test_ing2', None, None),
+            
+        with self.assertRaises(Ingredient.DoesNotExist):
+            create_list_ingredient(None, 400, None),
+            
+        with self.assertRaises(Ingredient.DoesNotExist):
+            create_list_ingredient(None, None, 'test_unit2'),
 
         ing_list = []
         ing_list.append(ing1)
@@ -651,12 +660,20 @@ class AddIngredientToListApi(TestCase):
 
         self.assertEqual(response.status_code, 200)
         # ensures correct response given by view response
-        self.assertDictEqual(
-            response.json(),
-            {
-                'message': 'Item updated successfully.'
-            }
+        result = response.json().get('result')
+        self.assertEqual(
+            result.get('ingredients'),
+            [
+                {
+                    'amount': 5,
+                    'ingredient_id': 1,
+                    'unit_id': 1,
+                    'ingredient_name': 'test_ing',
+                    'unit': 'test_unit'
+                }
+            ]
         )
+
         # ensures the item was actually added to the list
         modified_list = UserListIngredients.objects.filter(
             user__username='testuser',
@@ -727,7 +744,6 @@ class AddIngredientToListApi(TestCase):
             reverse('user_list_ingredients'),
             json.dumps(
                 {
-                    'username': 'testuser_invalid',
                     'list_name': 'testlist',
                     'ingredient': 'test_ing',
                     'amount': 5,
@@ -738,10 +754,10 @@ class AddIngredientToListApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 500)
         # ensures correct response given by view response
-        self.assertDictEqual(
-            response.json(), {'message': DOES_NOT_EXIST_MSG}
+        self.assertEqual(
+            response.json(), {'message': INVALID_USER_LIST}
         )
         # ensures the list items have not been changed
         modified_list = UserListIngredients.objects.filter(
@@ -754,7 +770,7 @@ class AddIngredientToListApi(TestCase):
     def test_add_ingredient_to_list_nonexisting_ing(self, mock_decode):
         """
         Testing adding an ingredient to an existing list with an ingredient
-        that does not acutally exist
+        that does not actually exist
         """
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
@@ -773,12 +789,12 @@ class AddIngredientToListApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 500)
         # ensures correct response given by view response
         self.assertDictEqual(
             response.json(),
             {
-                'message': f'{UPDATE_FAILED_MSG} Ingredient does not exist.'
+                'message': f'Ingredient {DOES_NOT_EXIST}'
             }
         )
         # ensures the list items have not been changed
@@ -795,9 +811,7 @@ class CreateUser(TestCase):
         """
         response = self.client.post(reverse('user'))
         self.assertEqual(response.status_code, 401)
-        self.assertDictEqual(
-            response.json(), NO_AUTH
-        )
+        self.assertDictEqual(response.json(), NO_AUTH)
 
     def test_create_user_api_with_invalid_token_returns_unauthorized(self):
         """
@@ -808,9 +822,7 @@ class CreateUser(TestCase):
             HTTP_AUTHORIZATION='Bearer invalid-token'
         )
         self.assertEqual(response.status_code, 401)
-        self.assertDictEqual(
-            response.json(), INVALID_TOKEN
-        )
+        self.assertDictEqual(response.json(), INVALID_TOKEN)
 
     @patch.object(TokenBackend, 'decode')
     def test_create_user_api_with_valid_token_returns_ok(self, mock_decode):
@@ -820,6 +832,8 @@ class CreateUser(TestCase):
         exists in the db.
         """
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+        username = TEST_VALID_TOKEN_PAYLOAD.get('sub')
+        email = TEST_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
 
         response = self.client.post(
             reverse('user'),
@@ -831,8 +845,8 @@ class CreateUser(TestCase):
             response.json(),
             {
                 'result': {
-                    'username': 'CupboardTest@clients',
-                    'email': 'testing@cupboard.com'
+                    'username': username,
+                    'email': email
                 }
             }
         )
@@ -847,8 +861,8 @@ class CreateUser(TestCase):
             response.json(),
             {
                 'result': {
-                    'username': 'CupboardTest@clients',
-                    'email': 'testing@cupboard.com'
+                    'username': username,
+                    'email': email
                 }
             }
         )

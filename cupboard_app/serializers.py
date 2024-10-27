@@ -22,37 +22,37 @@ class UserListIngredientsViewSerializer(serializers.Serializer):
     unit = serializers.CharField()
 
 
-class IngredientSerializer(serializers.HyperlinkedModelSerializer):
+class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ['name', 'type']
 
 
-class list_nameSerializer(serializers.HyperlinkedModelSerializer):
+class list_nameSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListName
         fields = ['list_name']
 
 
-class MeasurementSerializer(serializers.HyperlinkedModelSerializer):
+class MeasurementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Measurement
         fields = ['unit']
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email']
 
 
-class UserListIngredientsSerializer(serializers.HyperlinkedModelSerializer):
+class UserListIngredientsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserListIngredients
         fields = ['user', 'list_name', 'ingredients']
 
 
-class RecipeSerializer(serializers.HyperlinkedModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ['user', 'recipe_name', 'steps', 'ingredients']

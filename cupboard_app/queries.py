@@ -8,12 +8,8 @@ from cupboard_app.models import (
     UserListIngredients
 )
 
-CREATE_SUCCESS_MSG = 'Item created successfully.'
-UPDATE_SUCCESS_MSG = 'Item updated successfully.'
-CREATE_FAILED_MSG = 'Failed to create item.'
-UPDATE_FAILED_MSG = 'Failed to update item.'
-EXISTS_MSG = 'Item already exists.'
-DOES_NOT_EXIST_MSG = 'Item does not exist.'
+INVALID_USER_LIST = 'User list does not exist.'
+DOES_NOT_EXIST = 'matching query does not exist.'
 
 
 def create_ingredient(name: str, type: str) -> Ingredient:
@@ -226,15 +222,12 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
             "unit_id": id,
             "unit": unit
         }
+        Exception raised if the ingredient or unit does not exist in the database
+        or amount is not int or float type
     """
-    ingredient_dict = None
-    ingredient = get_ingredient(name=ingredient)
-    unit = get_measurement(unit=unit)
-    if (
-        ingredient
-        and unit
-        and (isinstance(amount, int) or isinstance(amount, float))
-    ):
+    ingredient = Ingredient.objects.get(name=ingredient)
+    unit = Measurement.objects.get(unit=unit)
+    if isinstance(amount, int) or isinstance(amount, float):
         ingredient_dict = {
             'ingredient_id': ingredient.id,
             'ingredient_name': ingredient.name,
@@ -242,6 +235,8 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
             'unit_id': unit.id,
             'unit': unit.unit
         }
+    else:
+        raise ValueError('Amount must be of type int or float.')
 
     return ingredient_dict
 
@@ -296,52 +291,45 @@ def update_list_ingredient(
         unit: The unit of measure for the ingredient
 
     Returns:
-        Success message if the save was successful.
-        Fail message or exists message if save was unsuccessful.
+        The updated UserListIngredient object.
+        Raises exception if update was unsuccessful
+        or username, unit, or specified UserListIngredient does not exist
     """
-    result = UPDATE_FAILED_MSG
-    try:
-        list_ingredient = create_list_ingredient(
-            ingredient=ingredient,
-            amount=amount,
-            unit=unit
-        )
-        if list_ingredient:
-            # Check list exists
-            user_list = UserListIngredients.objects.filter(
-                user__username=username,
-                list_name__list_name=list_name
-            ).first()
-            if user_list:
-                search_id = list_ingredient.get('ingredient_id')
-                unit_id = list_ingredient.get('unit_id')
-                # Check if ingredient exists
-                if not user_list.ingredients:
-                    # Empty list so set the list
-                    user_list.ingredients = [list_ingredient]
-                elif not any(
-                    dictionary.get('ingredient_id', None) == search_id
-                    and dictionary.get('unit_id', None) == unit_id
-                    for dictionary in user_list.ingredients
-                ):
-                    # ingredient does not exist so insert
-                    user_list.ingredients.append(list_ingredient)
-                else:
-                    # ingredient exists so update ingredient
-                    for i in user_list.ingredients:
-                        # if unit is the same just change amount
-                        if i['ingredient_id'] == search_id and i['unit_id'] == unit_id:
-                            i['amount'] = amount
-                user_list.save()
-                result = UPDATE_SUCCESS_MSG
-            else:
-                result = DOES_NOT_EXIST_MSG
+    list_ingredient = create_list_ingredient(
+        ingredient=ingredient,
+        amount=amount,
+        unit=unit
+    )
+    # Check list exists
+    user_list = UserListIngredients.objects.filter(
+        user__username=username,
+        list_name__list_name=list_name
+    ).first()
+    if user_list:
+        search_id = list_ingredient.get('ingredient_id')
+        unit_id = list_ingredient.get('unit_id')
+        # Check if ingredient exists
+        if not user_list.ingredients:
+            # Empty list so set the list
+            user_list.ingredients = [list_ingredient]
+        elif not any(
+            dictionary.get('ingredient_id', None) == search_id
+            and dictionary.get('unit_id', None) == unit_id
+            for dictionary in user_list.ingredients
+        ):
+            # ingredient does not exist so insert
+            user_list.ingredients.append(list_ingredient)
         else:
-            result = f'{UPDATE_FAILED_MSG} Ingredient does not exist.'
-    except Exception:
-        result = UPDATE_FAILED_MSG
+            # ingredient exists so update ingredient
+            for i in user_list.ingredients:
+                # if unit is the same just change amount
+                if i['ingredient_id'] == search_id and i['unit_id'] == unit_id:
+                    i['amount'] = amount
+        user_list.save()
+    else:
+        raise ValueError(INVALID_USER_LIST)
 
-    return result
+    return user_list
 
 
 def create_user_list_ingredients(
