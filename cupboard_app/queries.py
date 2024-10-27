@@ -357,7 +357,7 @@ def update_list_ingredient(
                         if i['ingredientId'] == search_id and i['unitId'] == unit_id:
                             i['amount'] = amount
                 user_list.save()
-                result = UPDATE_SUCCESS_MSG                            
+                result = UPDATE_SUCCESS_MSG
             else:
                 result = DOES_NOT_EXIST_MSG
         else:
