@@ -308,7 +308,7 @@ def update_list_ingredient(
 
     If ingredient exists in the user's list and has a different unit, 
     then add new ingredient dictionary to user's list.
-    
+
     If ingredient does not exist in the user's list, then add new ingredient
     dictionary to user's list.
 
@@ -326,7 +326,7 @@ def update_list_ingredient(
             amount=amount,
             unit=unit
         )
-        if list_ingredient and ingredient is not None and amount is not None and unit is not None:
+        if list_ingredient:
             # Check list exists
             user_list = UserListIngredients.objects.filter(
                 user__username=username,
