@@ -294,7 +294,7 @@ class TestIngredients(TestCase):
 
     def test_update_list_ingredient(self):
         """
-        Testing test_update_list_ingredient correctly updates an ingredient in a user's list
+        Testing update_list_ingredient correctly updates an ingredient in a user's list
         """
         create_user("test_user", "user@test.com")
         test_user = get_user("test_user")
@@ -336,9 +336,19 @@ class TestIngredients(TestCase):
         self.assertEqual(after[0].ingredients[2]["ingredientId"], ing2.get("ingredientId"))
         self.assertEqual(after[0].ingredients[2]["amount"], 300)
 
+        create_list("empty_listname")
+        empty_ing = []
+        create_user_list_ingredients(test_user.username, "empty_listname", empty_ing)
+        after = get_user_lists_ingredients(test_user.username, test_user.id)
+        update_list_ingredient("test_user", "empty_listname", "test_ing", 500, "test_unit")
+        self.assertEqual(after[1].ingredients[0]["ingredientId"], ing1.get("ingredientId"))
+        self.assertEqual(after[1].ingredients[0]["amount"], ing1.get("amount"))
+        self.assertEqual(after[1].ingredients[0]["unitId"], ing1.get("unitId"))
+
+
     def test_create_user_list_ingredients(self):
         """
-        Testing test_create_user_list_ingredients creates a user list
+        Testing create_user_list_ingredients creates a user list
         """
 
         create_user("test_user", "user@test.com")
@@ -371,9 +381,26 @@ class TestIngredients(TestCase):
         self.assertEqual(list[0].user.email, "user@test.com")
         self.assertEqual(str(list[0].listName), "test_listname")
 
+        create_list("empty_listname")
+        empty_ing = []
+        create_user_list_ingredients(test_user.username, "empty_listname", empty_ing)
+
+        create_list("empty_listname2")
+        create_user_list_ingredients(test_user.username, "empty_listname2", None)
+
+        self.assertEqual(len(list[1].ingredients), 0)
+        self.assertEqual(list[1].user.username, "test_user")
+        self.assertEqual(list[1].user.email, "user@test.com")
+        self.assertEqual(str(list[1].listName), "empty_listname")
+
+        self.assertEqual(len(list[2].ingredients), 0)
+        self.assertEqual(list[2].user.username, "test_user")
+        self.assertEqual(list[2].user.email, "user@test.com")
+        self.assertEqual(str(list[2].listName), "empty_listname2")
+
     def test_remove_list_ingredient(self):
         """
-        Testing test_remove_list_ingredient removes specified ingredient from user's list
+        Testing remove_list_ingredient removes specified ingredient from user's list
         """
 
         create_user("test_user", "user@test.com")

@@ -357,6 +357,7 @@ def update_list_ingredient(
                     result = UPDATE_SUCCESS_MSG
                 else:
                     user_list.ingredients = [list_ingredient]
+                    user_list.save()
             else:
                 result = DOES_NOT_EXIST_MSG
         else:
@@ -396,11 +397,18 @@ def create_user_list_ingredients(
             ).exists():
                 result = EXISTS_MSG
             else:
-                UserListIngredients.objects.create(
-                    user=user,
-                    listName=list,
-                    ingredients=ingredients
-                )
+                if ingredients is not None:
+                    UserListIngredients.objects.create(
+                        user=user,
+                        listName=list,
+                        ingredients=ingredients
+                    )
+                else:
+                    UserListIngredients.objects.create(
+                        user=user,
+                        listName=list,
+                        ingredients=[]
+                    )
         else:
             result = CREATE_FAILED_MSG
     except Exception:
