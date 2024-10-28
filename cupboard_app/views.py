@@ -462,10 +462,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=200)
 
     @extend_schema(
-        request=inline_serializer(
-            name='DeleteUserListRequest',
-            fields={'list_name': serializers.CharField()}
-        ),
+        request=None,
         responses={
             200: OpenApiResponse(
                 response=inline_serializer(

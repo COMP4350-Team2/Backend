@@ -478,7 +478,7 @@ class GetAllIngredientsApi(TestCase):
         )
 
 
-class UpdateIngredientListApi(TestCase):
+class UpdatetUserListIngredientsApi(TestCase):
     user = None
     unit = None
     ing1 = None
@@ -820,3 +820,102 @@ class UpdateIngredientListApi(TestCase):
         self.assertEqual(response.status_code, 200)
         # ensures correct response given by view response
         self.assertEqual(response.json().get('ingredients'), [])
+
+
+class DeletetUserListIngredientsApi(TestCase):
+    username = TEST_VALID_TOKEN_PAYLOAD.get('sub')
+    email = TEST_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+    list_name1 = 'Grocery'
+    list_name2 = 'Pantry'
+    test_ing = 'Pork'
+    test_unit = 'g'
+
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        User.objects.create(username=self.username, email=self.email)
+        Ingredient.objects.create(name=self.test_ing, type='Meat')
+        Measurement.objects.create(unit=self.test_unit)
+        ListName.objects.create(list_name=self.list_name1)
+        ListName.objects.create(list_name=self.list_name2)
+        UserListIngredients.objects.create(
+            user=User.objects.get(username=self.username),
+            list_name=ListName.objects.get(list_name=self.list_name1),
+            ingredients=[]
+        )
+        UserListIngredients.objects.create(
+            user=User.objects.get(username=self.username),
+            list_name=ListName.objects.get(list_name=self.list_name2),
+            ingredients=[]
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_delete_lists_with_valid_token_returns_ok(self, mock_decode):
+        """
+        Testing the delete UserListIngredient API with a valid token and
+        parameters.
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.delete(
+            reverse(
+                'specific_user_list_ingredients',
+                kwargs={'list_name': self.list_name1}
+            ),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        # Check how many lists we have
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json().get('result')), 1)
+        self.assertEqual(
+            response.json().get('result'),
+            [
+                {
+                    'user': self.username,
+                    'list_name': self.list_name2,
+                    'ingredients': []
+                }
+            ]
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_delete_lists_with_valid_token_returns_ok(self, mock_decode):
+        """
+        Testing the delete UserListIngredient API with a valid token and
+        parameters.
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.delete(
+            reverse(
+                'specific_user_list_ingredients',
+                kwargs={'list_name': self.list_name1}
+            ),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        response = self.client.delete(
+            reverse(
+                'specific_user_list_ingredients',
+                kwargs={'list_name': self.list_name2}
+            ),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        # Check how many lists we have
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('result'), [])
+
+        # Try delete again when there is nothing
+        response = self.client.delete(
+            reverse(
+                'specific_user_list_ingredients',
+                kwargs={'list_name': self.list_name2}
+            ),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('result'), [])
