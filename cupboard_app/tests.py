@@ -25,6 +25,7 @@ from cupboard_app.queries import (
     get_user,
     create_list_ingredient,
     get_user_lists_ingredients,
+    get_specific_user_lists_ingredients,
     create_user_list_ingredients,
     update_list_ingredient,
     remove_list_ingredient,
@@ -227,6 +228,7 @@ class UserQueries(TestCase):
 
 
 class UserListIngredientsQueries(TestCase):
+
     def test_create_list_ingredient(self):
         """
         Testing create_list_ingredient creates an ingredient dictionary
@@ -330,6 +332,21 @@ class UserListIngredientsQueries(TestCase):
         result_lists.append(UserListIngredients.objects.get(user=test_user.id))
 
         self.assertEqual(user_lists, result_lists)
+
+    def test_specific_get_user_lists_ingredients(self):
+        """
+        Testing get_specific_user_lists_ingredients returns all lists from a user
+        """
+        create_user('test_user1', 'user1@test.com')
+        test_user = get_user('test_user1')
+
+        create_ingredient('test_ingredient1', 'test_type1')
+        create_measurement('test_unit1')
+        ing1 = create_list_ingredient('test_ingredient1', 500, 'test_unit1')
+        create_list_name('test_listname1')
+        list_created = create_user_list_ingredients('test_user1', 'test_listname1', ing1)
+        result = get_specific_user_lists_ingredients(test_user.username, 'test_listname1')
+        self.assertEqual(result, list_created)
 
     def test_update_list_ingredient(self):
         """

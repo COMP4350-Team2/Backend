@@ -357,6 +357,94 @@ class CreateUserListIngredientsApi(TestCase):
             )
 
 
+class GetUserListIngredientsApi(TestCase):
+    username = TEST_VALID_TOKEN_PAYLOAD.get('sub')
+    email = TEST_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+    list_name1 = 'Grocery'
+    list_name2 = 'Pantry'
+    test_ing = 'Pork'
+    test_unit = 'g'
+
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        User.objects.create(username=self.username, email=self.email)
+        Ingredient.objects.create(name=self.test_ing, type='Meat')
+        Measurement.objects.create(unit=self.test_unit)
+        ListName.objects.create(list_name=self.list_name1)
+        ListName.objects.create(list_name=self.list_name2)
+        UserListIngredients.objects.create(
+            user=User.objects.get(username=self.username),
+            list_name=ListName.objects.get(list_name=self.list_name1),
+            ingredients=[]
+        )
+        UserListIngredients.objects.create(
+            user=User.objects.get(username=self.username),
+            list_name=ListName.objects.get(list_name=self.list_name2),
+            ingredients=[]
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_get_all_lists_with_valid_token_returns_ok(self, mock_decode):
+        """
+        Testing the get all UserListIngredient API with a valid token and
+        parameters.
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.get(
+            reverse('user_list_ingredients'),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        # Check how many lists we have
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json().get('result')), 2)
+        self.assertEqual(
+            response.json().get('result'),
+            [
+                {
+                    'user': self.username,
+                    'list_name': self.list_name1,
+                    'ingredients': []
+                },
+                {
+                    'user': self.username,
+                    'list_name': self.list_name2,
+                    'ingredients': []
+                }
+            ]
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_get_specific_lists_with_valid_token_returns_ok(self, mock_decode):
+        """
+        Testing the get specific UserListIngredient API with a valid token and
+        parameters.
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.get(
+            reverse(
+                'specific_user_list_ingredients',
+                kwargs={'list_name': self.list_name1}
+            ),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        # Check how many lists we have
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(
+            response.json().get('result'),
+            {
+                'user': self.username,
+                'list_name': self.list_name1,
+                'ingredients': []
+            }
+        )
+
+
 class GetAllIngredientsApi(TestCase):
     def setUp(self):
         """

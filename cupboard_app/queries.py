@@ -287,12 +287,12 @@ def get_specific_user_lists_ingredients(
         result = UserListIngredients.objects.filter(
             user__id=id,
             list_name__list_name=list_name
-        )
+        ).first()
     else:
         result = UserListIngredients.objects.filter(
             user__username=username,
             list_name__list_name=list_name
-        )
+        ).first()
 
     return result
 
