@@ -5,10 +5,11 @@ from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiResponse
 )
-from rest_framework.exceptions import APIException
+from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework import viewsets
 from rest_framework.views import APIView, exception_handler
 
 from utils.api_helper import (
@@ -19,10 +20,13 @@ from utils.permissions import HasMessagesPermission
 from cupboard_app.exceptions import MissingInformation
 from cupboard_app.models import Message
 from cupboard_app.queries import (
-    create_list_name,
     create_user,
+    create_list_name,
     create_user_list_ingredients,
+    delete_user_list_ingredients,
     get_all_ingredients,
+    get_user_lists_ingredients,
+    get_specific_user_lists_ingredients,
     update_list_ingredient,
     DOES_NOT_EXIST,
     INVALID_USER_LIST
@@ -39,6 +43,47 @@ NO_AUTH = {'message': 'Authentication credentials were not provided.'}
 INVALID_TOKEN = {'message': 'Given token not valid for any token type'}
 PERMISSION_DENIED = {
     'message': 'Permission denied. You do not have permission to perform this action.'
+}
+
+GROCERY_LIST = {
+    'user': 'teacup',
+    'list_name': 'Grocery',
+    'ingredients': [
+        {
+            "ingredient_id": 1,
+            "ingredient_name": 'Beef',
+            "amount": 500,
+            "unit_id": 1,
+            "unit": 'g'
+        },
+        {
+            "ingredient_id": 1,
+            "ingredient_name": 'Dairy',
+            "amount": 2,
+            "unit_id": 2,
+            "unit": 'L'
+        }
+    ]
+}
+PANTRY_LIST = {
+    'user': 'teacup',
+    'list_name': 'Pantry',
+    'ingredients': [
+        {
+            "ingredient_id": 1,
+            "ingredient_name": 'Beef',
+            "amount": 500,
+            "unit_id": 1,
+            "unit": 'g'
+        },
+        {
+            "ingredient_id": 1,
+            "ingredient_name": 'Dairy',
+            "amount": 2,
+            "unit_id": 2,
+            "unit": 'L'
+        }
+    ]
 }
 
 
@@ -192,22 +237,17 @@ class PrivateScopedMessageAPIView(APIView):
 
 
 @extend_schema(tags=["User's List"])
-class UserListIngredientsAPIView(APIView):
-    MISSING_CREATE_USER_LIST_MSG = 'list_name missing in the body.'
+class UserListIngredientsViewSet(viewsets.ViewSet):
+    MISSING_USER_LIST_PARAM_MSG = 'list_name parameter missing.'
     MISSING_ADD_INGREDIENT_MSG = (
         'Required value missing from sent request, '
         'please ensure all items are sent in the following format: '
         '{list_name: [LISTNAME], ingredient: [INGREDIENT], '
-        'amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}'
+        'amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT], action: [ADD or DELETE]}'
     )
 
     @extend_schema(
-        request=inline_serializer(
-            name='AllIngredientsResponse',
-            fields={
-                'result': IngredientSerializer(many=True),
-            }
-        ),
+        request=None,
         responses={
             200: OpenApiResponse(
                 response=UserListIngredientsSerializer,
@@ -215,11 +255,10 @@ class UserListIngredientsAPIView(APIView):
                     OpenApiExample(
                         name="User's List Created",
                         value={
-                            'result': {
-                                'user': 'test_user',
-                                'list_name': 'test_list',
-                                'ingredients': []
-                            }
+                            'result': [
+                                GROCERY_LIST,
+                                PANTRY_LIST
+                            ]
                         },
                         status_codes=[200]
                     )
@@ -230,7 +269,7 @@ class UserListIngredientsAPIView(APIView):
                 examples=[
                     OpenApiExample(
                         name='Required Value Missing',
-                        value={'message': MISSING_CREATE_USER_LIST_MSG},
+                        value={'message': MISSING_USER_LIST_PARAM_MSG},
                         status_codes=[400]
                     ),
                 ]
@@ -238,26 +277,110 @@ class UserListIngredientsAPIView(APIView):
             401: auth_failed_response,
         }
     )
-    def post(self, request: Request) -> Response:
+    def list(self, request: Request) -> Response:
         """
-        Create a new UserListIngredients in the database.
+        Retrieves all the lists for a user.
+        """
+        username = get_auth_username_from_payload(request=request)
+
+        # Retrieves all the lists for the user
+        lists = get_user_lists_ingredients(username=username)
+        serializer = UserListIngredientsSerializer(lists, many=True)
+
+        return Response({'result': serializer.data}, status=200)
+
+    @extend_schema(
+        request=None,
+        responses={
+            201: OpenApiResponse(
+                response=UserListIngredientsSerializer,
+                examples=[
+                    OpenApiExample(
+                        name="User's List Created",
+                        value={
+                            'user': 'teacup',
+                            'list_name': 'Grocery',
+                            'ingredients': []
+                        },
+                        status_codes=[201]
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Required Value Missing',
+                        value={'message': MISSING_USER_LIST_PARAM_MSG},
+                        status_codes=[400]
+                    ),
+                ]
+            ),
+            401: auth_failed_response,
+        }
+    )
+    def create(self, request: Request, list_name: str = None) -> Response:
+        """
+        Create a new list for a user in the database.
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
-        body = request.data
 
-        if (username and 'list_name' in body):
+        if username and list_name:
             # Check listName object exists, if not add
-            create_list_name(list_name=body['list_name'])
+            create_list_name(list_name=list_name)
 
             # Create the list
             list = create_user_list_ingredients(
                 username,
-                body['list_name']
+                list_name
             )
             serializer = UserListIngredientsSerializer(list)
         else:
-            raise MissingInformation(self.MISSING_CREATE_USER_LIST_MSG)
+            raise MissingInformation(self.MISSING_USER_LIST_PARAM_MSG)
+
+        return Response(serializer.data, status=201)
+
+    @extend_schema(
+        request=None,
+        responses={
+            200: OpenApiResponse(
+                response=UserListIngredientsSerializer,
+                examples=[
+                    OpenApiExample(
+                        name="User's List Created",
+                        value=GROCERY_LIST,
+                        status_codes=[200]
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                response=MessageSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Required Value Missing',
+                        value={'message': MISSING_USER_LIST_PARAM_MSG},
+                        status_codes=[400]
+                    ),
+                ]
+            ),
+            401: auth_failed_response,
+        }
+    )
+    def retrieve(self, request: Request, list_name: str = None) -> Response:
+        """
+        Retrieves the specific list for a user.
+        """
+        username = get_auth_username_from_payload(request=request)
+        # Retrieves the specific list for the user
+        if username and list_name:
+            my_list = get_specific_user_lists_ingredients(
+                username=username,
+                list_name=list_name
+            )
+            serializer = UserListIngredientsSerializer(my_list)
+        else:
+            MissingInformation(self.MISSING_USER_LIST_PARAM_MSG)
 
         return Response({'result': serializer.data}, status=200)
 
@@ -265,11 +388,11 @@ class UserListIngredientsAPIView(APIView):
         request=UserListIngredientsViewSerializer,
         responses={
             200: OpenApiResponse(
-                response=MessageSerializer,
+                response=UserListIngredientsSerializer,
                 examples=[
                     OpenApiExample(
                         name='Item Updated',
-                        value={'message': 'Nice'},
+                        value=GROCERY_LIST,
                         status_codes=[200]
                     )
                 ]
@@ -307,9 +430,10 @@ class UserListIngredientsAPIView(APIView):
             )
         }
     )
-    def put(self, request: Request) -> Response:
+    def update(self, request: Request) -> Response:
         """
-        Adds an ingredient to a user's list.
+        Updates the ingredients for a user's list. Either adds or subtracts
+        (deletes if quantity is 0) an ingredient in the user's list.
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
@@ -321,23 +445,71 @@ class UserListIngredientsAPIView(APIView):
             and 'ingredient' in body
             and 'amount' in body
             and 'unit' in body
+            and 'action' in body
         ):
             list = update_list_ingredient(
                 username,
                 body['list_name'],
                 body['ingredient'],
                 body['amount'],
-                body['unit']
+                body['unit'],
+                body['action']
             )
             serializer = UserListIngredientsSerializer(list)
         else:
             raise MissingInformation(self.MISSING_ADD_INGREDIENT_MSG)
 
+        return Response(serializer.data, status=200)
+
+    @extend_schema(
+        request=inline_serializer(
+            name='DeleteUserListRequest',
+            fields={'list_name': serializers.CharField()}
+        ),
+        responses={
+            200: OpenApiResponse(
+                response=inline_serializer(
+                    name='AllIngredientsResponse',
+                    fields={
+                        'result': UserListIngredientsSerializer(many=True),
+                    }
+                ),
+                examples=[
+                    OpenApiExample(
+                        name='Success',
+                        value={
+                            'result': [
+                                GROCERY_LIST,
+                                PANTRY_LIST
+                            ]
+                        }
+                    )
+                ]
+            ),
+            401: auth_failed_response
+        }
+    )
+    def destroy(self, request: Response, list_name: str = None) -> Response:
+        """
+        Deletes a user's list.
+        """
+        username = get_auth_username_from_payload(request=request)
+
+        if username and list_name:
+            # Delete the list for specified user
+            lists = delete_user_list_ingredients(
+                username=username,
+                list_name=list_name
+            )
+            serializer = UserListIngredientsSerializer(lists, many=True)
+        else:
+            raise MissingInformation(self.MISSING_USER_LIST_PARAM_MSG)
+
         return Response({'result': serializer.data}, status=200)
 
 
 @extend_schema(tags=['Ingredients'])
-class AllIngredientsAPIView(APIView):
+class IngredientsViewSet(viewsets.ViewSet):
     @extend_schema(
         request=None,
         responses={
@@ -369,7 +541,7 @@ class AllIngredientsAPIView(APIView):
             401: auth_failed_response
         }
     )
-    def get(self, request: Request) -> Response:
+    def list(self, request: Request) -> Response:
         """
         Returns a list of all ingredients in database.
         """
@@ -379,8 +551,9 @@ class AllIngredientsAPIView(APIView):
 
 
 @extend_schema(tags=['User'])
-class UserAPIView(APIView):
+class UserViewSet(viewsets.ViewSet):
     MISSING_USER_INFO = 'Username or email missing. Unable to create new user.'
+
     @extend_schema(
         request=None,
         responses={
@@ -390,10 +563,8 @@ class UserAPIView(APIView):
                     OpenApiExample(
                         name='User Created',
                         value={
-                            'result': {
-                                'username': 'test_user',
-                                'email': 'test_user@domain.com'
-                            }
+                            'username': 'teacup',
+                            'email': 'teacup@domain.com'
                         },
                         status_codes=[201]
                     ),
@@ -412,7 +583,7 @@ class UserAPIView(APIView):
             401: auth_failed_response,
         }
     )
-    def post(self, request: Request) -> Response:
+    def create(self, request: Request) -> Response:
         """
         Create a new user in the database based on Auth0 access token.
         """
@@ -427,4 +598,4 @@ class UserAPIView(APIView):
         else:
             raise MissingInformation(self.MISSING_USER_INFO)
 
-        return Response({'result': serializer.data}, status=201)
+        return Response(serializer.data, status=201)

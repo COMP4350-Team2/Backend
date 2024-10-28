@@ -47,12 +47,30 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserListIngredientsSerializer(serializers.ModelSerializer):
+    user = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+    list_name = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='list_name'
+    )
+
     class Meta:
         model = UserListIngredients
         fields = ['user', 'list_name', 'ingredients']
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    user = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+    recipe_name = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='recipe_name'
+    )
+
     class Meta:
         model = Recipe
         fields = ['user', 'recipe_name', 'steps', 'ingredients']
