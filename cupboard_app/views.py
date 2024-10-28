@@ -239,7 +239,7 @@ class PrivateScopedMessageAPIView(APIView):
 @extend_schema(tags=["User's List"])
 class UserListIngredientsViewSet(viewsets.ViewSet):
     MISSING_USER_LIST_PARAM_MSG = 'list_name parameter missing.'
-    MISSING_ADD_INGREDIENT_MSG = (
+    MISSING_UPDATE_INGREDIENT_MSG = (
         'Required value missing from sent request, '
         'please ensure all items are sent in the following format: '
         '{list_name: [LISTNAME], ingredient: [INGREDIENT], '
@@ -402,7 +402,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
                 examples=[
                     OpenApiExample(
                         name='Required Value Missing',
-                        value={'message': MISSING_ADD_INGREDIENT_MSG},
+                        value={'message': MISSING_UPDATE_INGREDIENT_MSG},
                         status_codes=[400]
                     ),
                 ]
@@ -433,7 +433,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
     def update(self, request: Request) -> Response:
         """
         Updates the ingredients for a user's list. Either adds or subtracts
-        (deletes if quantity is 0) an ingredient in the user's list.
+        an ingredient in the user's list.
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
@@ -457,7 +457,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
             )
             serializer = UserListIngredientsSerializer(list)
         else:
-            raise MissingInformation(self.MISSING_ADD_INGREDIENT_MSG)
+            raise MissingInformation(self.MISSING_UPDATE_INGREDIENT_MSG)
 
         return Response(serializer.data, status=200)
 

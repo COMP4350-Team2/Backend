@@ -172,39 +172,6 @@ class PrivateScopedMessageApi(TestCase):
         self.assertDictEqual(response.json(), PERMISSION_DENIED)
 
 
-class GetAllIngredientsApi(TestCase):
-    def setUp(self):
-        """
-        Sets up a test database with test values
-        """
-        Ingredient.objects.create(name='testing', type='TEST')
-        Ingredient.objects.create(name='testing2', type='TEST2')
-
-    @patch.object(TokenBackend, 'decode')
-    def test_get_all_ingredients(self, mock_decode):
-        """
-        Testing get_all_ingredients retrieves all the ingredients
-        from the database
-        """
-        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
-
-        response = self.client.get(
-            reverse('ingredients'),
-            HTTP_AUTHORIZATION='Bearer valid-token'
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertDictEqual(
-            response.json(),
-            {
-                'result': [
-                    {'name': 'testing', 'type': 'TEST'},
-                    {'name': 'testing2', 'type': 'TEST2'}
-                ]
-            }
-        )
-
-
 class CreateUserApi(TestCase):
     def test_create_user_without_token_returns_unauthorized(self):
         """
@@ -311,7 +278,6 @@ class CreateUserListIngredientsApi(TestCase):
             ingredients=[]
         )
 
-    # Create with invalid token
     @patch.object(TokenBackend, 'decode')
     def test_create_list_with_valid_token_returns_ok(self, mock_decode):
         """
@@ -389,6 +355,39 @@ class CreateUserListIngredientsApi(TestCase):
                     'message': UserListIngredientsViewSet.MISSING_USER_LIST_PARAM_MSG
                 }
             )
+
+
+class GetAllIngredientsApi(TestCase):
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        Ingredient.objects.create(name='testing', type='TEST')
+        Ingredient.objects.create(name='testing2', type='TEST2')
+
+    @patch.object(TokenBackend, 'decode')
+    def test_get_all_ingredients(self, mock_decode):
+        """
+        Testing get_all_ingredients retrieves all the ingredients
+        from the database
+        """
+        mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
+
+        response = self.client.get(
+            reverse('ingredients'),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(
+            response.json(),
+            {
+                'result': [
+                    {'name': 'testing', 'type': 'TEST'},
+                    {'name': 'testing2', 'type': 'TEST2'}
+                ]
+            }
+        )
 
 
 class UpdateIngredientListApi(TestCase):
@@ -500,7 +499,7 @@ class UpdateIngredientListApi(TestCase):
         self.assertDictEqual(
             response.json(),
             {
-                'message': UserListIngredientsViewSet.MISSING_ADD_INGREDIENT_MSG
+                'message': UserListIngredientsViewSet.MISSING_UPDATE_INGREDIENT_MSG
             }
         )
 
