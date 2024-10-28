@@ -8,6 +8,10 @@ from cupboard_app.models import (
     UserListIngredients,
     Recipe
 )
+from cupboard_app.queries import (
+    ADD_ACTION,
+    REMOVE_ACTION
+)
 
 
 class MessageSerializer(serializers.Serializer):
@@ -19,7 +23,7 @@ class UserListIngredientsViewSerializer(serializers.Serializer):
     ingredient = serializers.CharField()
     amount = serializers.FloatField()
     unit = serializers.CharField()
-    action = serializers.CharField()
+    action = serializers.ChoiceField(choices=[ADD_ACTION, REMOVE_ACTION])
 
 
 class IngredientSerializer(serializers.ModelSerializer):

@@ -3,7 +3,8 @@ from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
     OpenApiExample,
-    OpenApiResponse
+    OpenApiResponse,
+    OpenApiRequest
 )
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -319,7 +320,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
     )
     def create(self, request: Request, list_name: str = None) -> Response:
         """
-        Create a new list for a user in the database.
+        Create a new list for the user in the database.
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
@@ -371,7 +372,38 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         return Response({'result': serializer.data}, status=200)
 
     @extend_schema(
-        request=UserListIngredientsViewSerializer,
+        request={
+            'Adding an ingredient': OpenApiRequest(
+                request=UserListIngredientsViewSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Adding an ingredient',
+                        value={
+                            'list_name': 'Grocery',
+                            'ingredient': 'Beef',
+                            'amount': 500,
+                            'unit': 'g',
+                            'action': "ADD"
+                        }
+                    )
+                ]
+            ),
+            'Remove an ingredient': OpenApiRequest(
+                request=UserListIngredientsViewSerializer,
+                examples=[
+                    OpenApiExample(
+                        name='Removing an ingredient',
+                        value={
+                            'list_name': 'Grocery',
+                            'ingredient': 'Beef',
+                            'amount': 400,
+                            'unit': 'g',
+                            'action': "REMOVE"
+                        }
+                    )
+                ]
+            )
+        },
         responses={
             200: OpenApiResponse(
                 response=UserListIngredientsSerializer,
@@ -420,6 +452,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         """
         Updates the ingredients for a user's list. Either adds or subtracts
         an ingredient in the user's list.
+        Returns the updated user's list
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
@@ -452,7 +485,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         responses={
             200: OpenApiResponse(
                 response=inline_serializer(
-                    name='AllIngredientsResponse',
+                    name='AllUserIngredientsListsResponse',
                     fields={
                         'result': UserListIngredientsSerializer(many=True),
                     }
@@ -474,7 +507,8 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
     )
     def destroy(self, request: Response, list_name: str = None) -> Response:
         """
-        Deletes a user's list.
+        Deletes the specified list from the user's list and returns
+        all of the user's lists after the delete
         """
         username = get_auth_username_from_payload(request=request)
 
@@ -565,7 +599,8 @@ class UserViewSet(viewsets.ViewSet):
     )
     def create(self, request: Request) -> Response:
         """
-        Create a new user in the database based on Auth0 access token.
+        Creates a new user in the database based on Auth0 access token.
+        Returns the user object.
         """
         # Extract username and email from the access token
         username = get_auth_username_from_payload(request=request)
