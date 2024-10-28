@@ -5,7 +5,6 @@ from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiResponse
 )
-from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -135,7 +134,6 @@ def api_exception_handler(exc, context=None) -> Response:
         data = {'message': str(exc)}
         response = Response(data, status=500)
     else:
-        print(exc)
         data = {'message': 'API Error'}
         response = Response(data, status=500)
     return response
@@ -238,7 +236,7 @@ class PrivateScopedMessageAPIView(APIView):
 
 @extend_schema(tags=["User's List"])
 class UserListIngredientsViewSet(viewsets.ViewSet):
-    MISSING_USER_LIST_PARAM_MSG = 'list_name parameter missing.'
+    MISSING_USER_LIST_PARAM_MSG = 'list_name parameter is missing or empty.'
     MISSING_UPDATE_INGREDIENT_MSG = (
         'Required value missing from sent request, '
         'please ensure all items are sent in the following format: '
@@ -354,16 +352,6 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
                     )
                 ]
             ),
-            400: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Required Value Missing',
-                        value={'message': MISSING_USER_LIST_PARAM_MSG},
-                        status_codes=[400]
-                    ),
-                ]
-            ),
             401: auth_failed_response,
         }
     )
@@ -372,15 +360,13 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         Retrieves the specific list for a user.
         """
         username = get_auth_username_from_payload(request=request)
+
         # Retrieves the specific list for the user
-        if username and list_name:
-            my_list = get_specific_user_lists_ingredients(
-                username=username,
-                list_name=list_name
-            )
-            serializer = UserListIngredientsSerializer(my_list)
-        else:
-            MissingInformation(self.MISSING_USER_LIST_PARAM_MSG)
+        my_list = get_specific_user_lists_ingredients(
+            username=username,
+            list_name=list_name
+        )
+        serializer = UserListIngredientsSerializer(my_list)
 
         return Response({'result': serializer.data}, status=200)
 
@@ -492,15 +478,12 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         """
         username = get_auth_username_from_payload(request=request)
 
-        if username and list_name:
-            # Delete the list for specified user
-            lists = delete_user_list_ingredients(
-                username=username,
-                list_name=list_name
-            )
-            serializer = UserListIngredientsSerializer(lists, many=True)
-        else:
-            raise MissingInformation(self.MISSING_USER_LIST_PARAM_MSG)
+        # Delete the list for specified user
+        lists = delete_user_list_ingredients(
+            username=username,
+            list_name=list_name
+        )
+        serializer = UserListIngredientsSerializer(lists, many=True)
 
         return Response({'result': serializer.data}, status=200)
 

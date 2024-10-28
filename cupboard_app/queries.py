@@ -469,9 +469,11 @@ def delete_user_list_ingredients(
     Returns:
         QuerySet of all the lists for the specific user after deletion.
     """
-    UserListIngredients.objects.filter(
+    query = UserListIngredients.objects.filter(
         user__username=username,
         list_name__list_name=list_name
-    ).delete()
+    )
+    if query.exists():
+        query.get().delete()
 
     return get_user_lists_ingredients(username=username)

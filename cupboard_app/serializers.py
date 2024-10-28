@@ -15,11 +15,11 @@ class MessageSerializer(serializers.Serializer):
 
 
 class UserListIngredientsViewSerializer(serializers.Serializer):
-    username = serializers.CharField()
     list_name = serializers.CharField()
     ingredient = serializers.CharField()
     amount = serializers.FloatField()
     unit = serializers.CharField()
+    action = serializers.CharField()
 
 
 class IngredientSerializer(serializers.ModelSerializer):

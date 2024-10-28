@@ -868,6 +868,7 @@ class DeletetUserListIngredientsApi(TestCase):
 
         # Check how many lists we have
         self.assertEqual(response.status_code, 200)
+
         self.assertEqual(len(response.json().get('result')), 1)
         self.assertEqual(
             response.json().get('result'),
@@ -881,10 +882,10 @@ class DeletetUserListIngredientsApi(TestCase):
         )
 
     @patch.object(TokenBackend, 'decode')
-    def test_delete_lists_with_valid_token_returns_ok(self, mock_decode):
+    def test_delete_lists_from_empty(self, mock_decode):
         """
-        Testing the delete UserListIngredient API with a valid token and
-        parameters.
+        Testing the delete UserListIngredient API when the user
+        has no lists
         """
         mock_decode.return_value = TEST_VALID_TOKEN_PAYLOAD
 
