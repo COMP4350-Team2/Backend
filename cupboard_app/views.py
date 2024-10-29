@@ -39,8 +39,10 @@ from cupboard_app.serializers import (
     UserListIngredientsViewSerializer
 )
 
-NO_AUTH = {'message': 'Authentication credentials were not provided.'}
+GROCERY_LIST_NAME = 'Grocery'
+PANTRY_LIST_NAME = 'Pantry'
 INVALID_TOKEN = {'message': 'Given token not valid for any token type'}
+NO_AUTH = {'message': 'Authentication credentials were not provided.'}
 PERMISSION_DENIED = {
     'message': 'Permission denied. You do not have permission to perform this action.'
 }
@@ -261,16 +263,6 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
                         },
                         status_codes=[200]
                     )
-                ]
-            ),
-            400: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Required Value Missing',
-                        value={'message': MISSING_USER_LIST_PARAM_MSG},
-                        status_codes=[400]
-                    ),
                 ]
             ),
             401: auth_failed_response,
@@ -610,6 +602,12 @@ class UserViewSet(viewsets.ViewSet):
             # Create user in the db
             user = create_user(username=username, email=email)
             serializer = UserSerializer(user)
+
+            # Create Pantry and Grocery lists
+            create_list_name(list_name=GROCERY_LIST_NAME)
+            create_list_name(list_name=PANTRY_LIST_NAME)
+            create_user_list_ingredients(username=username, list_name=GROCERY_LIST_NAME)
+            create_user_list_ingredients(username=username, list_name=PANTRY_LIST_NAME)
         else:
             raise MissingInformation(self.MISSING_USER_INFO)
 
