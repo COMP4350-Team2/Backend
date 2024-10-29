@@ -8,6 +8,8 @@ from cupboard_app.models import (
     UserListIngredients
 )
 
+GROCERY_LIST_NAME = 'Grocery'
+PANTRY_LIST_NAME = 'Pantry'
 INVALID_USER_LIST = 'User list does not exist.'
 DOES_NOT_EXIST = 'matching query does not exist.'
 INVALID_ACTION = 'Action has to be either "ADD" or "DELETE"'
@@ -477,3 +479,16 @@ def delete_user_list_ingredients(
         query.get().delete()
 
     return get_user_lists_ingredients(username=username)
+
+
+def add_default_user_lists(username: str):
+    """
+    Adds Grocery and Pantry lists by default.
+
+    Args:
+        username: User's username
+    """
+    create_list_name(list_name=GROCERY_LIST_NAME)
+    create_list_name(list_name=PANTRY_LIST_NAME)
+    create_user_list_ingredients(username=username, list_name=GROCERY_LIST_NAME)
+    create_user_list_ingredients(username=username, list_name=PANTRY_LIST_NAME)

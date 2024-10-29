@@ -20,6 +20,7 @@ from utils.permissions import HasMessagesPermission
 from cupboard_app.exceptions import MissingInformation
 from cupboard_app.models import Message
 from cupboard_app.queries import (
+    add_default_user_lists,
     create_user,
     create_list_name,
     create_user_list_ingredients,
@@ -39,8 +40,6 @@ from cupboard_app.serializers import (
     UserListIngredientsViewSerializer
 )
 
-GROCERY_LIST_NAME = 'Grocery'
-PANTRY_LIST_NAME = 'Pantry'
 INVALID_TOKEN = {'message': 'Given token not valid for any token type'}
 NO_AUTH = {'message': 'Authentication credentials were not provided.'}
 PERMISSION_DENIED = {
@@ -604,10 +603,7 @@ class UserViewSet(viewsets.ViewSet):
             serializer = UserSerializer(user)
 
             # Create Pantry and Grocery lists
-            create_list_name(list_name=GROCERY_LIST_NAME)
-            create_list_name(list_name=PANTRY_LIST_NAME)
-            create_user_list_ingredients(username=username, list_name=GROCERY_LIST_NAME)
-            create_user_list_ingredients(username=username, list_name=PANTRY_LIST_NAME)
+            add_default_user_lists(username=username)
         else:
             raise MissingInformation(self.MISSING_USER_INFO)
 
