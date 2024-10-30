@@ -12,12 +12,9 @@ GROCERY_LIST_NAME = 'Grocery'
 PANTRY_LIST_NAME = 'Pantry'
 INVALID_USER_LIST = 'User list does not exist.'
 DOES_NOT_EXIST = 'matching query does not exist.'
-INVALID_ACTION = 'Action has to be either "ADD" or "DELETE"'
-ADD_ACTION = 'ADD'
-REMOVE_ACTION = 'REMOVE'
 
 
-def create_ingredient(name: str, type: str) -> Ingredient:
+def create_ingredient(name: str, type: str) -> Ingredient: 
     """
     Creates an ingredient in the ingredient dimension table.
 
@@ -209,7 +206,7 @@ def get_user(username: str, id: int = None) -> User | None:
     return result
 
 
-def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> dict | None:
+def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> dict:
     """
     Creates the ingredient that will be in the user_list_ingredient
 
@@ -244,6 +241,224 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
         raise ValueError('Amount must be of type int or float.')
 
     return ingredient_dict
+
+
+def delete_list_ingredient(
+    username: str,
+    list_name: str,
+    ingredient: str,
+    unit: str
+) -> UserListIngredients:
+    """
+    Deletes an ingredient in the user's list.
+
+    Args:
+        username: User's username
+        list_name: Name of the list to update
+        ingredient: Ingredient name
+        unit: The unit of measure for the ingredient
+
+    Returns:
+        The updated list.
+    """
+    user_list = UserListIngredients.objects.filter(
+        user__username=username,
+        list_name__list_name=list_name
+    ).first()
+
+    if user_list:
+        if user_list.ingredients:
+            # Check if ingredient exists, if so delete it
+            for dictionary in user_list.ingredients:
+                if (
+                    dictionary.get('ingredient_name', None) == ingredient
+                    and dictionary.get('unit', None) == unit
+                ):
+                    user_list.ingredients.remove(dictionary)
+            user_list.save()
+    else:
+        raise ValueError(INVALID_USER_LIST)
+
+    return user_list
+
+
+def add_list_ingredient(
+    username: str,
+    list_name: str,
+    ingredient: str,
+    amount: int | float,
+    unit: str,
+    setting: bool = False
+) -> UserListIngredients:
+    """
+    Adds an ingredient in the user's list.
+
+    If the ingredient already existed and setting bool is false, then
+    adds the specified amount to the ingredient's current amount instead.
+
+    If the ingredient already existed and setting bool is true, then
+    sets the specified amount for the ingredient.
+
+    Args:
+        username: User's username
+        list_name: Name of the list to update
+        ingredient: Ingredient name
+        amount: Quantity of the ingredient
+        unit: The unit of measure for the ingredient
+        setting: Flag whether we are setting the value. If false,
+                 just adds to the existing amount.
+
+    Returns:
+        The updated list.
+    """
+    # Create the ingredient to put into list
+    list_ingredient = create_list_ingredient(
+        ingredient=ingredient,
+        amount=amount,
+        unit=unit
+    )
+
+    user_list = UserListIngredients.objects.filter(
+        user__username=username,
+        list_name__list_name=list_name
+    ).first()
+
+    if user_list:
+        if not user_list.ingredients:
+            # Empty list so set the list
+            user_list.ingredients = [list_ingredient]
+        elif not any(
+            dictionary.get('ingredient_name', None) == ingredient
+            and dictionary.get('unit', None) == unit
+            for dictionary in user_list.ingredients
+        ):
+            # ingredient does not exist so insert
+            user_list.ingredients.append(list_ingredient)
+        else:
+            # ingredient exists so add or set the ingredient
+            for i in user_list.ingredients:
+                if i['ingredient_name'] == ingredient and i['unit'] == unit:
+                    if setting:
+                        i['amount'] = amount
+                    else:
+                        i['amount'] += amount
+        user_list.save()
+    else:
+        raise ValueError(INVALID_USER_LIST)
+
+    return user_list
+
+
+def set_list_ingredient(
+    username: str,
+    list_name: str,
+    old_ingredient: str,
+    old_unit: str,
+    new_ingredient: str,
+    new_amount: int | float,
+    new_unit: str
+) -> UserListIngredients:
+    """
+    Sets an ingredient's unit and amount in the user's list.
+
+    If the new ingredient is not in the user's list, then
+    adds the new ingredient to the user's list.
+
+    Args:
+        username: User's username
+        list_name: Name of the list to update
+        old_ingredient: Name of the ingredient to update
+        old_unit: The unit of measure for the ingredient to update
+        new_ingredient: Name of the ingredient to change to
+        new_amount: Quantity of the ingredient to change to
+        new_unit: The unit of measure for the ingredient to change to
+
+    Returns:
+        The updated list.
+    """
+    user_list = UserListIngredients.objects.filter(
+        user__username=username,
+        list_name__list_name=list_name
+    ).first()
+
+    if user_list:
+        # Deletes the ingredient from the list
+        user_list = delete_list_ingredient(
+            username=username,
+            list_name=list_name,
+            ingredient=old_ingredient,
+            unit=old_unit
+        )
+
+        # Add the ingredient to the list
+        user_list = add_list_ingredient(
+            username=username,
+            list_name=list_name,
+            ingredient=new_ingredient,
+            amount=new_amount,
+            unit=new_unit,
+            setting=True
+        )
+    else:
+        raise ValueError(INVALID_USER_LIST)
+
+    return user_list
+
+
+def create_user_list_ingredients(
+    username: str,
+    list_name: str,
+    ingredients: list[dict] = []
+) -> UserListIngredients:
+    """
+    Creates a user list in the UserListIngredients dimension table.
+
+    Args:
+        username: User's username
+        list_name: List name.
+        ingredient: The array of dictionaries with ingredient information to add.
+
+    Returns:
+        UserListIngredients object if new UserListIngredients created successfully or
+        UserListIngredients already existed in the database.
+        Raises exception if the user or listName does not exist or problems with
+        creating a new UserListIngredients object
+    """
+    user = User.objects.get(username=username)
+    list = ListName.objects.get(list_name=list_name)
+
+    obj, new_created = UserListIngredients.objects.get_or_create(
+        user=user,
+        list_name=list,
+        ingredients=ingredients
+    )
+
+    return obj
+
+
+def delete_user_list_ingredients(
+    username: str,
+    list_name: str
+) -> QuerySet:
+    """
+    Deletes a user list in the UserListIngredients dimension table.
+
+    Args:
+        username: User's username
+        list_name: List name.
+        ingredient: The array of dictionaries with ingredient information to add.
+
+    Returns:
+        QuerySet of all the lists for the specific user after deletion.
+    """
+    query = UserListIngredients.objects.filter(
+        user__username=username,
+        list_name__list_name=list_name
+    )
+    if query.exists():
+        query.get().delete()
+
+    return get_user_lists_ingredients(username=username)
 
 
 def get_user_lists_ingredients(username: str, id: int = None) -> QuerySet:
@@ -296,189 +511,48 @@ def get_specific_user_lists_ingredients(
             list_name__list_name=list_name
         ).first()
 
+    if not result:
+        raise ValueError(INVALID_USER_LIST)
+
     return result
 
 
-def update_list_ingredient(
+def change_user_list_ingredient_name(
     username: str,
-    list_name: str,
-    ingredient: str,
-    amount: int | float,
-    unit: str,
-    action: str
+    old_list_name: str,
+    new_list_name: str
 ) -> UserListIngredients:
     """
-    Updates an ingredient in the user's list.
-
-    If ingredient exists in the user's list and has the same unit,
-    then update the given ingredient's amount.
-
-    If ingredient exists in the user's list and has a different unit,
-    then add new ingredient dictionary to user's list if action is ADD.
-
-    If ingredient does not exist in the user's list, then add new ingredient
-    dictionary to user's list if action is ADD.
+    Changes a user's list name to another list name.
 
     Args:
         username: User's username
-        list_name: Name of the list
-        ingredient: Name of the ingredient
-        amount: Quantity of the ingredient
-        unit: The unit of measure for the ingredient
-        action: How to update the ingredient. Either ADD or DELETE
+        old_list_name: Name of the list to update
+        new_list_name: Name of the list to change to
 
     Returns:
         The updated UserListIngredient object.
-        Raises exception if update was unsuccessful
-        or username, unit, or specified UserListIngredient does not exist
+        Raises exception if update was unsuccessful.
     """
-    delete_ingredient = False
-    list_ingredient = create_list_ingredient(
-        ingredient=ingredient,
-        amount=amount,
-        unit=unit
-    )
-    # Check list exists
     user_list = UserListIngredients.objects.filter(
         user__username=username,
-        list_name__list_name=list_name
+        list_name__list_name=old_list_name
     ).first()
-    if user_list:
-        search_id = list_ingredient.get('ingredient_id')
-        unit_id = list_ingredient.get('unit_id')
-        # Check if ingredient exists
-        if action == ADD_ACTION or action == REMOVE_ACTION:
-            if action == ADD_ACTION and not user_list.ingredients:
-                # Empty list so set the list
-                user_list.ingredients = [list_ingredient]
-            elif action == ADD_ACTION and not any(
-                dictionary.get('ingredient_id', None) == search_id
-                and dictionary.get('unit_id', None) == unit_id
-                for dictionary in user_list.ingredients
-            ):
-                # ingredient does not exist so insert
-                user_list.ingredients.append(list_ingredient)
-            else:
-                # ingredient exists so update ingredient
-                for i in user_list.ingredients:
-                    # if unit is the same just change amount
-                    if i['ingredient_id'] == search_id and i['unit_id'] == unit_id:
-                        if action == ADD_ACTION:
-                            i['amount'] += amount
-                        elif action == REMOVE_ACTION and i['amount'] > amount:
-                            i['amount'] -= amount
-                        elif action == REMOVE_ACTION and i['amount'] <= amount:
-                            # Delete from list
-                            delete_ingredient = True
-        else:
-            raise ValueError(INVALID_ACTION)
 
-        if delete_ingredient:
-            user_list = remove_list_ingredient(
-                username=username,
-                list_name=list_name,
-                ingredient=ingredient,
-                unit=unit
-            )
-        else:
-            user_list.save()
+    if user_list and old_list_name != new_list_name:
+        # Create the listName object if it doesn't already exist
+        create_list_name(list_name=new_list_name)
+        new_user_list = create_user_list_ingredients(
+            username=username,
+            list_name=new_list_name,
+            ingredients=user_list.ingredients
+        )
+        delete_user_list_ingredients(username=username, list_name=old_list_name)
+        user_list = new_user_list
     else:
         raise ValueError(INVALID_USER_LIST)
 
     return user_list
-
-
-def create_user_list_ingredients(
-    username: str,
-    list_name: str,
-    ingredients: list[dict] = []
-) -> UserListIngredients:
-    """
-    Creates a user list in the UserListIngredients dimension table.
-
-    Args:
-        username: User's username
-        list_name: List name.
-        ingredient: The array of dictionaries with ingredient information to add.
-
-    Returns:
-        UserListIngredients object if new UserListIngredients created successfully or
-        UserListIngredients already existed in the database.
-        Raises exception if the user or listName does not exist or problems with
-        creating a new UserListIngredients object
-    """
-    user = User.objects.get(username=username)
-    list = ListName.objects.get(list_name=list_name)
-
-    obj, new_created = UserListIngredients.objects.get_or_create(
-        user=user,
-        list_name=list,
-        ingredients=ingredients
-    )
-
-    return obj
-
-
-def remove_list_ingredient(
-    username: str,
-    list_name: str,
-    ingredient: str,
-    unit: str
-) -> UserListIngredients:
-    """
-    Removes an ingredient in the user's list.
-
-    Args:
-        username: User's username
-        list_name: Name of the list
-        ingredient: Ingredient name
-        unit: The unit of measure for the ingredient
-
-    Returns:
-        The updated list.
-    """
-    user_list = UserListIngredients.objects.filter(
-        user__username=username,
-        list_name__list_name=list_name
-    ).first()
-    if user_list and user_list.ingredients:
-        # Check if ingredient exists, if so delete it
-        for dictionary in user_list.ingredients:
-            if (
-                dictionary.get('ingredient_name', None) == ingredient
-                and dictionary.get('unit', None) == unit
-            ):
-                user_list.ingredients.remove(dictionary)
-        user_list.save()
-
-    result = user_list
-
-    return result
-
-
-def delete_user_list_ingredients(
-    username: str,
-    list_name: str
-) -> QuerySet:
-    """
-    Deletes a user list in the UserListIngredients dimension table.
-
-    Args:
-        username: User's username
-        list_name: List name.
-        ingredient: The array of dictionaries with ingredient information to add.
-
-    Returns:
-        QuerySet of all the lists for the specific user after deletion.
-    """
-    query = UserListIngredients.objects.filter(
-        user__username=username,
-        list_name__list_name=list_name
-    )
-    if query.exists():
-        query.get().delete()
-
-    return get_user_lists_ingredients(username=username)
 
 
 def add_default_user_lists(username: str):
