@@ -14,7 +14,7 @@ INVALID_USER_LIST = 'User list does not exist.'
 DOES_NOT_EXIST = 'matching query does not exist.'
 
 
-def create_ingredient(name: str, type: str) -> Ingredient: 
+def create_ingredient(name: str, type: str) -> Ingredient:
     """
     Creates an ingredient in the ingredient dimension table.
 
@@ -49,15 +49,12 @@ def get_ingredient(name: str, id: int = None) -> Ingredient | None:
         id: Ingredient ID
 
     Returns:
-        Ingredient object or None if ingredient is not found.
+        Ingredient object or exception if ingredient is not found.
     """
-    try:
-        if id:
-            result = Ingredient.objects.get(id=id)
-        else:
-            result = Ingredient.objects.get(name=name)
-    except Ingredient.DoesNotExist:
-        result = None
+    if id:
+        result = Ingredient.objects.get(id=id, name=name)
+    else:
+        result = Ingredient.objects.get(name=name)
 
     return result
 
@@ -96,15 +93,12 @@ def get_list_name(list_name: str, id: int = None) -> ListName | None:
         id: ListName ID
 
     Returns:
-        ListName object or None if ingredient is not found.
+        ListName object or exception if ingredient is not found.
     """
-    try:
-        if id:
-            result = ListName.objects.get(id=id)
-        else:
-            result = ListName.objects.get(list_name=list_name)
-    except ListName.DoesNotExist:
-        result = None
+    if id:
+        result = ListName.objects.get(id=id, list_name=list_name)
+    else:
+        result = ListName.objects.get(list_name=list_name)
 
     return result
 
@@ -143,15 +137,12 @@ def get_measurement(unit: str, id: int = None) -> Measurement | None:
         id: Measurement ID
 
     Returns:
-        Measurement object or None if measurement is not found.
+        Measurement object or exception if measurement not found
     """
-    try:
-        if id:
-            result = Measurement.objects.get(id=id)
-        else:
-            result = Measurement.objects.get(unit=unit)
-    except Measurement.DoesNotExist:
-        result = None
+    if id:
+        result = Measurement.objects.get(id=id, unit=unit)
+    else:
+        result = Measurement.objects.get(unit=unit)
 
     return result
 
@@ -191,17 +182,14 @@ def get_user(username: str, id: int = None) -> User | None:
         id: User ID
 
     Returns:
-        User object or None if user is not found.
+        User object or exception if user not found.
     """
     result = None
     if isinstance(username, str) and (isinstance(id, int) or id is None):
-        try:
-            if id:
-                result = User.objects.get(id=id)
-            else:
-                result = User.objects.get(username=username)
-        except User.DoesNotExist:
-            result = None
+        if id:
+            result = User.objects.get(id=id, username=username)
+        else:
+            result = User.objects.get(username=username)
 
     return result
 
@@ -474,7 +462,8 @@ def get_user_lists_ingredients(username: str, id: int = None) -> QuerySet:
     """
     if id:
         result = UserListIngredients.objects.filter(
-            user__id=id
+            user__id=id,
+            user__username=username
         )
     else:
         result = UserListIngredients.objects.filter(
@@ -539,16 +528,17 @@ def change_user_list_ingredient_name(
         list_name__list_name=old_list_name
     ).first()
 
-    if user_list and old_list_name != new_list_name:
-        # Create the listName object if it doesn't already exist
-        create_list_name(list_name=new_list_name)
-        new_user_list = create_user_list_ingredients(
-            username=username,
-            list_name=new_list_name,
-            ingredients=user_list.ingredients
-        )
-        delete_user_list_ingredients(username=username, list_name=old_list_name)
-        user_list = new_user_list
+    if user_list:
+        if old_list_name != new_list_name:
+            # Create the listName object if it doesn't already exist
+            create_list_name(list_name=new_list_name)
+            new_user_list = create_user_list_ingredients(
+                username=username,
+                list_name=new_list_name,
+                ingredients=user_list.ingredients
+            )
+            delete_user_list_ingredients(username=username, list_name=old_list_name)
+            user_list = new_user_list
     else:
         raise ValueError(INVALID_USER_LIST)
 

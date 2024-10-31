@@ -16,9 +16,6 @@ from cupboard_app.models import (
     UserListIngredients
 )
 from cupboard_app.queries import (
-    ADD_ACTION,
-    REMOVE_ACTION,
-    DOES_NOT_EXIST,
     INVALID_USER_LIST
 )
 from cupboard_app.views import (

@@ -33,6 +33,7 @@ from cupboard_app.queries import (
     delete_list_ingredient,
     set_list_ingredient,
     change_user_list_ingredient_name,
+    DOES_NOT_EXIST,
     INVALID_USER_LIST
 )
 from cupboard_app.serializers import (
