@@ -260,6 +260,7 @@ class UserListIngredientsQueries(TestCase):
         self.list_ing1 = {
             'ingredient_id': self.ing1.id,
             'ingredient_name': self.ing1.name,
+            'ingredient_type': self.ing1.type,
             'amount': 500,
             'unit_id': self.unit1.id,
             'unit': self.unit1.unit
@@ -267,6 +268,7 @@ class UserListIngredientsQueries(TestCase):
         self.list_ing2 = {
             'ingredient_id': self.ing2.id,
             'ingredient_name': self.ing2.name,
+            'ingredient_type': self.ing2.type,
             'amount': 400,
             'unit_id': self.unit2.id,
             'unit': self.unit2.unit
@@ -478,16 +480,7 @@ class UserListIngredientsQueries(TestCase):
             amount=500,
             unit=self.unit1.unit
         )
-        self.assertEqual(
-            list_ing,
-            {
-                'ingredient_id': self.ing1.id,
-                'ingredient_name': self.ing1.name,
-                'amount': 500,
-                'unit_id': self.unit1.id,
-                'unit': self.unit1.unit
-            }
-        )
+        self.assertEqual(list_ing, self.list_ing1)
 
         # Testing list ingredient creation with invalid values
         with self.assertRaises(Measurement.DoesNotExist):

@@ -221,6 +221,7 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
         ingredient_dict = {
             'ingredient_id': ingredient.id,
             'ingredient_name': ingredient.name,
+            'ingredient_type': ingredient.type,
             'amount': amount,
             'unit_id': unit.id,
             'unit': unit.unit

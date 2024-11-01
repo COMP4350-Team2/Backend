@@ -20,7 +20,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ['name', 'type']
 
 
-class list_nameSerializer(serializers.ModelSerializer):
+class ListNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListName
         fields = ['list_name']
@@ -56,7 +56,7 @@ class UserListIngredientsSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     user = serializers.SlugRelatedField(
         read_only=True,
-        slug_field='email'
+        slug_field='username'
     )
     recipe_name = serializers.SlugRelatedField(
         read_only=True,

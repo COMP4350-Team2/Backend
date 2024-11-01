@@ -3,8 +3,8 @@ from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
     OpenApiExample,
-    OpenApiResponse,
-    OpenApiRequest
+    OpenApiParameter,
+    OpenApiResponse
 )
 from rest_framework import serializers
 from rest_framework.request import Request
@@ -33,7 +33,6 @@ from cupboard_app.queries import (
     delete_list_ingredient,
     set_list_ingredient,
     change_user_list_ingredient_name,
-    DOES_NOT_EXIST,
     INVALID_USER_LIST
 )
 from cupboard_app.serializers import (
@@ -72,11 +71,6 @@ INGREDIENTS = [
 GROCERY_LIST = {
     'user': 'teacup',
     'list_name': 'Grocery',
-    'ingredients': INGREDIENTS
-}
-PANTRY_LIST = {
-    'user': 'teacup',
-    'list_name': 'Pantry',
     'ingredients': INGREDIENTS
 }
 FRIDGE_LIST = {
@@ -122,6 +116,13 @@ invalid_user_list_response = OpenApiResponse(
         )
     ]
 )
+list_name_param = OpenApiParameter(
+    name='list_name',
+    description='Name of the list.',
+    type=str,
+    location=OpenApiParameter.PATH
+)
+
 
 def api_exception_handler(exc, context=None) -> Response:
     """
@@ -155,18 +156,10 @@ class PublicMessageAPIView(APIView):
 
     @extend_schema(
         request=None,
-        responses={
-            200: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Success',
-                        value={'message': text},
-                        status_codes=[200]
-                    )
-                ]
-            )
-        }
+        responses=MessageSerializer,
+        examples=[
+            OpenApiExample(name='Success', value={'message': text}, status_codes=[200])
+        ]
     )
     def get(self, request: Request) -> Response:
         """
@@ -184,18 +177,12 @@ class PrivateMessageAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Success',
-                        value={'message': text},
-                        status_codes=[200]
-                    )
-                ]
-            ),
+            200: MessageSerializer,
             401: auth_failed_response
-        }
+        },
+        examples=[
+            OpenApiExample(name='Success', value={'message': text}, status_codes=[200])
+        ]
     )
     def get(self, request: Request) -> Response:
         """
@@ -218,19 +205,13 @@ class PrivateScopedMessageAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Success',
-                        value={'message': text},
-                        status_codes=[200]
-                    )
-                ]
-            ),
+            200: MessageSerializer,
             401: auth_failed_response,
             403: auth_no_permissions_response
-        }
+        },
+        examples=[
+            OpenApiExample(name='Success', value={'message': text}, status_codes=[200])
+        ]
     )
     def get(self, request: Request) -> Response:
         """
@@ -244,72 +225,63 @@ class PrivateScopedMessageAPIView(APIView):
 
 
 @extend_schema(tags=["User's List"])
-class ListIngredientViewSet(viewsets.ViewSet):
+class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
     MISSING_ADD_INGREDIENT_MSG = (
-        REQUIRED_VALUE_MISSING,
+        f'{REQUIRED_VALUE_MISSING}'
         '{list_name: [LISTNAME], ingredient: [INGREDIENT], '
         'amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}'
     )
     MISSING_DELETE_INGREDIENT_MSG = (
-        REQUIRED_VALUE_MISSING,
+        f'{REQUIRED_VALUE_MISSING}'
         '{list_name: [LISTNAME], ingredient: [INGREDIENT], unit: [MEASURMENT UNIT]}'
     )
     MISSING_SET_INGREDIENT_MSG = (
-        REQUIRED_VALUE_MISSING,
+        f'{REQUIRED_VALUE_MISSING}'
         '{list_name: [LISTNAME], old_ingredient: [INGREDIENT], '
         'old_unit: [MEASURMENT UNIT], new_ingredient: [INGREDIENT], '
         'new_amount: [AMOUNT/QUANTITY], new_unit: [MEASURMENT UNIT]}'
     )
 
     @extend_schema(
-        request={
-            'Add Ingredient in List': OpenApiRequest(
-                request=inline_serializer(
-                    name='AddIngredientInListRequest',
-                    fields={
-                        'list_name': serializers.CharField(),
-                        'ingredient': serializers.CharField(),
-                        'amount': serializers.FloatField(),
-                        'unit': serializers.CharField()
-                    }
-                ),
-                examples=[
-                    OpenApiExample(
-                        name='Add Ingredient in List',
-                        value={
-                            'list_name': 'Pantry',
-                            'ingredient': 'Beef',
-                            'amount': 500,
-                            'unit': 'g'
-                        }
-                    )
-                ]
-            )
-        },
+        request=inline_serializer(
+            name='AddIngredientInListRequest',
+            fields={
+                'list_name': serializers.CharField(),
+                'ingredient': serializers.CharField(),
+                'amount': serializers.FloatField(),
+                'unit': serializers.CharField()
+            }
+        ),
         responses={
-            200: OpenApiResponse(
-                response=UserListIngredientsSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Ingredient Added',
-                        value=PANTRY_LIST,
-                        status_codes=[200]
-                    )
-                ]
-            ),
-            400: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Required Value Missing',
-                        value={'message': MISSING_ADD_INGREDIENT_MSG},
-                        status_codes=[400]
-                    ),
-                ]
-            ),
+            200: UserListIngredientsSerializer,
+            400: MessageSerializer,
             401: auth_failed_response,
             500: invalid_user_list_response
-        }
+        },
+        examples=[
+            OpenApiExample(
+                name='Add Ingredient in List',
+                value={
+                    'list_name': 'Grocery',
+                    'ingredient': 'Beef',
+                    'amount': 500,
+                    'unit': 'g'
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name='Ingredient Added',
+                value=GROCERY_LIST,
+                status_codes=[200],
+                response_only=True
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_ADD_INGREDIENT_MSG},
+                status_codes=[400],
+                response_only=True
+            )
+        ]
     )
     def create(self, request: Request) -> Response:
         """
@@ -342,58 +314,49 @@ class ListIngredientViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=200)
 
     @extend_schema(
-        request={
-            'Update Ingredient in List': OpenApiRequest(
-                request=inline_serializer(
-                    name='UpdateIngredientInListRequest',
-                    fields={
-                        'list_name': serializers.CharField(),
-                        'old_ingredient': serializers.CharField(),
-                        'old_unit': serializers.CharField(),
-                        'new_ingredient': serializers.CharField(),
-                        'new_amount': serializers.FloatField(),
-                        'new_unit': serializers.CharField()
-                    }
-                ),
-                examples=[
-                    OpenApiExample(
-                        name='Update Ingredient in List',
-                        value={
-                            'list_name': 'Pantry',
-                            'old_ingredient': 'Pork',
-                            'old_unit': 'lb',
-                            'new_ingredient': 'Beef',
-                            'new_amount': 500,
-                            'new_unit': 'g'
-                        }
-                    )
-                ]
-            )
-        },
+        request=inline_serializer(
+            name='UpdateIngredientInListRequest',
+            fields={
+                'list_name': serializers.CharField(),
+                'old_ingredient': serializers.CharField(),
+                'old_unit': serializers.CharField(),
+                'new_ingredient': serializers.CharField(),
+                'new_amount': serializers.FloatField(),
+                'new_unit': serializers.CharField()
+            }
+        ),
         responses={
-            200: OpenApiResponse(
-                response=UserListIngredientsSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Ingredient Updated',
-                        value=PANTRY_LIST,
-                        status_codes=[200]
-                    )
-                ]
-            ),
-            400: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Required Value Missing',
-                        value={'message': MISSING_SET_INGREDIENT_MSG},
-                        status_codes=[400]
-                    ),
-                ]
-            ),
+            200: UserListIngredientsSerializer,
+            400: MessageSerializer,
             401: auth_failed_response,
             500: invalid_user_list_response
-        }
+        },
+        examples=[
+            OpenApiExample(
+                name='Update Ingredient in List',
+                value={
+                    'list_name': 'Grocery',
+                    'old_ingredient': 'Pork',
+                    'old_unit': 'lb',
+                    'new_ingredient': 'Beef',
+                    'new_amount': 500,
+                    'new_unit': 'g'
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name='Ingredient Updated',
+                value=GROCERY_LIST,
+                status_codes=[200],
+                response_only=True
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_SET_INGREDIENT_MSG},
+                status_codes=[400],
+                response_only=True
+            )
+        ]
     )
     def update(self, request: Request) -> Response:
         """
@@ -429,52 +392,43 @@ class ListIngredientViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=200)
 
     @extend_schema(
-        request={
-            'Delete Ingredient from List': OpenApiRequest(
-                request=inline_serializer(
-                    name='DeleteIngredientFromListRequest',
-                    fields={
-                        'list_name': serializers.CharField(),
-                        'ingredient': serializers.CharField(),
-                        'unit': serializers.CharField()
-                    }
-                ),
-                examples=[
-                    OpenApiExample(
-                        name='Delete Ingredient from List',
-                        value={
-                            'list_name': 'Pantry',
-                            'ingredient': 'Pork',
-                            'unit': 'g'
-                        }
-                    )
-                ]
-            )
-        },
+        request=inline_serializer(
+            name='DeleteIngredientFromListRequest',
+            fields={
+                'list_name': serializers.CharField(),
+                'ingredient': serializers.CharField(),
+                'unit': serializers.CharField()
+            }
+        ),
         responses={
-            200: OpenApiResponse(
-                response=UserListIngredientsSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Ingredient Deleted',
-                        value=PANTRY_LIST,
-                        status_codes=[200]
-                    )
-                ]
-            ),
-            400: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Required Value Missing',
-                        value={'message': MISSING_DELETE_INGREDIENT_MSG},
-                        status_codes=[400]
-                    ),
-                ]
-            ),
+            200: UserListIngredientsSerializer,
+            400: MessageSerializer,
             401: auth_failed_response,
             500: invalid_user_list_response
-        }
+        },
+        examples=[
+            OpenApiExample(
+                name='Delete Ingredient from List',
+                value={
+                    'list_name': 'Grocery',
+                    'ingredient': 'Pork',
+                    'unit': 'g'
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name='Ingredient Deleted',
+                value=GROCERY_LIST,
+                status_codes=[200],
+                response_only=True
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_DELETE_INGREDIENT_MSG},
+                status_codes=[400],
+                response_only=True
+            )
+        ]
     )
     def destroy(self, request: Request) -> Response:
         """
@@ -507,35 +461,38 @@ class ListIngredientViewSet(viewsets.ViewSet):
 class UserListIngredientsViewSet(viewsets.ViewSet):
     MISSING_USER_LIST_PARAM_MSG = 'list_name parameter is missing or empty.'
     MISSING_UPDATE_INGREDIENT_MSG = (
-        REQUIRED_VALUE_MISSING,
+        f'{REQUIRED_VALUE_MISSING}'
         '{old_list_name: [LISTNAME], new_list_name: [LISTNAME]}'
+    )
+    MISSING_ADD_INGREDIENT_MSG = (
+        f'{REQUIRED_VALUE_MISSING}'
+        '{list_name: [LISTNAME], ingredient: [INGREDIENT], '
+        'amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}'
+    )
+    MISSING_DELETE_INGREDIENT_MSG = (
+        f'{REQUIRED_VALUE_MISSING}'
+        '{list_name: [LISTNAME], ingredient: [INGREDIENT], unit: [MEASURMENT UNIT]}'
+    )
+    MISSING_SET_INGREDIENT_MSG = (
+        f'{REQUIRED_VALUE_MISSING}'
+        '{list_name: [LISTNAME], old_ingredient: [INGREDIENT], '
+        'old_unit: [MEASURMENT UNIT], new_ingredient: [INGREDIENT], '
+        'new_amount: [AMOUNT/QUANTITY], new_unit: [MEASURMENT UNIT]}'
     )
 
     @extend_schema(
         request=None,
         responses={
-            200: OpenApiResponse(
-                response=inline_serializer(
-                    name='AllUserIngredientsListsResponse',
-                    fields={
-                        'result': UserListIngredientsSerializer(many=True)
-                    }
-                ),
-                examples=[
-                    OpenApiExample(
-                        name="All User Lists Retrieved",
-                        value={
-                            'result': [
-                                GROCERY_LIST,
-                                PANTRY_LIST
-                            ]
-                        },
-                        status_codes=[200]
-                    )
-                ]
-            ),
+            200: UserListIngredientsSerializer(many=True),
             401: auth_failed_response,
-        }
+        },
+        examples=[
+            OpenApiExample(
+                name="All User Lists Retrieved",
+                value=GROCERY_LIST,
+                status_codes=[200]
+            )
+        ]
     )
     def list(self, request: Request) -> Response:
         """
@@ -547,37 +504,32 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         lists = get_user_lists_ingredients(username=username)
         serializer = UserListIngredientsSerializer(lists, many=True)
 
-        return Response({'result': serializer.data}, status=200)
+        return Response(serializer.data, status=200)
 
     @extend_schema(
+        parameters=[list_name_param],
         request=None,
         responses={
-            201: OpenApiResponse(
-                response=UserListIngredientsSerializer,
-                examples=[
-                    OpenApiExample(
-                        name="User's List Created",
-                        value={
-                            'user': 'teacup',
-                            'list_name': 'Grocery',
-                            'ingredients': []
-                        },
-                        status_codes=[201]
-                    )
-                ]
-            ),
-            400: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Required Value Missing',
-                        value={'message': MISSING_USER_LIST_PARAM_MSG},
-                        status_codes=[400]
-                    ),
-                ]
-            ),
+            201: UserListIngredientsSerializer,
+            400: MessageSerializer,
             401: auth_failed_response,
-        }
+        },
+        examples=[
+            OpenApiExample(
+                name="User's List Created",
+                value={
+                    'user': 'teacup',
+                    'list_name': 'Grocery',
+                    'ingredients': []
+                },
+                status_codes=[201]
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_USER_LIST_PARAM_MSG},
+                status_codes=[400]
+            )
+        ]
     )
     def create(self, request: Request, list_name: str = None) -> Response:
         """
@@ -602,21 +554,20 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=201)
 
     @extend_schema(
+        parameters=[list_name_param],
         request=None,
         responses={
-            200: OpenApiResponse(
-                response=UserListIngredientsSerializer,
-                examples=[
-                    OpenApiExample(
-                        name="User List Retrieved",
-                        value=GROCERY_LIST,
-                        status_codes=[200]
-                    )
-                ]
-            ),
+            200: UserListIngredientsSerializer,
             401: auth_failed_response,
             500: invalid_user_list_response
-        }
+        },
+        examples=[
+            OpenApiExample(
+                name="User List Retrieved",
+                value=GROCERY_LIST,
+                status_codes=[200]
+            )
+        ]
     )
     def retrieve(self, request: Request, list_name: str = None) -> Response:
         """
@@ -634,50 +585,38 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=200)
 
     @extend_schema(
-        request={
-            'Change List Name': OpenApiRequest(
-                request=inline_serializer(
-                    name='ChangeUserIngredientsListNameRequest',
-                    fields={
-                        'old_list_name': serializers.CharField(),
-                        'new_list_name': serializers.CharField()
-                    }
-                ),
-                examples=[
-                    OpenApiExample(
-                        name='Change List Name',
-                        value={
-                            'old_list_name': 'Pantry',
-                            'new_list_name': 'Fridge'
-                        }
-                    )
-                ]
-            )
-        },
+        request=inline_serializer(
+            name='ChangeUserIngredientsListNameRequest',
+            fields={
+                'old_list_name': serializers.CharField(),
+                'new_list_name': serializers.CharField()
+            }
+        ),
         responses={
-            200: OpenApiResponse(
-                response=UserListIngredientsSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='List Name Changed',
-                        value=FRIDGE_LIST,
-                        status_codes=[200]
-                    )
-                ]
-            ),
-            400: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Required Value Missing',
-                        value={'message': MISSING_UPDATE_INGREDIENT_MSG},
-                        status_codes=[400]
-                    ),
-                ]
-            ),
+            200: UserListIngredientsSerializer,
+            400: MessageSerializer,
             401: auth_failed_response,
             500: invalid_user_list_response
-        }
+        },
+        examples=[
+            OpenApiExample(
+                name='Change List Name',
+                value={'old_list_name': 'Pantry', 'new_list_name': 'Fridge'},
+                request_only=True
+            ),
+            OpenApiExample(
+                name='List Name Changed',
+                value=FRIDGE_LIST,
+                status_codes=[200],
+                response_only=True
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_UPDATE_INGREDIENT_MSG},
+                status_codes=[400],
+                response_only=True
+            )
+        ]
     )
     def update(self, request: Request) -> Response:
         """
@@ -704,29 +643,19 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=200)
 
     @extend_schema(
+        parameters=[list_name_param],
         request=None,
         responses={
-            200: OpenApiResponse(
-                response=inline_serializer(
-                    name='AllUserIngredientsListsResponse',
-                    fields={
-                        'result': UserListIngredientsSerializer(many=True)
-                    }
-                ),
-                examples=[
-                    OpenApiExample(
-                        name='List Deleted',
-                        value={
-                            'result': [
-                                GROCERY_LIST,
-                                PANTRY_LIST
-                            ]
-                        }
-                    )
-                ]
-            ),
+            200: UserListIngredientsSerializer(many=True),
             401: auth_failed_response
-        }
+        },
+        examples=[
+            OpenApiExample(
+                name='List Deleted',
+                value=GROCERY_LIST,
+                status_codes=[200]
+            )
+        ]
     )
     def destroy(self, request: Response, list_name: str = None) -> Response:
         """
@@ -742,7 +671,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         )
         serializer = UserListIngredientsSerializer(lists, many=True)
 
-        return Response({'result': serializer.data}, status=200)
+        return Response(serializer.data, status=200)
 
 
 @extend_schema(tags=['Ingredients'])
@@ -750,33 +679,16 @@ class IngredientsViewSet(viewsets.ViewSet):
     @extend_schema(
         request=None,
         responses={
-            200: OpenApiResponse(
-                response=inline_serializer(
-                    name='AllIngredientsResponse',
-                    fields={
-                        'result': IngredientSerializer(many=True),
-                    }
-                ),
-                examples=[
-                    OpenApiExample(
-                        name='All Ingredients Returned',
-                        value={
-                            'result': [
-                                {
-                                    'name': 'Beef',
-                                    'type': 'Meat'
-                                },
-                                {
-                                    'name': '2% Milk',
-                                    'type': 'Dairy'
-                                }
-                            ]
-                        }
-                    )
-                ]
-            ),
+            200: IngredientSerializer(many=True),
             401: auth_failed_response
-        }
+        },
+        examples=[
+            OpenApiExample(
+                name='All Ingredients Returned',
+                value={'name': 'Beef', 'type': 'Meat'},
+                status_codes=[200]
+            )
+        ]
     )
     def list(self, request: Request) -> Response:
         """
@@ -784,7 +696,7 @@ class IngredientsViewSet(viewsets.ViewSet):
         """
         all_ingredients = get_all_ingredients()
         serializer = IngredientSerializer(all_ingredients, many=True)
-        return Response({'result': serializer.data})
+        return Response(serializer.data)
 
 
 @extend_schema(tags=['User'])
@@ -794,31 +706,22 @@ class UserViewSet(viewsets.ViewSet):
     @extend_schema(
         request=None,
         responses={
-            201: OpenApiResponse(
-                response=UserSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='User Created',
-                        value={
-                            'username': 'teacup',
-                            'email': 'teacup@domain.com'
-                        },
-                        status_codes=[201]
-                    ),
-                ]
-            ),
-            400: OpenApiResponse(
-                response=MessageSerializer,
-                examples=[
-                    OpenApiExample(
-                        name='Unable to Create User',
-                        value={'message': MISSING_USER_INFO},
-                        status_codes=[400]
-                    )
-                ]
-            ),
+            201: UserSerializer,
+            400: MessageSerializer,
             401: auth_failed_response
-        }
+        },
+        examples=[
+            OpenApiExample(
+                name='User Created',
+                value={'username': 'teacup', 'email': 'teacup@domain.com'},
+                status_codes=[201]
+            ),
+            OpenApiExample(
+                name='Unable to Create User',
+                value={'message': MISSING_USER_INFO},
+                status_codes=[400]
+            )
+        ]
     )
     def create(self, request: Request) -> Response:
         """

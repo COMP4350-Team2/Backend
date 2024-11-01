@@ -6,10 +6,14 @@ from cupboard_app.views import (
     PrivateScopedMessageAPIView,
     IngredientsViewSet,
     UserViewSet,
-    ListIngredientViewSet,
-    UserListIngredientsViewSet
+    UserListIngredientsViewSet,
+    UpdateUserListIngredientsViewSet
 )
 
+"""
+URL order matters! The more granular it is, it should be on top of other urls.
+i.e. api/user_list_ingredients/add_ingredient should come before api/user_list_ingredients
+"""
 urlpatterns = [
     # urlpaths should have names for ease of testing
     path('api/public', PublicMessageAPIView.as_view(), name='public'),
@@ -19,7 +23,22 @@ urlpatterns = [
     path(
         'api/get_all_ingredients',
         IngredientsViewSet.as_view({'get': 'list'}),
-        name='ingredients'
+        name='get_all_ingredients'
+    ),
+    path(
+        'api/user_list_ingredients/add_ingredient',
+        UpdateUserListIngredientsViewSet.as_view({'put': 'create'}),
+        name='add_ingredient'
+    ),
+    path(
+        'api/user_list_ingredients/set_ingredient',
+        UpdateUserListIngredientsViewSet.as_view({'put': 'update'}),
+        name='set_ingredient'
+    ),
+    path(
+        'api/user_list_ingredients/delete_ingredient',
+        UpdateUserListIngredientsViewSet.as_view({'put': 'destroy'}),
+        name='delete_ingredient'
     ),
     path(
         'api/user_list_ingredients',
@@ -32,20 +51,5 @@ urlpatterns = [
             {'get': 'retrieve', 'post': 'create', 'delete': 'destroy'}
         ),
         name='specific_user_list_ingredients'
-    ),
-    path(
-        'api/user_list_ingredients/add_ingredient',
-        ListIngredientViewSet.as_view({'post': 'create'}),
-        name='add_ingredient'
-    ),
-    path(
-        'api/user_list_ingredients/set_ingredient',
-        ListIngredientViewSet.as_view({'put': 'update'}),
-        name='set_ingredient'
-    ),
-    path(
-        'api/user_list_ingredients/delete_ingredient',
-        ListIngredientViewSet.as_view({'delete': 'destroy'}),
-        name='delete_ingredient'
     ),
 ]
