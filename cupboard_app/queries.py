@@ -416,11 +416,19 @@ def create_user_list_ingredients(
     user = User.objects.get(username=username)
     list = ListName.objects.get(list_name=list_name)
 
-    obj, new_created = UserListIngredients.objects.get_or_create(
-        user=user,
-        list_name=list,
-        ingredients=ingredients
+    query = UserListIngredients.objects.filter(
+        user__username=username,
+        list_name__list_name=list_name
     )
+
+    if not query.exists():
+        obj = UserListIngredients.objects.create(
+            user=user,
+            list_name=list,
+            ingredients=ingredients
+        )
+    else:
+        obj = query.first()
 
     return obj
 

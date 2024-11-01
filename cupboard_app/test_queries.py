@@ -305,7 +305,7 @@ class UserListIngredientsQueries(TestCase):
         create_user_list_ingredients(
             username=self.user1.username,
             list_name=self.empty_list_name1.list_name,
-            ingredients=[]
+            ingredients=[self.list_ing1]
         )
 
         user_lists = UserListIngredients.objects.filter(user__username=self.user1.username)
