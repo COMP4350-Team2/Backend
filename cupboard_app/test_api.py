@@ -1354,6 +1354,40 @@ class GetAllIngredientsApi(TestCase):
         )
 
 
+class GetAllMeasurementsApi(TestCase):
+    unit1 = None
+    unit2 = None
+
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        self.unit1 = Measurement.objects.create(unit='test_unit1')
+        self.unit2 = Measurement.objects.create(unit='test_unit2')
+
+    @patch.object(TokenBackend, 'decode')
+    def test_get_all_measurements(self, mock_decode):
+        """
+        Testing get_all_measurements retrieves all the ingredients
+        from the database
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.get(
+            reverse('get_all_measurements'),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            [
+                {'unit': self.unit1.unit},
+                {'unit': self.unit2.unit}
+            ]
+        )
+
+
 class CreateUserApi(TestCase):
     @patch.object(TokenBackend, 'decode')
     def test_create_user_api(self, mock_decode):

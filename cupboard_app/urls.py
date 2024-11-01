@@ -5,6 +5,7 @@ from cupboard_app.views import (
     PrivateMessageAPIView,
     PrivateScopedMessageAPIView,
     IngredientsViewSet,
+    MeasurementsViewSet,
     UserViewSet,
     UserListIngredientsViewSet,
     UpdateUserListIngredientsViewSet
@@ -24,6 +25,11 @@ urlpatterns = [
         'api/get_all_ingredients',
         IngredientsViewSet.as_view({'get': 'list'}),
         name='get_all_ingredients'
+    ),
+    path(
+        'api/get_all_measurements',
+        MeasurementsViewSet.as_view({'get': 'list'}),
+        name='get_all_measurements'
     ),
     path(
         'api/user_list_ingredients/add_ingredient',

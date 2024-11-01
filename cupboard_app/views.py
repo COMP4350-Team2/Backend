@@ -27,6 +27,7 @@ from cupboard_app.queries import (
     create_user_list_ingredients,
     delete_user_list_ingredients,
     get_all_ingredients,
+    get_all_measurements,
     get_user_lists_ingredients,
     get_specific_user_lists_ingredients,
     add_list_ingredient,
@@ -38,6 +39,7 @@ from cupboard_app.queries import (
 from cupboard_app.serializers import (
     MessageSerializer,
     IngredientSerializer,
+    MeasurementSerializer,
     UserSerializer,
     UserListIngredientsSerializer
 )
@@ -699,7 +701,7 @@ class IngredientsViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
-@extend_schema(tags=['User'])
+@extend_schema(tags=['Users'])
 class UserViewSet(viewsets.ViewSet):
     MISSING_USER_INFO = 'Username or email missing. Unable to create new user.'
 
@@ -743,3 +745,28 @@ class UserViewSet(viewsets.ViewSet):
             raise MissingInformation(self.MISSING_USER_INFO)
 
         return Response(serializer.data, status=201)
+
+
+@extend_schema(tags=['Measurements'])
+class MeasurementsViewSet(viewsets.ViewSet):
+    @extend_schema(
+        request=None,
+        responses={
+            200: MeasurementSerializer(many=True),
+            401: auth_failed_response
+        },
+        examples=[
+            OpenApiExample(
+                name='All Measurements Returned',
+                value={'unit': 'g'},
+                status_codes=[200]
+            )
+        ]
+    )
+    def list(self, request: Request) -> Response:
+        """
+        Returns a list of all measurements in database.
+        """
+        all_measurements = get_all_measurements()
+        serializer = MeasurementSerializer(all_measurements, many=True)
+        return Response(serializer.data)
