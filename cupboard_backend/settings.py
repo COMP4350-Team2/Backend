@@ -176,6 +176,7 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'sub',
     'JTI_CLAIM': None,
     'TOKEN_TYPE_CLAIM': None,
+    'AUTH_TOKEN_CLASSES': ('utils.auth_helper.Auth0Token',),
 }
 
 
@@ -186,6 +187,6 @@ SPECTACULAR_SETTINGS = {
         'Cupboard is the ultimate kitchen companion that takes the hassle '
         'out of meal planning and grocery management!'
     ),
-    'VERSION': '1.0.0',
+    'VERSION': '2.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
