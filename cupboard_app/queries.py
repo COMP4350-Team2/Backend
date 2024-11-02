@@ -276,17 +276,13 @@ def add_list_ingredient(
     list_name: str,
     ingredient: str,
     amount: int | float,
-    unit: str,
-    setting: bool = False
+    unit: str
 ) -> UserListIngredients:
     """
     Adds an ingredient in the user's list.
 
-    If the ingredient already existed and setting bool is false, then
-    adds the specified amount to the ingredient's current amount instead.
-
-    If the ingredient already existed and setting bool is true, then
-    sets the specified amount for the ingredient.
+    If the ingredient already existed and then adds the specified
+    amount to the ingredient's current amount instead.
 
     Args:
         username: User's username
@@ -294,8 +290,6 @@ def add_list_ingredient(
         ingredient: Ingredient name
         amount: Quantity of the ingredient
         unit: The unit of measure for the ingredient
-        setting: Flag whether we are setting the value. If false,
-                 just adds to the existing amount.
 
     Returns:
         The updated list.
@@ -327,10 +321,7 @@ def add_list_ingredient(
             # ingredient exists so add or set the ingredient
             for i in user_list.ingredients:
                 if i['ingredient_name'] == ingredient and i['unit'] == unit:
-                    if setting:
-                        i['amount'] = amount
-                    else:
-                        i['amount'] += amount
+                    i['amount'] += amount
         user_list.save()
     else:
         raise ValueError(INVALID_USER_LIST)
@@ -385,8 +376,7 @@ def set_list_ingredient(
             list_name=list_name,
             ingredient=new_ingredient,
             amount=new_amount,
-            unit=new_unit,
-            setting=True
+            unit=new_unit
         )
     else:
         raise ValueError(INVALID_USER_LIST)

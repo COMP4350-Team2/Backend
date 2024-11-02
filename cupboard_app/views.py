@@ -306,8 +306,7 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
                 list_name=body['list_name'],
                 ingredient=body['ingredient'],
                 amount=body['amount'],
-                unit=body['unit'],
-                setting=False
+                unit=body['unit']
             )
             serializer = UserListIngredientsSerializer(list)
         else:

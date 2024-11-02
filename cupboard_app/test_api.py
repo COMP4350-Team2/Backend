@@ -852,7 +852,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
-        # Setting amount
+        # Setting amount only
         response = self.client.put(
             reverse(f'{API_VERSION}:set_ingredient'),
             json.dumps(
@@ -869,14 +869,12 @@ class SetIngredientUserListIngredientsApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
-        # Ensures correct response given by view response
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json().get('ingredients'),
             [{**self.list_ing1, 'amount': self.list_ing1.get('amount') + 10}]
         )
 
-        # ensures the item was actually added to the list
         modified_list = UserListIngredients.objects.filter(
             user__username=self.user1.username,
             list_name__list_name=self.list_name1.list_name
@@ -886,7 +884,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
             [{**self.list_ing1, 'amount': self.list_ing1.get('amount') + 10}]
         )
 
-        # Setting unit
+        # Setting unit only
         response = self.client.put(
             reverse(f'{API_VERSION}:set_ingredient'),
             json.dumps(
@@ -903,7 +901,6 @@ class SetIngredientUserListIngredientsApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
-        # Ensures correct response given by view response
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json().get('ingredients'),
@@ -917,7 +914,6 @@ class SetIngredientUserListIngredientsApi(TestCase):
             ]
         )
 
-        # Ensures the item was actually added to the list
         modified_list = UserListIngredients.objects.filter(
             user__username=self.user1.username,
             list_name__list_name=self.list_name1.list_name
@@ -951,16 +947,52 @@ class SetIngredientUserListIngredientsApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
-        # Ensures correct response given by view response
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json().get('ingredients'), [self.list_ing1])
 
-        # Ensures the item was actually added to the list
         modified_list = UserListIngredients.objects.filter(
             user__username=self.user1.username,
             list_name__list_name=self.list_name1.list_name
         ).first()
         self.assertEqual(modified_list.ingredients, [self.list_ing1])
+
+        # Test changing two same ingredients in the list but with different units
+        # to the same unit
+        UserListIngredients.objects.create(
+            user=self.user1,
+            list_name=self.list_name1,
+            ingredients=[{**self.list_ing1, 'unit_id': self.unit2.id, 'unit': self.unit2.unit}]
+        )
+        response = self.client.put(
+            reverse(f'{API_VERSION}:set_ingredient'),
+            json.dumps(
+                {
+                    'list_name': self.list_name1.list_name,
+                    'old_ingredient': self.ing1.name,
+                    'old_unit': self.unit2.unit,
+                    'new_ingredient': self.ing1.name,
+                    'new_amount': self.list_ing1.get('amount'),
+                    'new_unit': self.unit1.unit,
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json().get('ingredients'),
+            [{**self.list_ing1, 'amount': self.list_ing1.get('amount') * 2}]
+        )
+
+        modified_list = UserListIngredients.objects.filter(
+            user__username=self.user1.username,
+            list_name__list_name=self.list_name1.list_name
+        ).first()
+        self.assertEqual(
+            modified_list.ingredients,
+            [{**self.list_ing1, 'amount': self.list_ing1.get('amount') * 2}]
+        )
 
     @patch.object(TokenBackend, 'decode')
     def test_set_ingredient_not_in_list(self, mock_decode):

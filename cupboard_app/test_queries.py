@@ -619,57 +619,6 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(len(user_list.ingredients), 2)
         self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2])
 
-        # Test with setting flag on
-        # Adding ingredient to an empty list
-        UserListIngredients.objects.create(
-            user=self.user1,
-            list_name=self.list_name2,
-            ingredients=[]
-        )
-        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name2)
-        self.assertEqual(len(user_list.ingredients), 0)
-        add_list_ingredient(
-            username=self.user1.username,
-            list_name=self.list_name2.list_name,
-            ingredient=self.list_ing1.get('ingredient_name'),
-            amount=self.list_ing1.get('amount'),
-            unit=self.list_ing1.get('unit'),
-            setting=True
-        )
-        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name2)
-        self.assertEqual(len(user_list.ingredients), 1)
-        self.assertEqual(user_list.ingredients, [self.list_ing1])
-
-        # Adding to same ingredient in a list
-        add_list_ingredient(
-            username=self.user1.username,
-            list_name=self.list_name2.list_name,
-            ingredient=self.list_ing1.get('ingredient_name'),
-            amount=100,
-            unit=self.list_ing1.get('unit'),
-            setting=True
-        )
-        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name2)
-        updated_ing1 = {
-            **self.list_ing1,
-            'amount': 100
-        }
-        self.assertEqual(len(user_list.ingredients), 1)
-        self.assertEqual(user_list.ingredients, [updated_ing1])
-
-        # Adding different ingredient to a list
-        add_list_ingredient(
-            username=self.user1.username,
-            list_name=self.list_name2.list_name,
-            ingredient=self.list_ing2.get('ingredient_name'),
-            amount=self.list_ing2.get('amount'),
-            unit=self.list_ing2.get('unit'),
-            setting=True
-        )
-        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name2)
-        self.assertEqual(len(user_list.ingredients), 2)
-        self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2])
-
         # Adding a non-existent list raises error
         with self.assertRaises(ValueError):
             add_list_ingredient(
@@ -677,8 +626,7 @@ class UserListIngredientsQueries(TestCase):
                 list_name=self.empty_list_name1.list_name,
                 ingredient=self.list_ing2.get('ingredient_name'),
                 amount=self.list_ing2.get('amount'),
-                unit=self.list_ing2.get('unit'),
-                setting=True
+                unit=self.list_ing2.get('unit')
             )
 
     def test_set_list_ingredient(self):
