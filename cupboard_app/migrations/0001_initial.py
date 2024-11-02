@@ -115,7 +115,7 @@ class Migration(migrations.Migration):
                         verbose_name='ID'
                     )
                 ),
-                ('recipeName', models.CharField(max_length=50)),
+                ('recipe_name', models.CharField(max_length=50)),
                 ('steps', models.JSONField()),
                 ('ingredients', models.JSONField()),
                 (
