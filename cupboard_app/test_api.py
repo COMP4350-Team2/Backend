@@ -34,6 +34,8 @@ from cupboard_app.views import (
 
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
+API_VERSION = 'v2'
+CUPBOARD_EMAIL_CLAIM = 'https://cupboard-teacup.com/email'
 
 # Test payload
 USER_VALID_TOKEN_PAYLOAD = {
@@ -46,11 +48,11 @@ USER_VALID_TOKEN_PAYLOAD = {
     'scope': 'read:messages',
     'gty': 'client-credentials',
     'permissions': ['read:messages'],
-    'https://cupboard-teacup.com/email': 'testing@cupboard.com',
+    CUPBOARD_EMAIL_CLAIM: 'testing@cupboard.com',
 }
 TEST_INVALID_TOKEN_PAYLOAD = {
     **USER_VALID_TOKEN_PAYLOAD,
-    'https://cupboard-teacup.com/email': None,
+    CUPBOARD_EMAIL_CLAIM: None,
 }
 
 
@@ -59,7 +61,7 @@ class PublicMessageApi(TestCase):
         """
         Testing the public API
         """
-        response = self.client.get(reverse('public'))
+        response = self.client.get(reverse(f'{API_VERSION}:public'))
 
         self.assertEqual(response.status_code, 200)
         self.assertDictEqual(
@@ -75,7 +77,7 @@ class PrivateMessageApi(TestCase):
         """
         Testing the private API without a token
         """
-        response = self.client.get(reverse('private'))
+        response = self.client.get(reverse(f'{API_VERSION}:private'))
         self.assertEqual(response.status_code, 401)
         self.assertDictEqual(
             response.json(), NO_AUTH
@@ -86,7 +88,7 @@ class PrivateMessageApi(TestCase):
         Testing the private API with a invalid token
         """
         response = self.client.get(
-            reverse('private'),
+            reverse(f'{API_VERSION}:private'),
             HTTP_AUTHORIZATION='Bearer invalid-token'
         )
         self.assertEqual(response.status_code, 401)
@@ -102,7 +104,7 @@ class PrivateMessageApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.get(
-            reverse('private'),
+            reverse(f'{API_VERSION}:private'),
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         self.assertEqual(response.status_code, 200)
@@ -119,7 +121,7 @@ class PrivateScopedMessageApi(TestCase):
         """
         Testing the private_scoped API without a token
         """
-        response = self.client.get(reverse('private_scoped'))
+        response = self.client.get(reverse(f'{API_VERSION}:private_scoped'))
         self.assertEqual(response.status_code, 401)
         self.assertDictEqual(
             response.json(), NO_AUTH
@@ -130,7 +132,7 @@ class PrivateScopedMessageApi(TestCase):
         Testing the private_scoped API with a invalid token
         """
         response = self.client.get(
-            reverse('private_scoped'),
+            reverse(f'{API_VERSION}:private_scoped'),
             HTTP_AUTHORIZATION='Bearer invalid-token'
         )
         self.assertEqual(response.status_code, 401)
@@ -146,7 +148,7 @@ class PrivateScopedMessageApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.get(
-            reverse('private_scoped'),
+            reverse(f'{API_VERSION}:private_scoped'),
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         self.assertEqual(response.status_code, 200)
@@ -165,7 +167,7 @@ class PrivateScopedMessageApi(TestCase):
         }
 
         response = self.client.get(
-            reverse('private_scoped'), HTTP_AUTHORIZATION='Bearer valid-token'
+            reverse(f'{API_VERSION}:private_scoped'), HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
         self.assertEqual(response.status_code, 403)
@@ -185,7 +187,7 @@ class GetUserListIngredientsApi(TestCase):
         """
         self.user1 = User.objects.create(
             username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
-            email=USER_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.unit1 = Measurement.objects.create(unit='test_unit1')
@@ -211,7 +213,7 @@ class GetUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.get(
-            reverse('user_list_ingredients'),
+            reverse(f'{API_VERSION}:user_list_ingredients'),
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
@@ -248,7 +250,7 @@ class CreateUserListIngredientsApi(TestCase):
         """
         self.user1 = User.objects.create(
             username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
-            email=USER_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.unit1 = Measurement.objects.create(unit='test_unit1')
@@ -269,7 +271,7 @@ class CreateUserListIngredientsApi(TestCase):
 
         response = self.client.post(
             reverse(
-                'specific_user_list_ingredients',
+                f'{API_VERSION}:specific_user_list_ingredients',
                 kwargs={'list_name': self.list_name2.list_name}
             ),
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -292,7 +294,7 @@ class CreateUserListIngredientsApi(TestCase):
         # Try creating same list again
         response = self.client.post(
             reverse(
-                'specific_user_list_ingredients',
+                f'{API_VERSION}:specific_user_list_ingredients',
                 kwargs={'list_name': self.list_name2.list_name}
             ),
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -321,14 +323,14 @@ class CreateUserListIngredientsApi(TestCase):
         # Try with no parameter passed
         with self.assertRaises(NoReverseMatch):
             response = self.client.post(
-                reverse('specific_user_list_ingredients'),
+                reverse(f'{API_VERSION}:specific_user_list_ingredients'),
                 HTTP_AUTHORIZATION='Bearer valid-token'
             )
 
         # Try with empty string parameter passed
         with self.assertRaises(NoReverseMatch):
             response = self.client.post(
-                reverse('specific_user_list_ingredients', kwargs={'list_name': ''}),
+                reverse(f'{API_VERSION}:specific_user_list_ingredients', kwargs={'list_name': ''}),
                 HTTP_AUTHORIZATION='Bearer valid-token'
             )
 
@@ -355,7 +357,7 @@ class GetSpecificUserListIngredientsApi(TestCase):
         """
         self.user1 = User.objects.create(
             username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
-            email=USER_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.unit1 = Measurement.objects.create(unit='test_unit1')
@@ -381,7 +383,7 @@ class GetSpecificUserListIngredientsApi(TestCase):
 
         response = self.client.get(
             reverse(
-                'specific_user_list_ingredients',
+                f'{API_VERSION}:specific_user_list_ingredients',
                 kwargs={'list_name': self.list_name1.list_name}
             ),
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -407,7 +409,7 @@ class GetSpecificUserListIngredientsApi(TestCase):
 
         response = self.client.get(
             reverse(
-                'specific_user_list_ingredients',
+                f'{API_VERSION}:specific_user_list_ingredients',
                 kwargs={'list_name': 'nonexistent'}
             ),
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -432,7 +434,7 @@ class ChangeUserListIngredientsApi(TestCase):
         """
         self.user1 = User.objects.create(
             username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
-            email=USER_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.unit1 = Measurement.objects.create(unit='test_unit1')
@@ -460,7 +462,7 @@ class ChangeUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('user_list_ingredients'),
+            reverse(f'{API_VERSION}:user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': self.list_name1.list_name,
@@ -497,7 +499,7 @@ class ChangeUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('user_list_ingredients'),
+            reverse(f'{API_VERSION}:user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': self.list_name2.list_name,
@@ -532,7 +534,7 @@ class DeleteUserListIngredientsApi(TestCase):
         """
         self.user1 = User.objects.create(
             username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
-            email=USER_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.unit1 = Measurement.objects.create(unit='test_unit1')
@@ -558,7 +560,7 @@ class DeleteUserListIngredientsApi(TestCase):
 
         response = self.client.delete(
             reverse(
-                'specific_user_list_ingredients',
+                f'{API_VERSION}:specific_user_list_ingredients',
                 kwargs={'list_name': self.list_name1.list_name}
             ),
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -587,14 +589,14 @@ class DeleteUserListIngredientsApi(TestCase):
 
         response = self.client.delete(
             reverse(
-                'specific_user_list_ingredients',
+                f'{API_VERSION}:specific_user_list_ingredients',
                 kwargs={'list_name': self.list_name1.list_name}
             ),
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         response = self.client.delete(
             reverse(
-                'specific_user_list_ingredients',
+                f'{API_VERSION}:specific_user_list_ingredients',
                 kwargs={'list_name': self.list_name2.list_name}
             ),
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -607,7 +609,7 @@ class DeleteUserListIngredientsApi(TestCase):
         # Try delete again when there is nothing
         response = self.client.delete(
             reverse(
-                'specific_user_list_ingredients',
+                f'{API_VERSION}:specific_user_list_ingredients',
                 kwargs={'list_name': self.list_name2.list_name}
             ),
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -632,7 +634,7 @@ class AddIngredientUserListIngredientsApi(TestCase):
         """
         self.user1 = User.objects.create(
             username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
-            email=USER_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type2')
@@ -661,7 +663,7 @@ class AddIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('add_ingredient'),
+            reverse(f'{API_VERSION}:add_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
@@ -694,7 +696,7 @@ class AddIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('add_ingredient'),
+            reverse(f'{API_VERSION}:add_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
@@ -730,7 +732,7 @@ class AddIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('add_ingredient'),
+            reverse(f'{API_VERSION}:add_ingredient'),
             json.dumps(
                 {
                     'list_name': 'Does not exist',
@@ -761,7 +763,7 @@ class AddIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('add_ingredient'),
+            reverse(f'{API_VERSION}:add_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
@@ -808,7 +810,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
         """
         self.user1 = User.objects.create(
             username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
-            email=USER_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type2')
@@ -852,7 +854,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
 
         # Setting amount
         response = self.client.put(
-            reverse('set_ingredient'),
+            reverse(f'{API_VERSION}:set_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
@@ -886,7 +888,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
 
         # Setting unit
         response = self.client.put(
-            reverse('set_ingredient'),
+            reverse(f'{API_VERSION}:set_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
@@ -934,7 +936,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
 
         # Setting unit and amount
         response = self.client.put(
-            reverse('set_ingredient'),
+            reverse(f'{API_VERSION}:set_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
@@ -968,7 +970,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('set_ingredient'),
+            reverse(f'{API_VERSION}:set_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name2.list_name,
@@ -1003,7 +1005,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('set_ingredient'),
+            reverse(f'{API_VERSION}:set_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name2.list_name,
@@ -1039,7 +1041,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('set_ingredient'),
+            reverse(f'{API_VERSION}:set_ingredient'),
             json.dumps(
                 {
                     'list_name': 'does not exist',
@@ -1072,7 +1074,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('set_ingredient'),
+            reverse(f'{API_VERSION}:set_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name2.list_name,
@@ -1118,7 +1120,7 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         """
         self.user1 = User.objects.create(
             username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
-            email=USER_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type2')
@@ -1152,7 +1154,7 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('delete_ingredient'),
+            reverse(f'{API_VERSION}:delete_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
@@ -1190,7 +1192,7 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('delete_ingredient'),
+            reverse(f'{API_VERSION}:delete_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
@@ -1224,7 +1226,7 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('delete_ingredient'),
+            reverse(f'{API_VERSION}:delete_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name2.list_name,
@@ -1261,7 +1263,7 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('delete_ingredient'),
+            reverse(f'{API_VERSION}:delete_ingredient'),
             json.dumps(
                 {
                     'list_name': 'Does not exist',
@@ -1291,7 +1293,7 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.put(
-            reverse('delete_ingredient'),
+            reverse(f'{API_VERSION}:delete_ingredient'),
             json.dumps(
                 {
                     'list_name': self.list_name2.list_name,
@@ -1340,7 +1342,7 @@ class GetAllIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.get(
-            reverse('get_all_ingredients'),
+            reverse(f'{API_VERSION}:get_all_ingredients'),
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
@@ -1374,7 +1376,7 @@ class GetAllMeasurementsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.get(
-            reverse('get_all_measurements'),
+            reverse(f'{API_VERSION}:get_all_measurements'),
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
@@ -1396,9 +1398,12 @@ class CreateUserApi(TestCase):
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
         username = USER_VALID_TOKEN_PAYLOAD.get('sub')
-        email = USER_VALID_TOKEN_PAYLOAD.get('https://cupboard-teacup.com/email')
+        email = USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
 
-        response = self.client.post(reverse('user'), HTTP_AUTHORIZATION='Bearer valid-token')
+        response = self.client.post(
+            reverse(f'{API_VERSION}:user'),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
         self.assertEqual(response.status_code, 201)
         self.assertDictEqual(
             response.json(),
@@ -1406,7 +1411,10 @@ class CreateUserApi(TestCase):
         )
 
         # Try calling creating the same user again doesn't create a new user
-        response = self.client.post(reverse('user'), HTTP_AUTHORIZATION='Bearer valid-token')
+        response = self.client.post(
+            reverse(f'{API_VERSION}:user'),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
         self.assertEqual(response.status_code, 201)
         self.assertDictEqual(
             response.json(),
@@ -1440,11 +1448,11 @@ class CreateUserApi(TestCase):
         """
         mock_decode.return_value = {
             **USER_VALID_TOKEN_PAYLOAD,
-            'https://cupboard-teacup.com/email': None,
+            CUPBOARD_EMAIL_CLAIM: None,
         }
 
         response = self.client.post(
-            reverse('user'),
+            reverse(f'{API_VERSION}:user'),
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 

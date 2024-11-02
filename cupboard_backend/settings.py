@@ -165,6 +165,10 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ],
     'EXCEPTION_HANDLER': 'cupboard_app.views.api_exception_handler',
+    # API version
+    'ALLOWED_VERSIONS': ['v2'],
+    'DEFAULT_VERSION': 'v2',
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
 }
 
 
@@ -187,6 +191,7 @@ SPECTACULAR_SETTINGS = {
         'Cupboard is the ultimate kitchen companion that takes the hassle '
         'out of meal planning and grocery management!'
     ),
-    'VERSION': '2.0.0',
+    'CONTACT': {'email': 'teacup.backend@gmail.com'},
+    'VERSION': None,
     'SERVE_INCLUDE_SCHEMA': False,
 }
