@@ -778,7 +778,7 @@ class UploadDataAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request: Request) -> Response:
-        with open('Food.json', 'r', encoding="utf8") as file:
+        with open('temp.json', 'r', encoding="utf8") as file:
             data = json.load(file)
 
         for i in data:
