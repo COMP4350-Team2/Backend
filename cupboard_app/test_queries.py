@@ -337,6 +337,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(len(result), MAX_LISTS)
 
         with self.assertRaises(ValueError):
+            ListName.objects.get_or_create(list_name=f'test_max_listname{MAX_LISTS}')
             create_user_list_ingredients(
                 username=self.user1.username,
                 list_name=f'test_max_listname{MAX_LISTS}',
