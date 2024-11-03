@@ -34,7 +34,8 @@ from cupboard_app.queries import (
     delete_list_ingredient,
     set_list_ingredient,
     change_user_list_ingredient_name,
-    INVALID_USER_LIST
+    INVALID_USER_LIST,
+    MAX_LISTS_PER_USER
 )
 from cupboard_app.serializers import (
     MessageSerializer,
@@ -514,6 +515,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
             201: UserListIngredientsSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
+            500: MessageSerializer
         },
         examples=[
             OpenApiExample(
@@ -529,6 +531,11 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
                 name='Required Value Missing',
                 value={'message': MISSING_USER_LIST_PARAM_MSG},
                 status_codes=[400]
+            ),
+            OpenApiExample(
+                name='Max User Lists Reached',
+                value={'message': MAX_LISTS_PER_USER},
+                status_codes=[500]
             )
         ]
     )
