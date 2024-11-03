@@ -9,7 +9,7 @@ on:
 env:
   env_file: ${{ secrets.env }}
 jobs:
-  Testing:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
