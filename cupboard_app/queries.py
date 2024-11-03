@@ -210,6 +210,7 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
         {
             "ingredient_id": id,
             "ingredient_name": name,
+            'ingredient_type': type,
             "amount": amount,
             "unit_id": id,
             "unit": unit
