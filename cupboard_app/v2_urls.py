@@ -13,7 +13,7 @@ from cupboard_app.views import (
     MeasurementsViewSet,
     UserViewSet,
     UserListIngredientsViewSet,
-    UpdateUserListIngredientsViewSet,
+    UpdateUserListIngredientsViewSet
 )
 
 """
