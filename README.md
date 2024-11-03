@@ -18,7 +18,9 @@
 Have python version >= 3.12 and < 3.12.13 installed on machine
 
 Install all the requirements by running:
-`pip install -r requirements.txt`
+```
+pip install -r requirements.txt
+```
 
 ## Environment Variables Instructions
 - Download `SAMPLE.env` and rename it to `.env`. 
@@ -26,24 +28,27 @@ Install all the requirements by running:
 
 ## Run
 Run the following to run the Django server on the specified PORT in the `.env` file.
-`python manage.py runserver`
-
-The previous is for running a locally hosted instance, for running in production on a hosted server in aws or elsewhere are required (not applicable for current development).
+```
+python manage.py runserver
+```
 
 ## Profiling
 To profile the API, set the environment variable `RUN_PROFILER=true`. This will turn on the profiler when running the service.
 Profiler outputs are available in the `profiles/` directory which contains html files that you can open in the browser.
 
-To profile the tests, run `pyinstrument manage.py test`
+To profile the tests, run 
+```
+pyinstrument manage.py test
+```
 
 ## Cupboard API Usage
 For the official API documentation, run the backend and go to one of the following links in your browser:  
-Swagger UI: http://localhost:6060/api/<version>/doc/  
+Swagger UI: http://localhost:6060/api/[version]/doc/  
 ```
 http://localhost:6060/api/v2/doc/
 ```  
 
-Redoc UI: http://localhost:6060/api/<version>/redoc/  
+Redoc UI: http://localhost:6060/api/[version]/redoc/  
 ```
 http://localhost:6060/api/v2/redoc/
 ```
