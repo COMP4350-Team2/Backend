@@ -12,7 +12,7 @@ def get_auth_access_token_from_header(request: Request) -> str:
     Returns:
         The access token from the request.
     """
-    auth = request.META.get("HTTP_AUTHORIZATION", None)
+    auth = request.META.get('HTTP_AUTHORIZATION', None)
     parts = auth.split()
     token = parts[1]
 
