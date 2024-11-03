@@ -1,0 +1,17 @@
+name: backend_cd
+
+on:
+  workflow_dispatch:
+
+env:
+  env_file: ${{ secrets.env_prod }}
+  docker_password: ${{ secrets.docker_password }}
+jobs:
+  Testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main 
+      - run: echo "$env_file" > ".env" && docker login --username swanso15 --password $docker_password && docker build -t swanso15/cupboard_backend:latest . && docker push swanso15/cupboard_backend
+
