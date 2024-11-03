@@ -15,7 +15,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main 
-      - run: python -m venv testVenv && echo "$env_file" > ".env" && source testVenv/bin/activate && pip install -r requirements.txt && pip install pyopenssl --upgrade && pip install --force-reinstall -v "cryptography==42.0.0" && python manage.py test
+      - run: |
+        python -m venv testVenv
+        echo "$env_file" > ".env"
+        source testVenv/bin/activate
+        pip install -r requirements.txt
+        pip install pyopenssl --upgrade
+        pip install --force-reinstall -v "cryptography==42.0.0"
+        python manage.py test
+        flake8
       #- run: python -m venv testVenv
       #- run: cd testVenv && ls
       #- run: source testVenv/bin/activate
