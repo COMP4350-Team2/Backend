@@ -14,45 +14,55 @@ class MessageSerializer(serializers.Serializer):
     message = serializers.CharField()
 
 
-class UserListIngredientsViewSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    listName = serializers.CharField()
-    ingredient = serializers.CharField()
-    amount = serializers.FloatField()
-    unit = serializers.CharField()
-
-
-class IngredientSerializer(serializers.HyperlinkedModelSerializer):
+class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ['name', 'type']
 
 
-class ListNameSerializer(serializers.HyperlinkedModelSerializer):
+class ListNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListName
-        fields = ['listName']
+        fields = ['list_name']
 
 
-class MeasurementSerializer(serializers.HyperlinkedModelSerializer):
+class MeasurementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Measurement
         fields = ['unit']
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email']
 
 
-class UserListIngredientsSerializer(serializers.HyperlinkedModelSerializer):
+class UserListIngredientsSerializer(serializers.ModelSerializer):
+    user = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+    list_name = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='list_name'
+    )
+
     class Meta:
         model = UserListIngredients
-        fields = ['user', 'listName', 'ingredients']
+        fields = ['user', 'list_name', 'ingredients']
 
 
-class RecipeSerializer(serializers.HyperlinkedModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer):
+    user = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+    recipe_name = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='recipe_name'
+    )
+
     class Meta:
         model = Recipe
-        fields = ['user', 'recipeName', 'steps', 'ingredients']
+        fields = ['user', 'recipe_name', 'steps', 'ingredients']
