@@ -46,6 +46,9 @@ def load_env_variables():
     if os.getenv('DEBUG_ENABLE') == '' or os.getenv('DEBUG_ENABLE') is None:
         os.environ['DEBUG_ENABLE'] = 'true'
 
+    if os.getenv('RUN_PROFILER') == '' or os.getenv('RUN_PROFILER') is None:
+        os.environ['RUN_PROFILER'] = 'false'
+
     if (
         os.getenv('AUTHLIB_INSECURE_TRANSPORT') == ''
         or os.getenv('AUTHLIB_INSECURE_TRANSPORT') is None
