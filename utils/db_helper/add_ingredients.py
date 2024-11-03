@@ -12,4 +12,3 @@ for i in data:
         create_ingredient(i["name"], i["food_group"])
     else:
         create_ingredient(i["name"], "Miscellaneous")
-

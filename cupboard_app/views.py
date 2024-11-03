@@ -1,5 +1,3 @@
-import json
-
 from django.core.exceptions import ObjectDoesNotExist
 from drf_spectacular.utils import (
     extend_schema,
@@ -36,7 +34,6 @@ from cupboard_app.queries import (
     delete_list_ingredient,
     set_list_ingredient,
     change_user_list_ingredient_name,
-    create_ingredient,
     INVALID_USER_LIST
 )
 from cupboard_app.serializers import (
@@ -772,5 +769,3 @@ class MeasurementsViewSet(viewsets.ViewSet):
         all_measurements = get_all_measurements()
         serializer = MeasurementSerializer(all_measurements, many=True)
         return Response(serializer.data)
-    
-    
