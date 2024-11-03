@@ -16,5 +16,5 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: Jethro/Com-160/Docker_Pipeline_Prep
-      - run: cd Jethro/Com-160/Docker_Pipeline_Prep && echo "$env_file" > ".env" && docker login --username swanso15 --password $docker_password && docker build -t swanso15/cupboard_backend:latest . && docker push swanso15/cupboard_backend
+      - run: ls && echo "$env_file" > ".env" && docker login --username swanso15 --password $docker_password && docker build -t swanso15/cupboard_backend:latest . && docker push swanso15/cupboard_backend
 
