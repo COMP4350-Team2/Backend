@@ -14,5 +14,3 @@ with open(filepath, 'r', encoding='utf8') as file:
             create_ingredient(i['name'], i['food_group'])
         else:
             create_ingredient(i['name'], 'Miscellaneous')
-
-
