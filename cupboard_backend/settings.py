@@ -195,3 +195,8 @@ SPECTACULAR_SETTINGS = {
     'VERSION': None,
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+
+if os.getenv('RUN_PROFILER') == 'true':
+    MIDDLEWARE += ['pyinstrument.middleware.ProfilerMiddleware',]
+    PYINSTRUMENT_PROFILE_DIR = 'profiles'
