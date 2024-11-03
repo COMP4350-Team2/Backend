@@ -263,11 +263,13 @@ paths:
                     ingredients:
                     - ingredient_id: 1
                       ingredient_name: Beef
+                      ingredient_type: Meat
                       amount: 500
                       unit_id: 1
                       unit: g
                     - ingredient_id: 1
-                      ingredient_name: Dairy
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
                       amount: 2
                       unit_id: 2
                       unit: L
@@ -327,11 +329,13 @@ paths:
                     ingredients:
                     - ingredient_id: 1
                       ingredient_name: Beef
+                      ingredient_type: Meat
                       amount: 500
                       unit_id: 1
                       unit: g
                     - ingredient_id: 1
-                      ingredient_name: Dairy
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
                       amount: 2
                       unit_id: 2
                       unit: L
@@ -405,11 +409,13 @@ paths:
                     ingredients:
                     - ingredient_id: 1
                       ingredient_name: Beef
+                      ingredient_type: Meat
                       amount: 500
                       unit_id: 1
                       unit: g
                     - ingredient_id: 1
-                      ingredient_name: Dairy
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
                       amount: 2
                       unit_id: 2
                       unit: L
@@ -443,7 +449,9 @@ paths:
           description: ''
     post:
       operationId: api_v2_user_list_ingredients_create
-      description: Create a new list for the user in the database.
+      description: |-
+        Create a new list for the user in the database. Users are limited to
+        10 lists per user.
       parameters:
       - in: path
         name: list_name
@@ -495,6 +503,17 @@ paths:
                     message: Given token not valid for any token type
                   summary: Invalid token
           description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                MaxUserListsReached:
+                  value:
+                    message: User has 10 lists. Max limit per user reached.
+                  summary: Max User Lists Reached
+          description: ''
     delete:
       operationId: api_v2_user_list_ingredients_destroy
       description: |-
@@ -527,11 +546,13 @@ paths:
                     ingredients:
                     - ingredient_id: 1
                       ingredient_name: Beef
+                      ingredient_type: Meat
                       amount: 500
                       unit_id: 1
                       unit: g
                     - ingredient_id: 1
-                      ingredient_name: Dairy
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
                       amount: 2
                       unit_id: 2
                       unit: L
@@ -594,11 +615,13 @@ paths:
                     ingredients:
                     - ingredient_id: 1
                       ingredient_name: Beef
+                      ingredient_type: Meat
                       amount: 500
                       unit_id: 1
                       unit: g
                     - ingredient_id: 1
-                      ingredient_name: Dairy
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
                       amount: 2
                       unit_id: 2
                       unit: L
@@ -685,11 +708,13 @@ paths:
                     ingredients:
                     - ingredient_id: 1
                       ingredient_name: Beef
+                      ingredient_type: Meat
                       amount: 500
                       unit_id: 1
                       unit: g
                     - ingredient_id: 1
-                      ingredient_name: Dairy
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
                       amount: 2
                       unit_id: 2
                       unit: L
@@ -778,11 +803,13 @@ paths:
                     ingredients:
                     - ingredient_id: 1
                       ingredient_name: Beef
+                      ingredient_type: Meat
                       amount: 500
                       unit_id: 1
                       unit: g
                     - ingredient_id: 1
-                      ingredient_name: Dairy
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
                       amount: 2
                       unit_id: 2
                       unit: L

@@ -1,11 +1,15 @@
-import json
 import os
+import json
+
 from cupboard_app.queries import (
     create_ingredient
 )
 
 
-filepath = os.getenv('JSON_PATH')
+"""
+Runs one-time run script to add ingredients from a json file into the database.
+"""
+filepath = os.getenv('ADD_INGREDIENTS_JSON_PATH')
 with open(filepath, 'r', encoding='utf8') as file:
     data = json.load(file)
 

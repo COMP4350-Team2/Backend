@@ -33,7 +33,8 @@ from cupboard_app.queries import (
     change_user_list_ingredient_name,
     add_default_user_lists,
     GROCERY_LIST_NAME,
-    PANTRY_LIST_NAME
+    PANTRY_LIST_NAME,
+    MAX_LISTS
 )
 
 
@@ -319,6 +320,33 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_lists[2].user, self.user1)
         self.assertEqual(user_lists[2].list_name, self.empty_list_name2)
         self.assertEqual(user_lists[2].ingredients, None)
+
+        # Test max user list ingredients creation
+        result = UserListIngredients.objects.filter(user__username=self.user1.username)
+
+        for i in range(MAX_LISTS - len(result)):
+            ListName.objects.get_or_create(list_name=f'test_max_listname{i}')
+            create_user_list_ingredients(
+                username=self.user1.username,
+                list_name=f'test_max_listname{i}',
+                ingredients=[]
+            )
+
+        # Check how many lists we have
+        result = UserListIngredients.objects.filter(user__username=self.user1.username)
+        self.assertEqual(len(result), MAX_LISTS)
+
+        with self.assertRaises(ValueError):
+            ListName.objects.get_or_create(list_name=f'test_max_listname{MAX_LISTS}')
+            create_user_list_ingredients(
+                username=self.user1.username,
+                list_name=f'test_max_listname{MAX_LISTS}',
+                ingredients=[]
+            )
+
+        # Check how many lists we have
+        result = UserListIngredients.objects.filter(user__username=self.user1.username)
+        self.assertEqual(len(result), MAX_LISTS)
 
     def test_delete_user_list_ingredients(self):
         """

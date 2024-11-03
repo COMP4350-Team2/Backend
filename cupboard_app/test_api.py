@@ -19,7 +19,9 @@ from cupboard_app.queries import (
     DOES_NOT_EXIST,
     GROCERY_LIST_NAME,
     PANTRY_LIST_NAME,
-    INVALID_USER_LIST
+    INVALID_USER_LIST,
+    MAX_LISTS,
+    MAX_LISTS_PER_USER
 )
 from cupboard_app.views import (
     PublicMessageAPIView,
@@ -341,6 +343,45 @@ class CreateUserListIngredientsApi(TestCase):
                     'message': UserListIngredientsViewSet.MISSING_USER_LIST_PARAM_MSG
                 }
             )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_create_max_lists(self, mock_decode):
+        """
+        Testing the maximum create UserListIngredient API.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        result = UserListIngredients.objects.filter(user__username=self.user1.username)
+
+        for i in range(MAX_LISTS - len(result)):
+            response = self.client.post(
+                reverse(
+                    f'{API_VERSION}:specific_user_list_ingredients',
+                    kwargs={'list_name': f'test_listname{i}'}
+                ),
+                HTTP_AUTHORIZATION='Bearer valid-token'
+            )
+
+            self.assertEqual(response.status_code, 201)
+
+        # Check how many lists we have
+        result = UserListIngredients.objects.filter(user__username=self.user1.username)
+        self.assertEqual(len(result), MAX_LISTS)
+
+        response = self.client.post(
+            reverse(
+                f'{API_VERSION}:specific_user_list_ingredients',
+                kwargs={'list_name': f'test_listname{MAX_LISTS}'}
+            ),
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json(), {'message': MAX_LISTS_PER_USER})
+
+        # Check how many lists we have
+        result = UserListIngredients.objects.filter(user__username=self.user1.username)
+        self.assertEqual(len(result), MAX_LISTS)
 
 
 class GetSpecificUserListIngredientsApi(TestCase):

@@ -34,7 +34,8 @@ from cupboard_app.queries import (
     delete_list_ingredient,
     set_list_ingredient,
     change_user_list_ingredient_name,
-    INVALID_USER_LIST
+    INVALID_USER_LIST,
+    MAX_LISTS_PER_USER
 )
 from cupboard_app.serializers import (
     MessageSerializer,
@@ -58,13 +59,15 @@ INGREDIENTS = [
     {
         'ingredient_id': 1,
         'ingredient_name': 'Beef',
+        'ingredient_type': 'Meat',
         'amount': 500,
         'unit_id': 1,
         'unit': 'g'
     },
     {
         'ingredient_id': 1,
-        'ingredient_name': 'Dairy',
+        'ingredient_name': '2% Milk',
+        'ingredient_type': 'Dairy',
         'amount': 2,
         'unit_id': 2,
         'unit': 'L'
@@ -514,6 +517,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
             201: UserListIngredientsSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
+            500: MessageSerializer
         },
         examples=[
             OpenApiExample(
@@ -529,12 +533,18 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
                 name='Required Value Missing',
                 value={'message': MISSING_USER_LIST_PARAM_MSG},
                 status_codes=[400]
+            ),
+            OpenApiExample(
+                name='Max User Lists Reached',
+                value={'message': MAX_LISTS_PER_USER},
+                status_codes=[500]
             )
         ]
     )
     def create(self, request: Request, list_name: str = None) -> Response:
         """
-        Create a new list for the user in the database.
+        Create a new list for the user in the database. Users are limited to
+        10 lists per user.
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)

@@ -8,10 +8,12 @@ from cupboard_app.models import (
     UserListIngredients
 )
 
+MAX_LISTS = 10
 GROCERY_LIST_NAME = 'Grocery'
 PANTRY_LIST_NAME = 'Pantry'
 INVALID_USER_LIST = 'User list does not exist.'
 DOES_NOT_EXIST = 'matching query does not exist.'
+MAX_LISTS_PER_USER = f'User has {MAX_LISTS} lists. Max limit per user reached.'
 
 
 def create_ingredient(name: str, type: str) -> Ingredient:
@@ -208,6 +210,7 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
         {
             "ingredient_id": id,
             "ingredient_name": name,
+            'ingredient_type': type,
             "amount": amount,
             "unit_id": id,
             "unit": unit
@@ -390,7 +393,8 @@ def create_user_list_ingredients(
     ingredients: list[dict] = []
 ) -> UserListIngredients:
     """
-    Creates a user list in the UserListIngredients dimension table.
+    Creates a user list in the UserListIngredients dimension table. Users are limited
+    to 10 lists.
 
     Args:
         username: User's username
@@ -411,14 +415,17 @@ def create_user_list_ingredients(
         list_name__list_name=list_name
     )
 
-    if not query.exists():
-        obj = UserListIngredients.objects.create(
-            user=user,
-            list_name=list,
-            ingredients=ingredients
-        )
+    if len(UserListIngredients.objects.filter(user__username=username)) < MAX_LISTS:
+        if not query.exists():
+            obj = UserListIngredients.objects.create(
+                user=user,
+                list_name=list,
+                ingredients=ingredients
+            )
+        else:
+            obj = query.first()
     else:
-        obj = query.first()
+        raise ValueError(MAX_LISTS_PER_USER)
 
     return obj
 
