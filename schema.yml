@@ -1,13 +1,15 @@
 openapi: 3.0.3
 info:
   title: Cupboard API
-  version: 1.0.0
+  version: ''
   description: The official Cupboard API documentation. Cupboard is the ultimate kitchen
     companion that takes the hassle out of meal planning and grocery management!
+  contact:
+    email: teacup.backend@gmail.com
 paths:
-  /api/get_all_ingredients:
+  /api/v2/get_all_ingredients:
     get:
-      operationId: api_get_all_ingredients_list
+      operationId: api_v2_get_all_ingredients_list
       description: Returns a list of all ingredients in database.
       tags:
       - Ingredients
@@ -43,9 +45,46 @@ paths:
                     message: Given token not valid for any token type
                   summary: Invalid token
           description: ''
-  /api/private:
+  /api/v2/get_all_measurements:
     get:
-      operationId: api_private_retrieve
+      operationId: api_v2_get_all_measurements_list
+      description: Returns a list of all measurements in database.
+      tags:
+      - Measurements
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Measurement'
+              examples:
+                AllMeasurementsReturned:
+                  value:
+                  - unit: g
+                  summary: All Measurements Returned
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+  /api/v2/private:
+    get:
+      operationId: api_v2_private_retrieve
       description: |-
         This is an example of a private message API request.
         A valid access token is required to access this route.
@@ -80,9 +119,9 @@ paths:
                     message: Given token not valid for any token type
                   summary: Invalid token
           description: ''
-  /api/private_scoped:
+  /api/v2/private_scoped:
     get:
-      operationId: api_private_scoped_retrieve
+      operationId: api_v2_private_scoped_retrieve
       description: |-
         This is an example of a private scoped message API request.
         A valid access token and an appropriate permissions
@@ -130,9 +169,9 @@ paths:
                       this action.
                   summary: Permission denied
           description: ''
-  /api/public:
+  /api/v2/public:
     get:
-      operationId: api_public_retrieve
+      operationId: api_v2_public_retrieve
       description: This is an example of a public message API request.
       tags:
       - Messages
@@ -151,14 +190,14 @@ paths:
                     message: Hello from a public endpoint! You don't need to be authenticated
                       to see this.
           description: ''
-  /api/user:
+  /api/v2/user:
     post:
-      operationId: api_user_create
+      operationId: api_v2_user_create
       description: |-
         Creates a new user in the database based on Auth0 access token.
         Returns the user object.
       tags:
-      - User
+      - Users
       security:
       - jwtAuth: []
       responses:
@@ -200,9 +239,9 @@ paths:
                     message: Given token not valid for any token type
                   summary: Invalid token
           description: ''
-  /api/user_list_ingredients:
+  /api/v2/user_list_ingredients:
     get:
-      operationId: api_user_list_ingredients_list
+      operationId: api_v2_user_list_ingredients_list
       description: Retrieves all the lists for a user.
       tags:
       - User's List
@@ -250,7 +289,7 @@ paths:
                   summary: Invalid token
           description: ''
     put:
-      operationId: api_user_list_ingredients_update
+      operationId: api_v2_user_list_ingredients_update
       description: Changes the specified user's list name to another name.
       tags:
       - User's List
@@ -337,9 +376,9 @@ paths:
                     message: User list does not exist.
                   summary: User List not found
           description: ''
-  /api/user_list_ingredients/{list_name}:
+  /api/v2/user_list_ingredients/{list_name}:
     get:
-      operationId: api_user_list_ingredients_retrieve
+      operationId: api_v2_user_list_ingredients_retrieve
       description: Retrieves the specific list for a user.
       parameters:
       - in: path
@@ -403,7 +442,7 @@ paths:
                   summary: User List not found
           description: ''
     post:
-      operationId: api_user_list_ingredients_create
+      operationId: api_v2_user_list_ingredients_create
       description: Create a new list for the user in the database.
       parameters:
       - in: path
@@ -457,7 +496,7 @@ paths:
                   summary: Invalid token
           description: ''
     delete:
-      operationId: api_user_list_ingredients_destroy
+      operationId: api_v2_user_list_ingredients_destroy
       description: |-
         Deletes the specified list from the user's lists and returns
         all of the user's lists after the delete.
@@ -513,9 +552,9 @@ paths:
                     message: Given token not valid for any token type
                   summary: Invalid token
           description: ''
-  /api/user_list_ingredients/add_ingredient:
+  /api/v2/user_list_ingredients/add_ingredient:
     put:
-      operationId: api_user_list_ingredients_add_ingredient_update
+      operationId: api_v2_user_list_ingredients_add_ingredient_update
       description: Adds an ingredient to a specified user's list.
       tags:
       - User's List
@@ -605,9 +644,9 @@ paths:
                     message: User list does not exist.
                   summary: User List not found
           description: ''
-  /api/user_list_ingredients/delete_ingredient:
+  /api/v2/user_list_ingredients/delete_ingredient:
     put:
-      operationId: api_user_list_ingredients_delete_ingredient_update
+      operationId: api_v2_user_list_ingredients_delete_ingredient_update
       description: Deletes an ingredient from a specified user's list.
       tags:
       - User's List
@@ -695,9 +734,9 @@ paths:
                     message: User list does not exist.
                   summary: User List not found
           description: ''
-  /api/user_list_ingredients/set_ingredient:
+  /api/v2/user_list_ingredients/set_ingredient:
     put:
-      operationId: api_user_list_ingredients_set_ingredient_update
+      operationId: api_v2_user_list_ingredients_set_ingredient_update
       description: Sets an ingredient in a specified user's list.
       tags:
       - User's List
@@ -844,6 +883,14 @@ components:
       required:
       - name
       - type
+    Measurement:
+      type: object
+      properties:
+        unit:
+          type: string
+          maxLength: 30
+      required:
+      - unit
     Message:
       type: object
       properties:
