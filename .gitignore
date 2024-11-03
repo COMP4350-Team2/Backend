@@ -5,6 +5,7 @@
 
 # Logs
 logs/
+profiles/
 
 # Configuration
 .env
