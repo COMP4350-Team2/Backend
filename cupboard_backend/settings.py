@@ -65,6 +65,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'pyinstrument.middleware.ProfilerMiddleware',
 ]
 
 ROOT_URLCONF = 'cupboard_backend.urls'
@@ -195,3 +196,6 @@ SPECTACULAR_SETTINGS = {
     'VERSION': None,
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+
+PYINSTRUMENT_PROFILE_DIR = 'profiles'
