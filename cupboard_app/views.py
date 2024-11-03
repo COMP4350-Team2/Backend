@@ -541,7 +541,8 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
     )
     def create(self, request: Request, list_name: str = None) -> Response:
         """
-        Create a new list for the user in the database.
+        Create a new list for the user in the database. Users are limited to
+        10 lists per user.
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)

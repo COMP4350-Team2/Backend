@@ -13,7 +13,7 @@ GROCERY_LIST_NAME = 'Grocery'
 PANTRY_LIST_NAME = 'Pantry'
 INVALID_USER_LIST = 'User list does not exist.'
 DOES_NOT_EXIST = 'matching query does not exist.'
-MAX_LISTS_PER_USER = f'User has {MAX_LISTS} lists. Limit is reached.'
+MAX_LISTS_PER_USER = f'User has {MAX_LISTS} lists. Max limit per user reached.'
 
 
 def create_ingredient(name: str, type: str) -> Ingredient:
