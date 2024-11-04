@@ -5,6 +5,7 @@
 
 # Logs
 logs/
+profiles/
 
 # Configuration
 .env
@@ -57,3 +58,6 @@ Thumbs.db
 
 # Uncommitted directory
 **/uncommitted/*
+
+# Code coverage file
+.coverage

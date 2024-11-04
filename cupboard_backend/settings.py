@@ -31,10 +31,15 @@ DB_TEST_NAME = os.getenv('DB_TEST_NAME')
 MONGO_URL = os.getenv('MONGO_URL')
 REACT_CLIENT_ORIGIN_URL = os.getenv('REACT_CLIENT_ORIGIN_URL')
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
-if os.getenv('DEBUG_ENABLE') == 'false':
-    DEBUG = False
-else:
+if os.getenv('DEBUG_ENABLE') == 'true':
     DEBUG = True
+else:
+    DEBUG = False
+if os.getenv('DEBUG_PROPAGATE_EXCEPTIONS') == 'true':
+    DEBUG = True
+else:
+    DEBUG = False
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -150,9 +155,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-CORS_ALLOWED_ORIGINS = [
-    REACT_CLIENT_ORIGIN_URL,
-]
+# Security
+CORS_ALLOWED_ORIGINS = [REACT_CLIENT_ORIGIN_URL]
 
 
 REST_FRAMEWORK = {
@@ -160,13 +164,27 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTTokenUserAuthentication',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100,
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day'
+    },
     'EXCEPTION_HANDLER': 'cupboard_app.views.api_exception_handler',
+    # API version
+    'ALLOWED_VERSIONS': ['v2'],
+    'DEFAULT_VERSION': 'v2',
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
 }
 
 
@@ -178,6 +196,8 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'sub',
     'JTI_CLAIM': None,
     'TOKEN_TYPE_CLAIM': None,
+    'AUTH_TOKEN_CLASSES': ('utils.auth_helper.Auth0Token',),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 
@@ -188,6 +208,12 @@ SPECTACULAR_SETTINGS = {
         'Cupboard is the ultimate kitchen companion that takes the hassle '
         'out of meal planning and grocery management!'
     ),
-    'VERSION': '1.0.0',
+    'CONTACT': {'email': 'teacup.backend@gmail.com'},
+    'VERSION': None,
     'SERVE_INCLUDE_SCHEMA': False,
 }
+
+
+if os.getenv('RUN_PROFILER') == 'true':
+    MIDDLEWARE += ['pyinstrument.middleware.ProfilerMiddleware',]
+    PYINSTRUMENT_PROFILE_DIR = 'profiles'

@@ -1,0 +1,981 @@
+openapi: 3.0.3
+info:
+  title: Cupboard API
+  version: ''
+  description: The official Cupboard API documentation. Cupboard is the ultimate kitchen
+    companion that takes the hassle out of meal planning and grocery management!
+  contact:
+    email: teacup.backend@gmail.com
+paths:
+  /api/v2/get_all_ingredients:
+    get:
+      operationId: api_v2_get_all_ingredients_list
+      description: Returns a list of all ingredients in database.
+      tags:
+      - Ingredients
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+              examples:
+                AllIngredientsReturned:
+                  value:
+                  - name: Beef
+                    type: Meat
+                  summary: All Ingredients Returned
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+  /api/v2/get_all_measurements:
+    get:
+      operationId: api_v2_get_all_measurements_list
+      description: Returns a list of all measurements in database.
+      tags:
+      - Measurements
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Measurement'
+              examples:
+                AllMeasurementsReturned:
+                  value:
+                  - unit: g
+                  summary: All Measurements Returned
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+  /api/v2/private:
+    get:
+      operationId: api_v2_private_retrieve
+      description: |-
+        This is an example of a private message API request.
+        A valid access token is required to access this route.
+      tags:
+      - Messages
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                Success:
+                  value:
+                    message: Hello from a private endpoint! You need to be authenticated
+                      to see this.
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+  /api/v2/private_scoped:
+    get:
+      operationId: api_v2_private_scoped_retrieve
+      description: |-
+        This is an example of a private scoped message API request.
+        A valid access token and an appropriate permissions
+        are required to access this route.
+      tags:
+      - Messages
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                Success:
+                  value:
+                    message: Hello from a private endpoint! You need to be authenticated
+                      and have a permission of read:messages to see this.
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                PermissionDenied:
+                  value:
+                    message: Permission denied. You do not have permission to perform
+                      this action.
+                  summary: Permission denied
+          description: ''
+  /api/v2/public:
+    get:
+      operationId: api_v2_public_retrieve
+      description: This is an example of a public message API request.
+      tags:
+      - Messages
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                Success:
+                  value:
+                    message: Hello from a public endpoint! You don't need to be authenticated
+                      to see this.
+          description: ''
+  /api/v2/user:
+    post:
+      operationId: api_v2_user_create
+      description: |-
+        Creates a new user in the database based on Auth0 access token.
+        Returns the user object.
+      tags:
+      - Users
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              examples:
+                UserCreated:
+                  value:
+                    username: teacup
+                    email: teacup@domain.com
+                  summary: User Created
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                UnableToCreateUser:
+                  value:
+                    message: Username or email missing. Unable to create new user.
+                  summary: Unable to Create User
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+  /api/v2/user_list_ingredients:
+    get:
+      operationId: api_v2_user_list_ingredients_list
+      description: Retrieves all the lists for a user.
+      tags:
+      - User's List
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserListIngredients'
+              examples:
+                AllUserListsRetrieved:
+                  value:
+                  - user: teacup
+                    list_name: Grocery
+                    ingredients:
+                    - ingredient_id: 1
+                      ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit_id: 1
+                      unit: g
+                    - ingredient_id: 1
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit_id: 2
+                      unit: L
+                  summary: All User Lists Retrieved
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+    put:
+      operationId: api_v2_user_list_ingredients_update
+      description: Changes the specified user's list name to another name.
+      tags:
+      - User's List
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeUserIngredientsListNameRequest'
+            examples:
+              ChangeListName:
+                value:
+                  old_list_name: Pantry
+                  new_list_name: Fridge
+                summary: Change List Name
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangeUserIngredientsListNameRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangeUserIngredientsListNameRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListIngredients'
+              examples:
+                ListNameChanged:
+                  value:
+                    user: teacup
+                    list_name: Fridge
+                    ingredients:
+                    - ingredient_id: 1
+                      ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit_id: 1
+                      unit: g
+                    - ingredient_id: 1
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit_id: 2
+                      unit: L
+                  summary: List Name Changed
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: 'Required value missing from sent request, please ensure
+                      all items are sent in the following format: {old_list_name:
+                      [LISTNAME], new_list_name: [LISTNAME]}'
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                UserListNotFound:
+                  value:
+                    message: User list does not exist.
+                  summary: User List not found
+          description: ''
+  /api/v2/user_list_ingredients/{list_name}:
+    get:
+      operationId: api_v2_user_list_ingredients_retrieve
+      description: Retrieves the specific list for a user.
+      parameters:
+      - in: path
+        name: list_name
+        schema:
+          type: string
+        description: Name of the list.
+        required: true
+      tags:
+      - User's List
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListIngredients'
+              examples:
+                UserListRetrieved:
+                  value:
+                    user: teacup
+                    list_name: Grocery
+                    ingredients:
+                    - ingredient_id: 1
+                      ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit_id: 1
+                      unit: g
+                    - ingredient_id: 1
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit_id: 2
+                      unit: L
+                  summary: User List Retrieved
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                UserListNotFound:
+                  value:
+                    message: User list does not exist.
+                  summary: User List not found
+          description: ''
+    post:
+      operationId: api_v2_user_list_ingredients_create
+      description: |-
+        Create a new list for the user in the database. Users are limited to
+        10 lists per user.
+      parameters:
+      - in: path
+        name: list_name
+        schema:
+          type: string
+        description: Name of the list.
+        required: true
+      tags:
+      - User's List
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListIngredients'
+              examples:
+                User'sListCreated:
+                  value:
+                    user: teacup
+                    list_name: Grocery
+                    ingredients: []
+                  summary: User's List Created
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: list_name parameter is missing or empty.
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                MaxUserListsReached:
+                  value:
+                    message: User has 10 lists. Max limit per user reached.
+                  summary: Max User Lists Reached
+          description: ''
+    delete:
+      operationId: api_v2_user_list_ingredients_destroy
+      description: |-
+        Deletes the specified list from the user's lists and returns
+        all of the user's lists after the delete.
+      parameters:
+      - in: path
+        name: list_name
+        schema:
+          type: string
+        description: Name of the list.
+        required: true
+      tags:
+      - User's List
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserListIngredients'
+              examples:
+                ListDeleted:
+                  value:
+                  - user: teacup
+                    list_name: Grocery
+                    ingredients:
+                    - ingredient_id: 1
+                      ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit_id: 1
+                      unit: g
+                    - ingredient_id: 1
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit_id: 2
+                      unit: L
+                  summary: List Deleted
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+  /api/v2/user_list_ingredients/add_ingredient:
+    put:
+      operationId: api_v2_user_list_ingredients_add_ingredient_update
+      description: Adds an ingredient to a specified user's list.
+      tags:
+      - User's List
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddIngredientInListRequest'
+            examples:
+              AddIngredientInList:
+                value:
+                  list_name: Grocery
+                  ingredient: Beef
+                  amount: 500
+                  unit: g
+                summary: Add Ingredient in List
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddIngredientInListRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AddIngredientInListRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListIngredients'
+              examples:
+                IngredientAdded:
+                  value:
+                    user: teacup
+                    list_name: Grocery
+                    ingredients:
+                    - ingredient_id: 1
+                      ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit_id: 1
+                      unit: g
+                    - ingredient_id: 1
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit_id: 2
+                      unit: L
+                  summary: Ingredient Added
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: 'Required value missing from sent request, please ensure
+                      all items are sent in the following format: {list_name: [LISTNAME],
+                      ingredient: [INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT
+                      UNIT]}'
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                UserListNotFound:
+                  value:
+                    message: User list does not exist.
+                  summary: User List not found
+          description: ''
+  /api/v2/user_list_ingredients/delete_ingredient:
+    put:
+      operationId: api_v2_user_list_ingredients_delete_ingredient_update
+      description: Deletes an ingredient from a specified user's list.
+      tags:
+      - User's List
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteIngredientFromListRequest'
+            examples:
+              DeleteIngredientFromList:
+                value:
+                  list_name: Grocery
+                  ingredient: Pork
+                  unit: g
+                summary: Delete Ingredient from List
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeleteIngredientFromListRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeleteIngredientFromListRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListIngredients'
+              examples:
+                IngredientDeleted:
+                  value:
+                    user: teacup
+                    list_name: Grocery
+                    ingredients:
+                    - ingredient_id: 1
+                      ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit_id: 1
+                      unit: g
+                    - ingredient_id: 1
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit_id: 2
+                      unit: L
+                  summary: Ingredient Deleted
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: 'Required value missing from sent request, please ensure
+                      all items are sent in the following format: {list_name: [LISTNAME],
+                      ingredient: [INGREDIENT], unit: [MEASURMENT UNIT]}'
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                UserListNotFound:
+                  value:
+                    message: User list does not exist.
+                  summary: User List not found
+          description: ''
+  /api/v2/user_list_ingredients/set_ingredient:
+    put:
+      operationId: api_v2_user_list_ingredients_set_ingredient_update
+      description: Sets an ingredient in a specified user's list.
+      tags:
+      - User's List
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateIngredientInListRequest'
+            examples:
+              UpdateIngredientInList:
+                value:
+                  list_name: Grocery
+                  old_ingredient: Pork
+                  old_unit: lb
+                  new_ingredient: Beef
+                  new_amount: 500
+                  new_unit: g
+                summary: Update Ingredient in List
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UpdateIngredientInListRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateIngredientInListRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListIngredients'
+              examples:
+                IngredientUpdated:
+                  value:
+                    user: teacup
+                    list_name: Grocery
+                    ingredients:
+                    - ingredient_id: 1
+                      ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit_id: 1
+                      unit: g
+                    - ingredient_id: 1
+                      ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit_id: 2
+                      unit: L
+                  summary: Ingredient Updated
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: 'Required value missing from sent request, please ensure
+                      all items are sent in the following format: {list_name: [LISTNAME],
+                      old_ingredient: [INGREDIENT], old_unit: [MEASURMENT UNIT], new_ingredient:
+                      [INGREDIENT], new_amount: [AMOUNT/QUANTITY], new_unit: [MEASURMENT
+                      UNIT]}'
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                UserListNotFound:
+                  value:
+                    message: User list does not exist.
+                  summary: User List not found
+          description: ''
+components:
+  schemas:
+    AddIngredientInListRequest:
+      type: object
+      properties:
+        list_name:
+          type: string
+        ingredient:
+          type: string
+        amount:
+          type: number
+          format: double
+        unit:
+          type: string
+      required:
+      - amount
+      - ingredient
+      - list_name
+      - unit
+    ChangeUserIngredientsListNameRequest:
+      type: object
+      properties:
+        old_list_name:
+          type: string
+        new_list_name:
+          type: string
+      required:
+      - new_list_name
+      - old_list_name
+    DeleteIngredientFromListRequest:
+      type: object
+      properties:
+        list_name:
+          type: string
+        ingredient:
+          type: string
+        unit:
+          type: string
+      required:
+      - ingredient
+      - list_name
+      - unit
+    Ingredient:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 30
+        type:
+          type: string
+          maxLength: 30
+      required:
+      - name
+      - type
+    Measurement:
+      type: object
+      properties:
+        unit:
+          type: string
+          maxLength: 30
+      required:
+      - unit
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    UpdateIngredientInListRequest:
+      type: object
+      properties:
+        list_name:
+          type: string
+        old_ingredient:
+          type: string
+        old_unit:
+          type: string
+        new_ingredient:
+          type: string
+        new_amount:
+          type: number
+          format: double
+        new_unit:
+          type: string
+      required:
+      - list_name
+      - new_amount
+      - new_ingredient
+      - new_unit
+      - old_ingredient
+      - old_unit
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 30
+        email:
+          type: string
+          maxLength: 100
+      required:
+      - email
+      - username
+    UserListIngredients:
+      type: object
+      properties:
+        user:
+          type: string
+          readOnly: true
+        list_name:
+          type: string
+          readOnly: true
+        ingredients: {}
+      required:
+      - ingredients
+      - list_name
+      - user
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
