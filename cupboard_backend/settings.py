@@ -21,7 +21,6 @@ dns.resolver.default_resolver.nameservers = ['8.8.8.8']
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Initialize environment variables
 AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
