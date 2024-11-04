@@ -23,6 +23,7 @@ def main():
         ) from exc
 
     # Override default port for `runserver` command
+    runserver.default_addr = os.getenv('DJANGO_ADDRESS')
     runserver.default_port = os.getenv('DJANGO_PORT')
     execute_from_command_line(sys.argv)
 
