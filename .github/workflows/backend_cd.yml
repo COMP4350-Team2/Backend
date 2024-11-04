@@ -3,6 +3,10 @@ name: backend_cd
 on:
   workflow_dispatch:
 
+env:
+  env_file: ${{ secrets.env_prod }}
+  aws_pem_file: ${{ secrets.aws_pem_file }}
+  docker_password: ${{ secrets.docker_password }}
 jobs:
   Testing:
     runs-on: ubuntu-latest
@@ -10,4 +14,4 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main 
-      - run: echo "Running Dummy Action"
+      - run: ls && echo "$env_file" > ".env" && echo "$aws_pem_file" > aws.pem && docker login --username swanso15 --password $docker_password && docker build -t swanso15/cupboard_backend:latest . && docker image ls && docker save -o cupboard_backend.tar swanso15/cupboard_backend:latest

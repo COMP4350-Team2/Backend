@@ -48,6 +48,28 @@ Swagger UI: http://localhost:6060/api/[version]/doc/
 http://localhost:6060/api/v2/doc/
 ```  
 
+To test the user authentication required endpoints, click the authorize button and put your Auth0 access token.
+
+## Docker Commands
+build docker image
+`docker build -t cupboard_backend:latest .`
+
+run docker image 
+`docker run -p 6060:6060 cupboard_backend:latest`
+
+create docker image zip
+`docker save -o cupboard_backend.tar cupboard_backend:latest`
+
+load docker image zip
+`docker image load --input cupboard_backend.tar`
+
+push to dockerhub using default tag (latest)
+`docker push swanso15/cupboard_backend`
+
+pull to dockerhub using default tag (latest)
+`docker pull swanso15/cupboard_backend`
+
+
 Redoc UI: http://localhost:6060/api/[version]/redoc/  
 ```
 http://localhost:6060/api/v2/redoc/
