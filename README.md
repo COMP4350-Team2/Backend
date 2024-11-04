@@ -52,7 +52,16 @@ To test the user authentication required endpoints, click the authorize button a
 
 ## Docker Commands
 build docker image
-`docker build -t cupboard_backend .`
+`docker build -t cupboard_backend:latest .`
+
+run docker image 
+`docker run -p 6060:6060 cupboard_backend:latest`
+
+create docker image zip
+`docker save -o cupboard_backend.tar cupboard_backend:latest`
+
+load docker image zip
+`docker image load --input cupboard_backend.tar`
 
 push to dockerhub using default tag (latest)
 `docker push swanso15/cupboard_backend`

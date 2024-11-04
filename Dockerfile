@@ -19,4 +19,4 @@ RUN pip3 install -r requirements.txt
 EXPOSE 6060
 
 # Start the app using serve command
-CMD ["python3", "manage.py", "runserver", "35.183.197.0:6060"]
+CMD ["python3", "manage.py", "runserver", "0.0.0.0:6060"]
