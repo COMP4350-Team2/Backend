@@ -96,6 +96,7 @@ The team has yet to agree on a collection of elements for a user-friendly and ap
 ### Agape
 
 ### Ahmed
+Added caching to the backend concrete implementation. API calls are only made initially and then every 5 minutes. Cached values returned otherwise. Updates, puts, adds or removes to the backend state is reflected in the instance variables. Made the backend calls much faster. The desktop front-end is to be used at home so eventual consistency is acceptable here. The "refresh time" can be easily modified to adjust consistency and concurrency needs. [Like to file diff](https://github.com/COMP4350-Team2/Desktop-WebApp/commit/adec1fe094054da4697dc39e5cd9165ad7b58011#diff-4c8075b4448df5037b73f539d020d590520363b9466be2752c69e589618bb7d7R16-R498).
 
 ### Hien
 
