@@ -10,7 +10,7 @@ Our team issue tracking is available in Linear. Please see UMLearn submission fo
 
 ## Architecture Diagram
 
-![Architecture Diagram](/docs/images/sprint_1/Sprint_1_Architecture.jpg)
+![Architecture Diagram](/docs/images/sprint_2/Sprint_2_Architecture.jpg)
 
 ## Get Started Documentation
 
