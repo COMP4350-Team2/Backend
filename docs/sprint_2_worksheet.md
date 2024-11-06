@@ -19,20 +19,12 @@ The Get started documentation is available in the README.md for each respective 
 [Desktop Get Started](https://github.com/COMP4350-Team2/Desktop-WebApp#requirements)  
 [Mobile Get Started](https://github.com/COMP4350-Team2/Mobile-Webapp#prerequisites)
 
-## Sequence Diagrams
-
-### Login/Registration
-
-![Login/Registration sequence diagram](/docs/images/sprint_1/login_registration_sequence_diagram.png)
-
-### Get All Ingredients
-
-![Get all ingredients sequence diagram](/docs/images/sprint_1/get_all_ingredients_sequence_diagram.png)
-
 ## API Documentation
 
-The API documentation is available at the bottom in the backend README.md.  
+The API documentation is available following the information at the bottom in the backend README.md.  
 [Link to API documentation](https://github.com/COMP4350-Team2/Backend?tab=readme-ov-file#cupboard-api-usage)
+
+The API documentation can also be accessed via putting the schema.yml file in the repo into https://editor.swagger.io/ However you will not be able to test the API endpoints themselves via this method.
 
 ## Testing
 
