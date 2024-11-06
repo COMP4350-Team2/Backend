@@ -72,12 +72,11 @@ No unit tests for the mobile frontend because almost all the functionality in th
 
 ## Profiler
 We use the pyinstrument library to run a profiler on our API.
-The latest profiler run with an attempt to visit every endpoint is in the following folder:
+The latest profiler results with an attempt to visit every endpoint is located in the [docs/sprint_2_profiler](docs/sprint_2_profiler).
 
+The slowest endpoint is the `api/v2/user_list_ingredients/set_ingredient`. The reason being it is calling the database twice the amount another endpoint would as it is editing two different objects in the database wheras other endpoints are just editing one object in the database.
 
-
-
-
+This could be possibly fixed by making the save run once instead of twice by using something similar to django bulk_commit command or transaction command, hence sending the database request once. But this is something that needs to be explored as this command from Django might not work well with the Mongo database (our current setup).
 
 ## Last Dash
 #### Backend
@@ -92,8 +91,12 @@ There were issues performing continuous delivery (CD) for the desktop frontend. 
 The team has yet to agree on a collection of elements for a user-friendly and appealing design of the UI (such as button layouts, color schemes, and such). The current implementation, although consistent, is still raw and needs a more solid backbone. One of our next important tasks is to carry out a major UI change to create a consistent, modernized look, following our UI draft. Additionally, as mentioned earlier, the complexity of the mocks has been steadily increasing with each sprint. The team has therefore decided that the best practice for robustness would be to introduce unit tests and automated acceptance tests in the next sprint.
 
 ## Showoff
-
 ### Agape
+My best work is the API design to update the ingredients in our user's ingredients lists. Our user_ingredients_lists is one of the most complex object in terms of database handling and the number of various API requests a user needs. This implementation was the third version after going through several discussions with the group especially the frontends' needs. Previously, we had made it so that there was only one API endpoint to add, delete, or set a user's ingredients in the lists and it would change what action it was doing depending on the sender's body request. However, this would result in way too many checks for one endpoint and a drastic slowdown to run one endpoint. With this commit, I was able to separate the APIs into three different calls in order to make it a single responsibility and the API calls became much faster. Additionally, the API became easier to use.  
+[Link to the API part of the change](https://github.com/COMP4350-Team2/Backend/blob/3230457caffed596ea62c2f88346c56636714423/cupboard_app/views.py#L246-L502).  
+[Link to the Database queries to handle the API](https://github.com/COMP4350-Team2/Backend/blob/3230457caffed596ea62c2f88346c56636714423/cupboard_app/queries.py#L246-L405).
+
+Note: After the commits in the links, some additional commits happened to fix any bugs.
 
 ### Ahmed
 Added caching to the backend concrete implementation. API calls are only made initially and then every 5 minutes. Cached values returned otherwise. Updates, puts, adds or removes to the backend state is reflected in the instance variables. Made the backend calls much faster. The desktop front-end is to be used at home so eventual consistency is acceptable here. The "refresh time" can be easily modified to adjust consistency and concurrency needs. [Link to file diff](https://github.com/COMP4350-Team2/Desktop-WebApp/commit/adec1fe094054da4697dc39e5cd9165ad7b58011#diff-4c8075b4448df5037b73f539d020d590520363b9466be2752c69e589618bb7d7R16-R498).
