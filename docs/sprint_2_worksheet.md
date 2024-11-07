@@ -104,6 +104,7 @@ Added caching to the backend concrete implementation. API calls are only made in
 ### Hien
 
 ### Jethro
+Set up docker to run the backend server in a containerized fashion. The actual code is disappointingly simple for the amount of headache that went into getting this thing functional but it is what I am most proud of for this sprint due do how complex the proccess to get here was. https://github.com/COMP4350-Team2/Backend/blob/59dac849baf4d700b368d1ae43eb9e40bdd6fbdc/Dockerfile#L1-L22
 
 ### Sam
 In our app, one of the things a user can do is move any given ingredient from one list to another. This is done so that a user can move an ingredient from let’s say Grocery to Pantry (if the user just purchased an ingredient they wanted). Our backend did not have an API endpoint for updating ingredients.  Therefore, I had to do a combination of removing the ingredient from the current list and adding it to another. However, at any point, the API request for either removing or adding can fail and I think I came up with a pretty cool way of doing a soft rollback in case anything fails. The method I designed can be found [here](https://github.com/COMP4350-Team2/Mobile-Webapp/blob/9f3c70d1cb6e189503344782680457144bf060f1/src/services/Backend.ts#L249-L303). Nothing too special; just proud of its robustness.
