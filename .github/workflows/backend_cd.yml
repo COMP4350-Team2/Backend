@@ -17,4 +17,4 @@ jobs:
       - name: Create docker image and send to aws
         run: echo "$env_file" > ".env" && echo "$aws_pem_file" > aws.pem && chmod 600 aws.pem && docker build -t cupboard_backend:latest . && docker save -o cupboard_backend.tar cupboard_backend:latest && scp -i aws.pem -o StrictHostKeyChecking=no cupboard_backend.tar ec2-user@35.183.197.0:/home/ec2-user
       - name: Load and run docker image on aws
-        run: ssh -i aws.pem -o StrictHostKeyChecking=no ec2-user@35.183.197.0 "docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q) && docker image rm --force cupboard_backend && docker image load --input cupboard_backend.tar && docker run -p 6060:6060 cupboard_backend:latest"
+        run: ssh -i aws.pem -o StrictHostKeyChecking=no ec2-user@35.183.197.0 "docker ps -a -q | xargs -r docker stop && docker ps -a -q | xargs -r docker remove && docker image rm --force cupboard_backend && docker image load --input cupboard_backend.tar && docker run -p 6060:6060 cupboard_backend:latest"
