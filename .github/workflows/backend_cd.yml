@@ -23,7 +23,7 @@ jobs:
           scp -i aws.pem -o StrictHostKeyChecking=no cupboard_backend.tar ec2-user@35.183.197.0:/home/ec2-user
       - name: Load and run docker image on aws
         run: |
-          ssh -i aws.pem -o StrictHostKeyChecking=no ec2-user@35.183.197.0 " |
+          ssh -i aws.pem -o StrictHostKeyChecking=no ec2-user@35.183.197.0 "
             docker ps -a -q | xargs -r docker stop
             docker ps -a -q | xargs -r docker remove
             docker image rm --force cupboard_backend
