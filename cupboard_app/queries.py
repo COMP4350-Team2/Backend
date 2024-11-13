@@ -86,7 +86,7 @@ def get_all_custom_ingredients() -> QuerySet:
     """
     return CustomIngredient.objects.all()
 
-def get_ingredient(username: str, name: str, id: int = None) -> Ingredient | None:
+def get_ingredient(username: str, name: str, id: int = None) -> CustomIngredient | None:
     """
     Gets the specific custom ingredient object from the user.
 
