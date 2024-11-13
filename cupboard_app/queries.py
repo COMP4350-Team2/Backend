@@ -5,7 +5,8 @@ from cupboard_app.models import (
     ListName,
     Measurement,
     User,
-    UserListIngredients
+    UserListIngredients,
+    CustomIngredient
 )
 
 MAX_LISTS = 10
@@ -57,6 +58,50 @@ def get_ingredient(name: str, id: int = None) -> Ingredient | None:
         result = Ingredient.objects.get(id=id, name=name)
     else:
         result = Ingredient.objects.get(name=name)
+
+    return result
+
+def create_custom_ingredient(username: str, name: str, type: str) -> CustomIngredient:
+    """
+    Creates a custom ingredient in the custom ingredient dimension table.
+
+    Args:
+        username: User's username
+        name: Ingredient name
+        type: Ingredient type
+
+    Returns:
+        CustomIngredient object if new custom ingredient created or
+        custom ingredient already existed for the user.
+    """
+    obj, new_created = CustomIngredient.objects.get_or_create(username=username, name=name, type=type)
+    return obj
+
+def get_all_custom_ingredients() -> QuerySet:
+    """
+    Gets all the custom ingredients in the custom ingredients dimension table.
+
+    Returns:
+        QuerySet of all the custom ingredients.
+    """
+    return CustomIngredient.objects.all()
+
+def get_ingredient(username: str, name: str, id: int = None) -> Ingredient | None:
+    """
+    Gets the specific custom ingredient object from the user.
+
+    Args:
+        username: User's username
+        name: Ingredient name
+        id: Ingredient ID
+
+    Returns:
+        CustomIngredient object or exception if ingredient is not found.
+    """
+    if id:
+        result = CustomIngredient.objects.get(username=username, id=id, name=name)
+    else:
+        result = CustomIngredient.objects.get(username=username, name=name)
 
     return result
 

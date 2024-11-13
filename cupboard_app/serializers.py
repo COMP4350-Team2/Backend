@@ -71,4 +71,4 @@ class RecipeSerializer(serializers.ModelSerializer):
 class CustomIngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomIngredient
-        fields = ['name', 'type']
+        fields = ['user', 'name', 'type']
