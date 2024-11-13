@@ -6,7 +6,6 @@ on:
 env:
   env_file: ${{ secrets.env_prod }}
   aws_pem_file: ${{ secrets.aws_pem_file }}
-  #docker_password: ${{ secrets.docker_password }}
 jobs:
   Testing:
     runs-on: ubuntu-latest
