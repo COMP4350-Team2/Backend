@@ -60,7 +60,8 @@ class Recipe(models.Model):
 
     def __str__(self):
         return f'{self.recipe_name} by {self.user.username}'
-    
+
+
 class CustomIngredient(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=30, unique=True)

@@ -61,6 +61,7 @@ def get_ingredient(name: str, id: int = None) -> Ingredient | None:
 
     return result
 
+
 def create_custom_ingredient(username: str, name: str, type: str) -> CustomIngredient:
     """
     Creates a custom ingredient in the custom ingredient dimension table.
@@ -74,19 +75,24 @@ def create_custom_ingredient(username: str, name: str, type: str) -> CustomIngre
         CustomIngredient object if new custom ingredient created or
         custom ingredient already existed for the user.
     """
-    obj, new_created = CustomIngredient.objects.get_or_create(username=username, name=name, type=type)
+    user = User.objects.get(username=username)
+    obj, new_created = CustomIngredient.objects.get_or_create(user=user, name=name, type=type)
     return obj
 
-def get_all_custom_ingredients() -> QuerySet:
+
+def get_all_custom_ingredients(username: str) -> QuerySet:
     """
     Gets all the custom ingredients in the custom ingredients dimension table.
 
     Returns:
         QuerySet of all the custom ingredients.
     """
-    return CustomIngredient.objects.all()
 
-def get_ingredient(username: str, name: str, id: int = None) -> CustomIngredient | None:
+    user = User.objects.filter(username=username).first()
+    return CustomIngredient.objects.all().filter(user=user)
+
+
+def get_custom_ingredient(username: str, name: str, id: int = None) -> CustomIngredient | None:
     """
     Gets the specific custom ingredient object from the user.
 
@@ -98,10 +104,12 @@ def get_ingredient(username: str, name: str, id: int = None) -> CustomIngredient
     Returns:
         CustomIngredient object or exception if ingredient is not found.
     """
+
+    user = User.objects.get(username=username)
     if id:
-        result = CustomIngredient.objects.get(username=username, id=id, name=name)
+        result = CustomIngredient.objects.get(user=user, id=id, name=name)
     else:
-        result = CustomIngredient.objects.get(username=username, name=name)
+        result = CustomIngredient.objects.get(user=user, name=name)
 
     return result
 
