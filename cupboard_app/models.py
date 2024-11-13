@@ -60,3 +60,12 @@ class Recipe(models.Model):
 
     def __str__(self):
         return f'{self.recipe_name} by {self.user.username}'
+    
+class CustomIngredient(models.Model):
+    name = models.CharField(max_length=30, unique=True)
+    type = models.CharField(max_length=30)
+
+    def __str__(self):
+        my_dictionary = {'name': self.name, 'type': self.type}
+        result = json.dumps(my_dictionary)
+        return result
