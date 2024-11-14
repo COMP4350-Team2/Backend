@@ -20,6 +20,7 @@ jobs:
           chmod 600 aws.pem
           docker build -t cupboard_backend:latest .
           docker save -o cupboard_backend.tar cupboard_backend:latest
+          scp -i aws.pem -o StrictHostKeyChecking=no .env ec2-user@35.183.197.0:/home/ec2-user
           scp -i aws.pem -o StrictHostKeyChecking=no cupboard_backend.tar ec2-user@35.183.197.0:/home/ec2-user
       - name: Load and run docker image on aws
         run: |
@@ -28,5 +29,5 @@ jobs:
             docker ps -a -q | xargs -r docker remove
             docker image rm --force cupboard_backend
             docker image load --input cupboard_backend.tar
-            docker run -d -p 6060:6060 cupboard_backend:latest
+            docker run -d -p 6060:6060 --env-file .env cupboard_backend:latest
           "
