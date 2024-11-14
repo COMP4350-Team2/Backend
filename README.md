@@ -66,9 +66,14 @@ build docker image
 docker build -t cupboard_backend:latest .
 ```
 
+upload .env to docker (manual .env change only) where "aws.pem" is the location of the pem file for aws auth
+```
+scp -i aws.pem -o StrictHostKeyChecking=no .env ec2-user@35.183.197.0:/home/ec2-user
+```
+
 run docker image 
 ```
-docker run -p 6060:6060 cupboard_backend:latest
+docker run -p 6060:6060 --env-file .env cupboard_backend:latest
 ```
 
 create docker image zip
