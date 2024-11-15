@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             model_name='customingredient',
             name='user',
             field=models.ForeignKey(
-                default=None, on_delete=django.db.models.deletion.CASCADE,
+                on_delete=django.db.models.deletion.CASCADE,
                 to='cupboard_app.user'
             ),
             preserve_default=False,

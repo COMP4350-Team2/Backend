@@ -70,6 +70,11 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class CustomIngredientSerializer(serializers.ModelSerializer):
+    user = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
     class Meta:
         model = CustomIngredient
         fields = ['user', 'name', 'type']

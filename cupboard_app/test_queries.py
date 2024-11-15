@@ -126,8 +126,10 @@ class CustomIngredientQueries(TestCase):
         """
         Testing get_all_custom_ingredients retrieves all the custom ingredients for the user
         """
-        user2 = User.objects.create(username='test_user2', email='test_user2@cupboard.app')
-        CustomIngredient.objects.create(user=user2, name='test_ingredient3', type='test_type1')
+        self.user2 = User.objects.create(username='test_user2', email='test_user2@cupboard.app')
+        self.ing3 = CustomIngredient.objects.create(
+            user=self.user2, name='test_ingredient3', type='test_type1'
+        )
         ingredients_list = get_all_custom_ingredients(self.user.username)
         self.assertEqual(len(ingredients_list), 2)
         self.assertEqual(
@@ -137,6 +139,13 @@ class CustomIngredientQueries(TestCase):
         self.assertEqual(
             json.dumps({'name': self.ing2.name, 'type': self.ing2.type}),
             str(ingredients_list[1])
+        )
+
+        ingredients_list2 = get_all_custom_ingredients(self.user2.username)
+        self.assertEqual(len(ingredients_list2), 1)
+        self.assertEqual(
+            json.dumps({'name': self.ing3.name, 'type': self.ing3.type}),
+            str(ingredients_list2[0])
         )
 
     def test_get_custom_ingredient(self):
@@ -155,7 +164,7 @@ class CustomIngredientQueries(TestCase):
         self.assertEqual(test_ingredient2, self.ing2)
 
         with self.assertRaises(CustomIngredient.DoesNotExist):
-            get_custom_ingredient(username='test_user', name='doesnt_exist')
+            get_custom_ingredient(username=self.user.username, name='doesnt_exist')
 
 
 class ListNameQueries(TestCase):
