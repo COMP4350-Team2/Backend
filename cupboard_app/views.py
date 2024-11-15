@@ -219,7 +219,7 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
             username
             and body.get('list_name', None)
             and body.get('ingredient', None)
-            and body.get('amount', -1) >= 0
+            and body.get('amount', None)
             and body.get('unit', None)
         ):
             # Adding ingredient to a list
