@@ -342,7 +342,7 @@ def set_list_ingredient(
     new_ingredient: str,
     new_amount: int | float,
     new_unit: str
-) -> tuple[UserListIngredients, UserListIngredients] | tuple[None, UserListIngredients]:
+) -> QuerySet:
     """
     Sets an ingredient's unit and amount in the user's list.
 
@@ -361,7 +361,7 @@ def set_list_ingredient(
         new_unit: The unit of measure for the ingredient to change to
 
     Returns:
-        The updated lists.
+        All of the user's updated lists.
     """
     # Create the ingredient to put into list
     list_ingredient = create_list_ingredient(
@@ -428,7 +428,7 @@ def set_list_ingredient(
 
     new_user_list.save()
 
-    return old_user_list, new_user_list
+    return get_user_lists_ingredients(username=username)
 
 
 def create_user_list_ingredients(
