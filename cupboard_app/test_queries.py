@@ -671,9 +671,11 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(len(user_list.ingredients), 0)
         set_list_ingredient(
             username=self.user1.username,
-            list_name=self.list_name1.list_name,
+            old_list_name=self.list_name1.list_name,
             old_ingredient=self.list_ing2.get('ingredient_name'),
+            old_amount=0,
             old_unit=self.list_ing2.get('unit'),
+            new_list_name=self.list_name1.list_name,
             new_ingredient=self.list_ing1.get('ingredient_name'),
             new_amount=self.list_ing1.get('amount'),
             new_unit=self.list_ing1.get('unit')
@@ -683,47 +685,174 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_list.ingredients, [self.list_ing1])
 
         # Setting the same ingredient in the list
-        set_list_ingredient(
-            username=self.user1.username,
-            list_name=self.list_name1.list_name,
-            old_ingredient=self.list_ing1.get('ingredient_name'),
-            old_unit=self.list_ing1.get('unit'),
-            new_ingredient=self.list_ing1.get('ingredient_name'),
-            new_amount=100,
-            new_unit=self.unit2.unit
-        )
-        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         updated_ing1 = {
             **self.list_ing1,
             'amount': 100,
             'unit_id': self.unit2.id,
             'unit': self.unit2.unit
         }
+        set_list_ingredient(
+            username=self.user1.username,
+            old_list_name=self.list_name1.list_name,
+            old_ingredient=self.list_ing1.get('ingredient_name'),
+            old_amount=self.list_ing1.get('amount'),
+            old_unit=self.list_ing1.get('unit'),
+            new_list_name=self.list_name1.list_name,
+            new_ingredient=updated_ing1.get('ingredient_name'),
+            new_amount=updated_ing1.get('amount'),
+            new_unit=updated_ing1.get('unit')
+        )
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         self.assertEqual(len(user_list.ingredients), 1)
         self.assertEqual(user_list.ingredients, [updated_ing1])
+
+        # Setting the same ingredient in the list with only some amount
+        set_list_ingredient(
+            username=self.user1.username,
+            old_list_name=self.list_name1.list_name,
+            old_ingredient=updated_ing1.get('ingredient_name'),
+            old_amount=updated_ing1.get('amount') / 2,
+            old_unit=updated_ing1.get('unit'),
+            new_list_name=self.list_name1.list_name,
+            new_ingredient=updated_ing1.get('ingredient_name'),
+            new_amount=updated_ing1.get('amount'),
+            new_unit=updated_ing1.get('unit')
+        )
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
+        updated_ing1 = {
+            **updated_ing1,
+            'amount': updated_ing1.get('amount') + updated_ing1.get('amount') / 2
+        }
+        self.assertEqual(len(user_list.ingredients), 1)
+        self.assertEqual(user_list.ingredients, [updated_ing1])
+
+        # Setting the same ingredient in the list with only some amount
+        # to a new unit
+        updated_ing2 = {
+            **self.list_ing1,
+            'amount': 50
+        }
+        set_list_ingredient(
+            username=self.user1.username,
+            old_list_name=self.list_name1.list_name,
+            old_ingredient=updated_ing1.get('ingredient_name'),
+            old_amount=updated_ing2.get('amount'),
+            old_unit=updated_ing1.get('unit'),
+            new_list_name=self.list_name1.list_name,
+            new_ingredient=updated_ing2.get('ingredient_name'),
+            new_amount=updated_ing2.get('amount'),
+            new_unit=updated_ing2.get('unit')
+        )
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
+        updated_ing1 = {
+            **updated_ing1,
+            'amount': updated_ing1.get('amount') - updated_ing2.get('amount')
+        }
+        self.assertEqual(len(user_list.ingredients), 2)
+        self.assertEqual(user_list.ingredients, [updated_ing1, updated_ing2])
 
         # Setting a different ingredient in a list when there are values in it
         set_list_ingredient(
             username=self.user1.username,
-            list_name=self.list_name1.list_name,
+            old_list_name=self.list_name1.list_name,
             old_ingredient=self.list_ing2.get('ingredient_name'),
+            old_amount=0,
             old_unit=self.list_ing2.get('unit'),
+            new_list_name=self.list_name1.list_name,
             new_ingredient=self.list_ing2.get('ingredient_name'),
             new_amount=self.list_ing2.get('amount'),
             new_unit=self.list_ing2.get('unit')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
-        self.assertEqual(len(user_list.ingredients), 2)
-        self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2])
+        self.assertEqual(len(user_list.ingredients), 3)
+        self.assertEqual(user_list.ingredients, [updated_ing1, updated_ing2, self.list_ing2])
 
         # Setting a non-existent list raises error
         with self.assertRaises(ValueError):
             set_list_ingredient(
                 username=self.user1.username,
-                list_name=self.empty_list_name1.list_name,
+                old_list_name=self.empty_list_name1.list_name,
                 old_ingredient=self.list_ing2.get('ingredient_name'),
+                old_amount=0,
                 old_unit=self.list_ing2.get('unit'),
+                new_list_name=self.empty_list_name1.list_name,
                 new_ingredient=self.list_ing2.get('ingredient_name'),
                 new_amount=self.list_ing2.get('amount'),
                 new_unit=self.list_ing2.get('unit')
             )
+
+        # Moving the ingredient entirely from one list to another
+        UserListIngredients.objects.create(
+            user=self.user1,
+            list_name=self.list_name2,
+            ingredients=[]
+        )
+        set_list_ingredient(
+            username=self.user1.username,
+            old_list_name=self.list_name1.list_name,
+            old_ingredient=updated_ing2.get('ingredient_name'),
+            old_amount=updated_ing2.get('amount'),
+            old_unit=updated_ing2.get('unit'),
+            new_list_name=self.list_name2.list_name,
+            new_ingredient=updated_ing2.get('ingredient_name'),
+            new_amount=updated_ing2.get('amount'),
+            new_unit=updated_ing2.get('unit')
+        )
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
+        self.assertEqual(len(user_list.ingredients), 2)
+        self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2])
+
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name2)
+        self.assertEqual(len(user_list.ingredients), 1)
+        self.assertEqual(user_list.ingredients, [updated_ing2])
+
+        # Moving the ingredient not in one list to another list
+        set_list_ingredient(
+            username=self.user1.username,
+            old_list_name=self.list_name1.list_name,
+            old_ingredient=updated_ing2.get('ingredient_name'),
+            old_amount=updated_ing2.get('amount'),
+            old_unit=updated_ing2.get('unit'),
+            new_list_name=self.list_name2.list_name,
+            new_ingredient=updated_ing2.get('ingredient_name'),
+            new_amount=updated_ing2.get('amount'),
+            new_unit=updated_ing2.get('unit')
+        )
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
+        self.assertEqual(len(user_list.ingredients), 2)
+        self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2])
+
+        updated_ing2 = {
+            **updated_ing2,
+            'amount': updated_ing2.get('amount') * 2
+        }
+
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name2)
+        self.assertEqual(len(user_list.ingredients), 1)
+        self.assertEqual(user_list.ingredients, [updated_ing2])
+
+        # Moving the ingredient partially from one list to another list
+        set_list_ingredient(
+            username=self.user1.username,
+            old_list_name=self.list_name1.list_name,
+            old_ingredient=updated_ing1.get('ingredient_name'),
+            old_amount=updated_ing1.get('amount') / 2,
+            old_unit=updated_ing1.get('unit'),
+            new_list_name=self.list_name2.list_name,
+            new_ingredient=updated_ing1.get('ingredient_name'),
+            new_amount=updated_ing1.get('amount') / 2,
+            new_unit=updated_ing1.get('unit')
+        )
+
+        updated_ing1 = {
+            **updated_ing1,
+            'amount': updated_ing1.get('amount') / 2
+        }
+
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
+        self.assertEqual(len(user_list.ingredients), 2)
+        self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2])
+
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name2)
+        self.assertEqual(len(user_list.ingredients), 2)
+        self.assertEqual(user_list.ingredients, [updated_ing2, updated_ing1])
