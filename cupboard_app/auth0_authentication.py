@@ -1,4 +1,5 @@
 import os
+from time import strftime, localtime
 from urllib.parse import quote_plus, urlencode
 
 from authlib.integrations.django_client import OAuth
@@ -7,8 +8,12 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from drf_spectacular.utils import (
     extend_schema,
+    inline_serializer,
     OpenApiExample,
+    OpenApiParameter,
+    OpenApiResponse
 )
+from rest_framework import serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.request import Request
@@ -34,8 +39,8 @@ AUTH0_BACKEND_CLIENT_SECRET = os.getenv('AUTH0_BACKEND_CLIENT_SECRET')
 
 
 # Auth0 Client setup
-oauth = OAuth()
-oauth.register(
+login_oauth = OAuth()
+login_oauth.register(
     'auth0',
     client_id=AUTH0_BACKEND_CLIENT_ID,
     client_secret=AUTH0_BACKEND_CLIENT_SECRET,
@@ -53,8 +58,7 @@ def login_callback(request: Request) -> HttpResponseRedirect:
     Saves the access token and the refresh tokens in the database.
     Redirects to the login endpoint.
     """
-    token = oauth.auth0.authorize_access_token(request)
-    request.session['user'] = token
+    token = login_oauth.auth0.authorize_access_token(request)
 
     access_token = token.get('access_token')
     refresh_token = token.get('refresh_token')
@@ -71,7 +75,18 @@ def login_callback(request: Request) -> HttpResponseRedirect:
         create_user(username=username, email=email)
         add_default_user_lists(username=username)
 
-    # Save the access token and the refresh token for the user in the db
+    token = {
+        'token': {
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'id_token': token.get('id_token'),
+            'issued_time': strftime('%Y-%m-%d %H:%M:%S', localtime(issued_time)),
+            'expire_time': strftime('%Y-%m-%d %H:%M:%S', localtime(expire_time))
+        },
+        'user_info': token.get('userinfo')
+    }
+
+    request.session['user'] = token
 
     return redirect(request.build_absolute_uri(reverse('login')))
 
@@ -87,13 +102,48 @@ def logout_callback(request: Request) -> HttpResponseRedirect:
 @extend_schema(tags=['Authentication'])
 class LoginAPIView(APIView):
     permission_classes = [AllowAny]
-    text = 'Login successful.'
 
     @extend_schema(
         request=None,
-        responses=MessageSerializer,
+        responses= {
+            200: inline_serializer(
+                name='Login',
+                fields={
+                    'token': serializers.JSONField(),
+                    'user_info': serializers.JSONField()
+                }
+            )
+        },
         examples=[
-            OpenApiExample(name='Success', value={'message': text}, status_codes=[200])
+            OpenApiExample(
+                name='Login successful',
+                value={
+                    'token': {
+                        'access_token': 'very_long_jwt_token',
+                        'refresh_token': 'refresh_token',
+                        'expire_time': '2024-11-17 01:49:09',
+                        'issued_time': '2024-11-16 01:49:09',
+                        'id_token': 'very_long_jwt_token'
+                    },
+                    'user_info': {
+                        'nickname': 'teacup.backend',
+                        'name': 'teacup.backend@gmail.com',
+                        'picture': 'image_url',
+                        'updated_at': '2024-11-16T07:49:07.640Z',
+                        'email': 'teacup.backend@gmail.com',
+                        'email_verified': True,
+                        'iss': 'https://dev-cupboard.ca.auth0.com/',
+                        'aud': 'audience_string',
+                        'iat': 1731743349,
+                        'exp': 1731779349,
+                        'sub': 'auth0|982734jhe98whjhw8',
+                        'sid': 'session_id',
+                        'nonce': 'random_value'
+                    }
+                },
+                status_codes=[200],
+                response_only=True
+            )
         ]
     )
     def get(self, request: Request) -> Response | HttpResponseRedirect:
@@ -104,11 +154,9 @@ class LoginAPIView(APIView):
         """
         session = request.session.get('user')
         if session:
-            message = Message(message=self.text)
-            serializer = MessageSerializer(message)
-            result = Response(serializer.data, status=200)
+            result = Response(session, status=200)
         else:
-            result = oauth.auth0.authorize_redirect(
+            result = login_oauth.auth0.authorize_redirect(
                 request,
                 request.build_absolute_uri(reverse('login_callback')),
                 audience=AUTH0_API_IDENTIFIER
@@ -134,7 +182,6 @@ class LogoutAPIView(APIView):
         Logs out the user from Auth0.
         """
         if request.session.get('user'):
-            # Remove the access token and refresh token from the database
             request.session.clear()
             result = redirect(
                 f'https://{AUTH0_DOMAIN}/v2/logout?'
