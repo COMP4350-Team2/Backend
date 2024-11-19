@@ -582,12 +582,22 @@ class UserListIngredientsQueries(TestCase):
         """
         Testing create_list_ingredient creates an ingredient dictionary
         """
+
+        create_custom_ingredient(self.user1.username, self.ing2.name, self.ing2.type)
+
         list_ing = create_list_ingredient(
             ingredient=self.ing1.name,
             amount=500,
             unit=self.unit1.unit
         )
         self.assertEqual(list_ing, self.list_ing1)
+
+        list_ing2 = create_list_ingredient(
+            ingredient=self.ing2.name,
+            amount=400,
+            unit=self.unit2.unit
+        )
+        self.assertEqual(list_ing2, self.list_ing2)
 
         # Testing list ingredient creation with invalid values
         with self.assertRaises(Measurement.DoesNotExist):

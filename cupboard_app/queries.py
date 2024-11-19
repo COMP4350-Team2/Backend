@@ -249,7 +249,7 @@ def get_user(username: str, id: int = None) -> User | None:
     return result
 
 
-def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> dict:
+def create_list_ingredient(ingredient: str, amount: int | float, unit: str, id: int = None) -> dict:
     """
     Creates the ingredient that will be in the user_list_ingredient
 
@@ -257,6 +257,7 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
         ingredient: Ingredient name
         amount: Ingredient quantity
         unit: unit of measure for the ingredient
+        id: User ID
 
     Returns:
         The ingredient dictionary in the form of:
@@ -271,7 +272,12 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
         Exception raised if the ingredient or unit does not exist in the database
         or amount is not int or float type
     """
-    ingredient = Ingredient.objects.get(name=ingredient)
+    try:
+        ingredient = CustomIngredient.objects.get(name=ingredient, user=id)
+    except CustomIngredient.DoesNotExist:
+        ingredient = Ingredient.objects.get(name=ingredient)
+    else:
+        print("custom user")
     unit = Measurement.objects.get(unit=unit)
     if isinstance(amount, int) or isinstance(amount, float):
         ingredient_dict = {
