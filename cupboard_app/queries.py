@@ -88,7 +88,7 @@ def get_all_custom_ingredients(username: str) -> QuerySet:
         QuerySet of all the custom ingredients.
     """
 
-    user = User.objects.filter(username=username).first()
+    user = User.objects.get(username=username)
     return CustomIngredient.objects.all().filter(user=user)
 
 
@@ -249,7 +249,8 @@ def get_user(username: str, id: int = None) -> User | None:
     return result
 
 
-def create_list_ingredient(ingredient: str, amount: int | float, unit: str, id: int = None) -> dict:
+def create_list_ingredient(ingredient: str, amount: int | float,
+                           unit: str, user_id: int = None) -> dict:
     """
     Creates the ingredient that will be in the user_list_ingredient
 
@@ -257,7 +258,7 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str, id: 
         ingredient: Ingredient name
         amount: Ingredient quantity
         unit: unit of measure for the ingredient
-        id: User ID
+        user_id: User ID
 
     Returns:
         The ingredient dictionary in the form of:
@@ -273,17 +274,15 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str, id: 
         or amount is not int or float type
     """
     try:
-        ingredient = CustomIngredient.objects.get(name=ingredient, user=id)
+        ingredient_object = CustomIngredient.objects.get(name=ingredient, user=user_id)
     except CustomIngredient.DoesNotExist:
-        ingredient = Ingredient.objects.get(name=ingredient)
-    else:
-        print("custom user")
+        ingredient_object = Ingredient.objects.get(name=ingredient)
     unit = Measurement.objects.get(unit=unit)
     if isinstance(amount, int) or isinstance(amount, float):
         ingredient_dict = {
-            'ingredient_id': ingredient.id,
-            'ingredient_name': ingredient.name,
-            'ingredient_type': ingredient.type,
+            'ingredient_id': ingredient_object.id,
+            'ingredient_name': ingredient_object.name,
+            'ingredient_type': ingredient_object.type,
             'amount': amount,
             'unit_id': unit.id,
             'unit': unit.unit

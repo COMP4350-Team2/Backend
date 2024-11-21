@@ -126,9 +126,9 @@ class CustomIngredientQueries(TestCase):
         """
         Testing get_all_custom_ingredients retrieves all the custom ingredients for the user
         """
-        self.user2 = User.objects.create(username='test_user2', email='test_user2@cupboard.app')
-        self.ing3 = CustomIngredient.objects.create(
-            user=self.user2, name='test_ingredient3', type='test_type1'
+        user2 = User.objects.create(username='test_user2', email='test_user2@cupboard.app')
+        ing3 = CustomIngredient.objects.create(
+            user=user2, name='test_ingredient3', type='test_type1'
         )
         ingredients_list = get_all_custom_ingredients(self.user.username)
         self.assertEqual(len(ingredients_list), 2)
@@ -141,10 +141,10 @@ class CustomIngredientQueries(TestCase):
             str(ingredients_list[1])
         )
 
-        ingredients_list2 = get_all_custom_ingredients(self.user2.username)
+        ingredients_list2 = get_all_custom_ingredients(user2.username)
         self.assertEqual(len(ingredients_list2), 1)
         self.assertEqual(
-            json.dumps({'name': self.ing3.name, 'type': self.ing3.type}),
+            json.dumps({'name': ing3.name, 'type': ing3.type}),
             str(ingredients_list2[0])
         )
 
@@ -583,7 +583,7 @@ class UserListIngredientsQueries(TestCase):
         Testing create_list_ingredient creates an ingredient dictionary
         """
 
-        create_custom_ingredient(self.user1.username, self.ing2.name, self.ing2.type)
+        CustomIngredient.objects.create(user=self.user1, name='test_ingredient1', type='test_type1')
 
         list_ing = create_list_ingredient(
             ingredient=self.ing1.name,
@@ -595,7 +595,8 @@ class UserListIngredientsQueries(TestCase):
         list_ing2 = create_list_ingredient(
             ingredient=self.ing2.name,
             amount=400,
-            unit=self.unit2.unit
+            unit=self.unit2.unit,
+            user_id=self.user1.id
         )
         self.assertEqual(list_ing2, self.list_ing2)
 
