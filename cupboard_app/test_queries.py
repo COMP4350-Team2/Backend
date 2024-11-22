@@ -7,12 +7,16 @@ from cupboard_app.models import (
     ListName,
     Measurement,
     User,
-    UserListIngredients
+    UserListIngredients,
+    CustomIngredient
 )
 from cupboard_app.queries import (
     create_ingredient,
     get_all_ingredients,
     get_ingredient,
+    create_custom_ingredient,
+    get_all_custom_ingredients,
+    get_custom_ingredient,
     create_list_name,
     get_all_list_names,
     get_list_name,
@@ -86,6 +90,81 @@ class IngredientsQueries(TestCase):
 
         with self.assertRaises(Ingredient.DoesNotExist):
             get_ingredient(name='doesnt_exist')
+
+
+class CustomIngredientQueries(TestCase):
+    ing1 = None
+    ing2 = None
+    user = None
+
+    def setUp(self):
+        self.user = User.objects.create(username='test_user', email='test_user@cupboard.app')
+        self.ing1 = CustomIngredient.objects.create(
+            user=self.user, name='test_ingredient1', type='test_type1'
+        )
+        self.ing2 = CustomIngredient.objects.create(
+            user=self.user, name='test_ingredient2', type='test_type1'
+        )
+
+    def test_create_custom_ingredient(self):
+        """
+        Testing create_custom_ingredient creates a custom ingredient for the user
+        """
+        create_custom_ingredient(username='test_user', name='test_ingredient3', type='test_type2')
+        self.assertEqual(
+            CustomIngredient.objects.filter(
+                user=self.user, name='test_ingredient3', type='test_type2'
+            ).exists(),
+            True
+        )
+        self.assertEqual(len(CustomIngredient.objects.all()), 3)
+
+        create_custom_ingredient(username='test_user', name='test_ingredient3', type='test_type2')
+        self.assertEqual(len(CustomIngredient.objects.all()), 3)
+
+    def test_get_all_custom_ingredients(self):
+        """
+        Testing get_all_custom_ingredients retrieves all the custom ingredients for the user
+        """
+        user2 = User.objects.create(username='test_user2', email='test_user2@cupboard.app')
+        ing3 = CustomIngredient.objects.create(
+            user=user2, name='test_ingredient3', type='test_type1'
+        )
+        ingredients_list = get_all_custom_ingredients(self.user.username)
+        self.assertEqual(len(ingredients_list), 2)
+        self.assertEqual(
+            json.dumps({'name': self.ing1.name, 'type': self.ing1.type}),
+            str(ingredients_list[0])
+        )
+        self.assertEqual(
+            json.dumps({'name': self.ing2.name, 'type': self.ing2.type}),
+            str(ingredients_list[1])
+        )
+
+        ingredients_list2 = get_all_custom_ingredients(user2.username)
+        self.assertEqual(len(ingredients_list2), 1)
+        self.assertEqual(
+            json.dumps({'name': ing3.name, 'type': ing3.type}),
+            str(ingredients_list2[0])
+        )
+
+    def test_get_custom_ingredient(self):
+        """
+        Testing get_ingredient returns an ingredient from the database
+        """
+        test_ingredient = get_custom_ingredient(
+            username=self.user.username,
+            name=self.ing1.name
+        )
+        test_ingredient2 = get_custom_ingredient(
+            username=self.user.username,
+            name=self.ing2.name, id=self.ing2.id
+        )
+        self.assertEqual(test_ingredient, self.ing1)
+        self.assertEqual(test_ingredient2, self.ing2)
+
+        with self.assertRaises(CustomIngredient.DoesNotExist):
+            get_custom_ingredient(username=self.user.username, name='doesnt_exist')
 
 
 class ListNameQueries(TestCase):
@@ -503,12 +582,23 @@ class UserListIngredientsQueries(TestCase):
         """
         Testing create_list_ingredient creates an ingredient dictionary
         """
+
+        CustomIngredient.objects.create(user=self.user1, name='test_ingredient1', type='test_type1')
+
         list_ing = create_list_ingredient(
             ingredient=self.ing1.name,
             amount=500,
             unit=self.unit1.unit
         )
         self.assertEqual(list_ing, self.list_ing1)
+
+        list_ing2 = create_list_ingredient(
+            ingredient=self.ing2.name,
+            amount=400,
+            unit=self.unit2.unit,
+            user_id=self.user1.id
+        )
+        self.assertEqual(list_ing2, self.list_ing2)
 
         # Testing list ingredient creation with invalid values
         with self.assertRaises(Measurement.DoesNotExist):

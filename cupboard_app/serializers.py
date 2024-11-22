@@ -6,7 +6,8 @@ from cupboard_app.models import (
     Measurement,
     User,
     UserListIngredients,
-    Recipe
+    Recipe,
+    CustomIngredient
 )
 
 
@@ -66,3 +67,14 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ['user', 'recipe_name', 'steps', 'ingredients']
+
+
+class CustomIngredientSerializer(serializers.ModelSerializer):
+    user = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
+    class Meta:
+        model = CustomIngredient
+        fields = ['user', 'name', 'type']
