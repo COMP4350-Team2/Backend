@@ -249,8 +249,12 @@ def get_user(username: str, id: int = None) -> User | None:
     return result
 
 
-def create_list_ingredient(ingredient: str, amount: int | float,
-                           unit: str, user_id: int = None) -> dict:
+def create_list_ingredient(
+    ingredient: str,
+    amount: int | float,
+    unit: str,
+    user_id: int = None
+) -> dict:
     """
     Creates the ingredient that will be in the user_list_ingredient
 
@@ -274,7 +278,7 @@ def create_list_ingredient(ingredient: str, amount: int | float,
         or amount is not int or float type
     """
     try:
-        ingredient_object = CustomIngredient.objects.get(name=ingredient, user=user_id)
+        ingredient_object = CustomIngredient.objects.get(name=ingredient, user__id=user_id)
     except CustomIngredient.DoesNotExist:
         ingredient_object = Ingredient.objects.get(name=ingredient)
     unit = Measurement.objects.get(unit=unit)
