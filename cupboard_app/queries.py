@@ -79,6 +79,29 @@ def create_custom_ingredient(username: str, name: str, type: str) -> CustomIngre
     obj, new_created = CustomIngredient.objects.get_or_create(user=user, name=name, type=type)
     return obj
 
+# May not need
+def delete_custom_ingredient(    
+    username: str,
+    ingredient: str
+) -> QuerySet:
+    """
+    Deletes a custom ingredient in the CustomIngredient dimension table.
+
+    Args:
+        username: User's username
+        ingredient: Ingredient name.
+
+    Returns:
+        QuerySet of all the custom ingredients for the specific user after deletion.
+    """
+    query = CustomIngredient.objects.filter(
+        user__username=username,
+        name=ingredient
+    )
+    if query.exists():
+        query.get().delete()
+
+    return get_all_custom_ingredients(username)
 
 def get_all_custom_ingredients(username: str) -> QuerySet:
     """

@@ -23,6 +23,8 @@ from cupboard_app.queries import (
     create_list_name,
     create_user_list_ingredients,
     delete_user_list_ingredients,
+    create_custom_ingredient,
+    delete_custom_ingredient,
     get_all_ingredients,
     get_all_measurements,
     get_user_lists_ingredients,
@@ -39,7 +41,8 @@ from cupboard_app.serializers import (
     IngredientSerializer,
     MeasurementSerializer,
     UserSerializer,
-    UserListIngredientsSerializer
+    UserListIngredientsSerializer,
+    CustomIngredientSerializer
 )
 
 INVALID_TOKEN = {'message': 'Given token not valid for any token type'}
@@ -698,3 +701,77 @@ class MeasurementsViewSet(viewsets.ViewSet):
         all_measurements = get_all_measurements()
         serializer = MeasurementSerializer(all_measurements, many=True)
         return Response(serializer.data)
+
+
+@extend_schema(tags=['CustomIngredients'])
+class CustomIngredientsViewSet(viewsets.ViewSet):
+    MISSING_USER_INFO = 'User missing. Unable to create new custom ingredient.'
+    @extend_schema(
+        request=None,
+        responses={
+            200: CustomIngredientSerializer(many=True),
+            401: auth_failed_response
+        },
+        examples=[
+            OpenApiExample(
+                name='Custom Ingredient Created.',
+                value={'username': 'teacup', 'name': 'Beef', 'type': 'Meat'},
+                status_codes=[200]
+            ),
+            OpenApiExample(
+                name='Custom Ingredient Deleted.',
+                value={'username': 'teacup', 'name': 'Beef', 'type': 'Meat'},
+                status_codes=[200]
+            ),
+            OpenApiExample(
+                name='Unable to Create Custom Ingredient',
+                value={'message': MISSING_USER_INFO},
+                status_codes=[400]
+            ),
+            OpenApiExample(
+                name='Unable to Delete Custom Ingredient',
+                value={'message': MISSING_USER_INFO},
+                status_codes=[400]
+            )
+        ]
+    )  
+    
+    def create(self, request: Request) -> Response:
+        """
+        Creates a custom ingredient for the user.
+        Returns the custom ingredient object.
+        """
+        # Extract username from the access token
+        username = get_auth_username_from_payload(request=request)
+        body = request.data
+
+        if username:
+            custom_ingredient = create_custom_ingredient(
+                username=username,
+                ingredient=body['ingredient'],
+                type=body['type']
+            )
+            serializer = CustomIngredientSerializer(custom_ingredient)
+        else:
+            raise MissingInformation(self.MISSING_USER_INFO)
+
+        return Response(serializer.data, status=201)
+    
+    def destroy(self, request: Response, list_name: str = None) -> Response:
+        """
+        Deletes a custom ingredient for the user.
+        Returns the list of remaining custom ingredients for the user
+        """
+        username = get_auth_username_from_payload(request=request)
+        body = request.data
+
+        if username:
+            list = delete_custom_ingredient(
+                username=username,
+                ingredient=body['ingredient']
+            )
+            serializer = UserListIngredientsSerializer(list)
+        else:
+            raise MissingInformation(self.MISSING_USER_INFO)
+
+        return Response(serializer.data, status=201)

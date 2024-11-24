@@ -17,6 +17,7 @@ from cupboard_app.queries import (
     create_custom_ingredient,
     get_all_custom_ingredients,
     get_custom_ingredient,
+    delete_custom_ingredient,
     create_list_name,
     get_all_list_names,
     get_list_name,
@@ -165,7 +166,17 @@ class CustomIngredientQueries(TestCase):
 
         with self.assertRaises(CustomIngredient.DoesNotExist):
             get_custom_ingredient(username=self.user.username, name='doesnt_exist')
-
+    
+    def test_delete_custom_ingredient(self):
+        """
+        Testing delete_custom_ingredient deletes a custom ingredient from the database
+        """
+        self.assertEqual(len(get_all_custom_ingredients(self.user.username)), 2)
+        delete_custom_ingredient(self.user.username,self.ing1.name)
+        self.assertEqual(len(get_all_custom_ingredients(self.user.username)), 1)
+        delete_custom_ingredient(self.user.username,"does not exist")
+        self.assertEqual(len(get_all_custom_ingredients(self.user.username)), 1)
+        
 
 class ListNameQueries(TestCase):
     list_name1 = None
