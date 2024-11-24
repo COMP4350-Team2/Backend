@@ -601,6 +601,9 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(list_ing2, self.list_ing2)
 
         # Testing list ingredient creation with invalid values
+        with self.assertRaises(Ingredient.DoesNotExist):
+            create_list_ingredient("test123", 15000, self.unit1.unit)
+
         with self.assertRaises(Measurement.DoesNotExist):
             create_list_ingredient(self.ing2.name, 500, 'none')
 
@@ -747,6 +750,16 @@ class UserListIngredientsQueries(TestCase):
                 unit=self.list_ing2.get('unit')
             )
 
+        # Adding a item with too high of an amount raises an error
+        with self.assertRaises(ValueError):
+            add_list_ingredient(
+                username=self.user1.username,
+                list_name=self.empty_list_name1.list_name,
+                ingredient=self.list_ing2.get('ingredient_name'),
+                amount=15000,
+                unit=self.list_ing2.get('unit')
+            )
+
     def test_set_list_ingredient(self):
         """
         Testing set_list_ingredient correctly updates an ingredient in a user's list
@@ -815,5 +828,17 @@ class UserListIngredientsQueries(TestCase):
                 old_unit=self.list_ing2.get('unit'),
                 new_ingredient=self.list_ing2.get('ingredient_name'),
                 new_amount=self.list_ing2.get('amount'),
+                new_unit=self.list_ing2.get('unit')
+            )
+
+        # Setting a item with too high of an amount raises an error
+        with self.assertRaises(ValueError):
+            set_list_ingredient(
+                username=self.user1.username,
+                list_name=self.empty_list_name1.list_name,
+                old_ingredient=self.list_ing2.get('ingredient_name'),
+                old_unit=self.list_ing2.get('unit'),
+                new_ingredient=self.list_ing2.get('ingredient_name'),
+                new_amount=15000,
                 new_unit=self.list_ing2.get('unit')
             )
