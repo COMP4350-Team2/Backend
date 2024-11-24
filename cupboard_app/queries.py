@@ -267,11 +267,9 @@ def create_list_ingredient(
     Returns:
         The ingredient dictionary in the form of:
         {
-            "ingredient_id": id,
             "ingredient_name": name,
             'ingredient_type': type,
             "amount": amount,
-            "unit_id": id,
             "unit": unit
         }
         Exception raised if the ingredient or unit does not exist in the database
@@ -287,11 +285,9 @@ def create_list_ingredient(
     if isinstance(amount, int) or isinstance(amount, float):
         if (amount < 10000):
             ingredient_dict = {
-                'ingredient_id': ingredient_object.id,
                 'ingredient_name': ingredient_object.name,
                 'ingredient_type': ingredient_object.type,
                 'amount': amount,
-                'unit_id': unit.id,
                 'unit': unit.unit
             }
         else:

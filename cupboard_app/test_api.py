@@ -358,11 +358,9 @@ class ChangeUserListIngredientsApi(TestCase):
         self.list_name1 = ListName.objects.create(list_name=GROCERY_LIST_NAME)
         self.list_name2 = ListName.objects.create(list_name=PANTRY_LIST_NAME)
         self.list_ing1 = {
-            'ingredient_id': self.ing1.id,
             'ingredient_name': self.ing1.name,
             'ingredient_type': self.ing1.type,
             'amount': 500,
-            'unit_id': self.unit1.id,
             'unit': self.unit1.unit
         }
         UserListIngredients.objects.create(
@@ -564,11 +562,9 @@ class AddIngredientUserListIngredientsApi(TestCase):
             ingredients=[]
         )
         self.list_ing1 = {
-            'ingredient_id': self.ing1.id,
             'ingredient_name': self.ing1.name,
             'ingredient_type': self.ing1.type,
             'amount': 5,
-            'unit_id': self.unit1.id,
             'unit': self.unit1.unit
         }
 
@@ -736,19 +732,15 @@ class SetIngredientUserListIngredientsApi(TestCase):
         self.list_name1 = ListName.objects.create(list_name=GROCERY_LIST_NAME)
         self.list_name2 = ListName.objects.create(list_name=PANTRY_LIST_NAME)
         self.list_ing1 = {
-            'ingredient_id': self.ing1.id,
             'ingredient_name': self.ing1.name,
             'ingredient_type': self.ing1.type,
             'amount': 50,
-            'unit_id': self.unit1.id,
             'unit': self.unit1.unit
         }
         self.list_ing2 = {
-            'ingredient_id': self.ing2.id,
             'ingredient_name': self.ing2.name,
             'ingredient_type': self.ing2.type,
             'amount': 50,
-            'unit_id': self.unit1.id,
             'unit': self.unit1.unit
         }
         UserListIngredients.objects.create(
@@ -824,7 +816,6 @@ class SetIngredientUserListIngredientsApi(TestCase):
 
         updated_ing1 = {
             **updated_ing1,
-            'unit_id': self.unit2.id,
             'unit': self.unit2.unit
         }
 
@@ -877,7 +868,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
             list_name=list_name3,
             ingredients=[
                 self.list_ing1,
-                {**self.list_ing1, 'unit_id': self.unit2.id, 'unit': self.unit2.unit}
+                {**self.list_ing1, 'unit': self.unit2.unit}
             ]
         )
 
@@ -1180,11 +1171,9 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         self.list_name1 = ListName.objects.create(list_name=GROCERY_LIST_NAME)
         self.list_name2 = ListName.objects.create(list_name=PANTRY_LIST_NAME)
         self.list_ing1 = {
-            'ingredient_id': self.ing1.id,
             'ingredient_name': self.ing1.name,
             'ingredient_type': self.ing1.type,
             'amount': 5,
-            'unit_id': self.unit1.id,
             'unit': self.unit1.unit
         }
         UserListIngredients.objects.create(

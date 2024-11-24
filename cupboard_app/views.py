@@ -54,19 +54,15 @@ REQUIRED_VALUE_MISSING = (
 
 INGREDIENTS = [
     {
-        'ingredient_id': 1,
         'ingredient_name': 'Beef',
         'ingredient_type': 'Meat',
         'amount': 500,
-        'unit_id': 1,
         'unit': 'g'
     },
     {
-        'ingredient_id': 1,
         'ingredient_name': '2% Milk',
         'ingredient_type': 'Dairy',
         'amount': 2,
-        'unit_id': 2,
         'unit': 'L'
     }
 ]

@@ -338,19 +338,15 @@ class UserListIngredientsQueries(TestCase):
         self.unit2 = Measurement.objects.create(unit='test_unit2')
         self.unit3 = Measurement.objects.create(unit='test_unit3')
         self.list_ing1 = {
-            'ingredient_id': self.ing1.id,
             'ingredient_name': self.ing1.name,
             'ingredient_type': self.ing1.type,
             'amount': 500,
-            'unit_id': self.unit1.id,
             'unit': self.unit1.unit
         }
         self.list_ing2 = {
-            'ingredient_id': self.ing2.id,
             'ingredient_name': self.ing2.name,
             'ingredient_type': self.ing2.type,
             'amount': 400,
-            'unit_id': self.unit2.id,
             'unit': self.unit2.unit
         }
 
@@ -791,7 +787,6 @@ class UserListIngredientsQueries(TestCase):
         updated_ing1 = {
             **self.list_ing1,
             'amount': 100,
-            'unit_id': self.unit2.id,
             'unit': self.unit2.unit
         }
         set_list_ingredient(
