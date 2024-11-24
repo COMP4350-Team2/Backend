@@ -281,16 +281,21 @@ def create_list_ingredient(
         ingredient_object = CustomIngredient.objects.get(name=ingredient, user__id=user_id)
     except CustomIngredient.DoesNotExist:
         ingredient_object = Ingredient.objects.get(name=ingredient)
+
     unit = Measurement.objects.get(unit=unit)
+
     if isinstance(amount, int) or isinstance(amount, float):
-        ingredient_dict = {
-            'ingredient_id': ingredient_object.id,
-            'ingredient_name': ingredient_object.name,
-            'ingredient_type': ingredient_object.type,
-            'amount': amount,
-            'unit_id': unit.id,
-            'unit': unit.unit
-        }
+        if (amount < 10000):
+            ingredient_dict = {
+                'ingredient_id': ingredient_object.id,
+                'ingredient_name': ingredient_object.name,
+                'ingredient_type': ingredient_object.type,
+                'amount': amount,
+                'unit_id': unit.id,
+                'unit': unit.unit
+            }
+        else:
+            raise ValueError('Amount must be less than 10,000.')
     else:
         raise ValueError('Amount must be of type int or float.')
 

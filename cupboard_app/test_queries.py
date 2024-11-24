@@ -601,6 +601,9 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(list_ing2, self.list_ing2)
 
         # Testing list ingredient creation with invalid values
+        with self.assertRaises(ValueError):
+            create_list_ingredient(self.ing1.name, 15000, self.unit1.unit)
+
         with self.assertRaises(Measurement.DoesNotExist):
             create_list_ingredient(self.ing2.name, 500, 'none')
 
@@ -744,6 +747,16 @@ class UserListIngredientsQueries(TestCase):
                 list_name=self.empty_list_name1.list_name,
                 ingredient=self.list_ing2.get('ingredient_name'),
                 amount=self.list_ing2.get('amount'),
+                unit=self.list_ing2.get('unit')
+            )
+
+        # Adding a item with too high of an amount raises an error
+        with self.assertRaises(ValueError):
+            add_list_ingredient(
+                username=self.user1.username,
+                list_name=self.list_name1,
+                ingredient=self.list_ing2.get('ingredient_name'),
+                amount=15000,
                 unit=self.list_ing2.get('unit')
             )
 
@@ -946,3 +959,17 @@ class UserListIngredientsQueries(TestCase):
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name2)
         self.assertEqual(len(user_list.ingredients), 2)
         self.assertEqual(user_list.ingredients, [updated_ing2, updated_ing1])
+
+        # Setting a item with too high of an amount raises an error
+        with self.assertRaises(ValueError):
+            set_list_ingredient(
+                username=self.user1.username,
+                old_list_name=self.list_name1,
+                old_ingredient=updated_ing1.get('ingredient_name'),
+                old_amount=updated_ing1.get('amount') / 2,
+                old_unit=updated_ing1.get('unit'),
+                new_list_name=self.list_name1,
+                new_ingredient=updated_ing1.get('ingredient_name'),
+                new_amount=15000,
+                new_unit=updated_ing1.get('unit')
+            )
