@@ -601,7 +601,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(list_ing2, self.list_ing2)
 
         # Testing list ingredient creation with invalid values
-        with self.assertRaises(Ingredient.DoesNotExist):
+        with self.assertRaises(ValueError):
             create_list_ingredient(self.ing1.name, 15000, self.unit1.unit)
 
         with self.assertRaises(Measurement.DoesNotExist):
