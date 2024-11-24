@@ -602,7 +602,7 @@ class UserListIngredientsQueries(TestCase):
 
         # Testing list ingredient creation with invalid values
         with self.assertRaises(Ingredient.DoesNotExist):
-            create_list_ingredient("test123", 15000, self.unit1.unit)
+            create_list_ingredient(self.ing1.name, 15000, self.unit1.unit)
 
         with self.assertRaises(Measurement.DoesNotExist):
             create_list_ingredient(self.ing2.name, 500, 'none')
