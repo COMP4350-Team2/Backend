@@ -13,7 +13,8 @@ from cupboard_app.models import (
     ListName,
     Measurement,
     User,
-    UserListIngredients
+    UserListIngredients,
+    CustomIngredient
 )
 from cupboard_app.queries import (
     DOES_NOT_EXIST,
@@ -1479,4 +1480,75 @@ class CreateUserApi(TestCase):
             {
                 'message': UserViewSet.MISSING_USER_INFO
             }
+        )
+
+class CustomIngredientsApi(TestCase):
+    unit1 = None
+    unit2 = None
+
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        self.user1 = User.objects.create(
+            username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
+        )
+
+        self.ing1 = CustomIngredient.objects.create(name='test_ingredient1', type='test_type1')
+        self.ing2 = CustomIngredient.objects.create(name='test_ingredient2', type='test_type1')
+
+    @patch.object(TokenBackend, 'decode')
+    def test_create_custom_ingredient(self, mock_decode):
+        """
+        Testing create_custom_ingredient creates a custom ingredient
+        in the database
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse(f'{API_VERSION}:add_delete_customingredient'),
+            json.dumps(
+                {
+                    'username': self.user1.username,
+                    'ingredient': 'Beef',
+                    'type': 'Meat'
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertDictEqual(
+            response.json(),
+            {'username': self.user1.username, 'ingredient': 'Beef', 'type': 'Meat'}
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_delete_custom_ingredient(self, mock_decode):
+        """
+        Testing get_all_measurements retrieves all the ingredients
+        from the database
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.delete(
+            reverse(f'{API_VERSION}:add_delete_customingredient'),
+            json.dumps(
+                {
+                    'username': self.user1.username,
+                    'ingredient': self.ing1.name
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            [
+                {'unit': self.ing2.name},
+            ]
         )

@@ -755,9 +755,9 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
         else:
             raise MissingInformation(self.MISSING_USER_INFO)
 
-        return Response(serializer.data, status=201)
+        return Response(serializer.data, status=200)
     
-    def destroy(self, request: Response, list_name: str = None) -> Response:
+    def destroy(self, request: Response) -> Response:
         """
         Deletes a custom ingredient for the user.
         Returns the list of remaining custom ingredients for the user
@@ -770,8 +770,8 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
                 username=username,
                 ingredient=body['ingredient']
             )
-            serializer = UserListIngredientsSerializer(list)
+            serializer = CustomIngredientSerializer(list)
         else:
             raise MissingInformation(self.MISSING_USER_INFO)
 
-        return Response(serializer.data, status=201)
+        return Response(serializer.data, status=200)
