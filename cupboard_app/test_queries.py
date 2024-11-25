@@ -315,6 +315,8 @@ class UserListIngredientsQueries(TestCase):
     user2 = None
     ing1 = None
     ing2 = None
+    cust_ing1 = None
+    cust_ing2 = None
     list_name1 = None
     list_name2 = None
     empty_list_name1 = None
@@ -324,12 +326,24 @@ class UserListIngredientsQueries(TestCase):
     unit3 = None
     list_ing1 = None
     list_ing2 = None
+    list_cust_ing1 = None
+    list_cust_ing2 = None
 
     def setUp(self):
         self.user1 = User.objects.create(username='test_user1', email='user1@test.com')
         self.user2 = User.objects.create(username='test_user2', email='user2@test.com')
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type1')
+        self.cust_ing1 = CustomIngredient.objects.create(
+            user=self.user1,
+            name='test_ingredient1',
+            type='test_type1'
+        )
+        self.cust_ing2 = CustomIngredient.objects.create(
+            user=self.user2,
+            name='test_ingredient2',
+            type='test_type1'
+        )
         self.list_name1 = ListName.objects.create(list_name='test_listname1')
         self.list_name2 = ListName.objects.create(list_name='test_listname2')
         self.empty_list_name1 = ListName.objects.create(list_name='empty_listname1')
@@ -341,13 +355,29 @@ class UserListIngredientsQueries(TestCase):
             'ingredient_name': self.ing1.name,
             'ingredient_type': self.ing1.type,
             'amount': 500,
-            'unit': self.unit1.unit
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
         }
         self.list_ing2 = {
             'ingredient_name': self.ing2.name,
             'ingredient_type': self.ing2.type,
             'amount': 400,
-            'unit': self.unit2.unit
+            'unit': self.unit2.unit,
+            'is_custom_ingredient': False
+        }
+        self.list_cust_ing1 = {
+            'ingredient_name': self.cust_ing1.name,
+            'ingredient_type': self.cust_ing1.type,
+            'amount': 500,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': True
+        }
+        self.list_cust_ing2 = {
+            'ingredient_name': self.cust_ing2.name,
+            'ingredient_type': self.cust_ing2.type,
+            'amount': 400,
+            'unit': self.unit2.unit,
+            'is_custom_ingredient': True
         }
 
     def test_create_user_list_ingredients(self):
@@ -578,9 +608,6 @@ class UserListIngredientsQueries(TestCase):
         """
         Testing create_list_ingredient creates an ingredient dictionary
         """
-
-        CustomIngredient.objects.create(user=self.user1, name='test_ingredient1', type='test_type1')
-
         list_ing = create_list_ingredient(
             ingredient=self.ing1.name,
             amount=500,
@@ -589,12 +616,12 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(list_ing, self.list_ing1)
 
         list_ing2 = create_list_ingredient(
-            ingredient=self.ing2.name,
-            amount=400,
-            unit=self.unit2.unit,
+            ingredient=self.list_cust_ing1.get('ingredient_name'),
+            amount=500,
+            unit=self.list_cust_ing1.get('unit'),
             user_id=self.user1.id
         )
-        self.assertEqual(list_ing2, self.list_ing2)
+        self.assertEqual(list_ing2, self.list_cust_ing1)
 
         # Testing list ingredient creation with invalid values
         with self.assertRaises(ValueError):
@@ -635,7 +662,8 @@ class UserListIngredientsQueries(TestCase):
             username=self.user1.username,
             list_name=self.list_name1.list_name,
             ingredient=self.list_ing1.get('ingredient_name'),
-            unit=self.list_ing1.get('unit')
+            unit=self.list_ing1.get('unit'),
+            is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         self.assertEqual(user_list.ingredients, [])
@@ -650,7 +678,8 @@ class UserListIngredientsQueries(TestCase):
             username=self.user1.username,
             list_name=self.list_name2.list_name,
             ingredient=self.list_ing1.get('ingredient_name'),
-            unit=self.list_ing1.get('unit')
+            unit=self.list_ing1.get('unit'),
+            is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name2)
         self.assertEqual(user_list.ingredients, None)
@@ -670,11 +699,34 @@ class UserListIngredientsQueries(TestCase):
             username=self.user2.username,
             list_name=self.list_name1.list_name,
             ingredient=self.list_ing1.get('ingredient_name'),
-            unit=self.list_ing1.get('unit')
+            unit=self.list_ing1.get('unit'),
+            is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user2, list_name=self.list_name1)
         self.assertEqual(len(user_list.ingredients), 1)
         self.assertEqual(user_list.ingredients, [self.list_ing2])
+
+        # Delete custom ingredient
+        ing_list = [self.list_ing1, self.list_ing2, self.list_cust_ing2]
+
+        UserListIngredients.objects.create(
+            user=self.user2,
+            list_name=self.list_name2,
+            ingredients=ing_list
+        )
+        user_list = UserListIngredients.objects.get(user=self.user2, list_name=self.list_name2)
+        self.assertEqual(len(user_list.ingredients), 3)
+
+        delete_list_ingredient(
+            username=self.user2.username,
+            list_name=self.list_name2.list_name,
+            ingredient=self.list_cust_ing2.get('ingredient_name'),
+            unit=self.list_cust_ing2.get('unit'),
+            is_custom_ingredient=self.list_cust_ing2.get('is_custom_ingredient')
+        )
+        user_list = UserListIngredients.objects.get(user=self.user2, list_name=self.list_name2)
+        self.assertEqual(len(user_list.ingredients), 2)
+        self.assertEqual(user_list.ingredients, [self.list_ing1, self.list_ing2])
 
         # Deleting in a non-existent list raises error
         with self.assertRaises(ValueError):
@@ -682,7 +734,8 @@ class UserListIngredientsQueries(TestCase):
                 username=self.user2.username,
                 list_name=self.empty_list_name1.list_name,
                 ingredient=self.list_ing1.get('ingredient_name'),
-                unit=self.list_ing1.get('unit')
+                unit=self.list_ing1.get('unit'),
+                is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
             )
 
     def test_add_list_ingredient(self):
@@ -702,7 +755,8 @@ class UserListIngredientsQueries(TestCase):
             list_name=self.list_name1.list_name,
             ingredient=self.list_ing1.get('ingredient_name'),
             amount=self.list_ing1.get('amount'),
-            unit=self.list_ing1.get('unit')
+            unit=self.list_ing1.get('unit'),
+            is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         self.assertEqual(len(user_list.ingredients), 1)
@@ -714,7 +768,8 @@ class UserListIngredientsQueries(TestCase):
             list_name=self.list_name1.list_name,
             ingredient=self.list_ing1.get('ingredient_name'),
             amount=100,
-            unit=self.list_ing1.get('unit')
+            unit=self.list_ing1.get('unit'),
+            is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         updated_ing1 = {
@@ -730,11 +785,25 @@ class UserListIngredientsQueries(TestCase):
             list_name=self.list_name1.list_name,
             ingredient=self.list_ing2.get('ingredient_name'),
             amount=self.list_ing2.get('amount'),
-            unit=self.list_ing2.get('unit')
+            unit=self.list_ing2.get('unit'),
+            is_custom_ingredient=self.list_ing2.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         self.assertEqual(len(user_list.ingredients), 2)
         self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2])
+
+        # Adding custom ingredient to a list
+        add_list_ingredient(
+            username=self.user1.username,
+            list_name=self.list_name1.list_name,
+            ingredient=self.list_cust_ing1.get('ingredient_name'),
+            amount=self.list_cust_ing1.get('amount'),
+            unit=self.list_cust_ing1.get('unit'),
+            is_custom_ingredient=self.list_cust_ing1.get('is_custom_ingredient')
+        )
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
+        self.assertEqual(len(user_list.ingredients), 3)
+        self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2, self.list_cust_ing1])
 
         # Adding a non-existent list raises error
         with self.assertRaises(ValueError):
@@ -743,7 +812,8 @@ class UserListIngredientsQueries(TestCase):
                 list_name=self.empty_list_name1.list_name,
                 ingredient=self.list_ing2.get('ingredient_name'),
                 amount=self.list_ing2.get('amount'),
-                unit=self.list_ing2.get('unit')
+                unit=self.list_ing2.get('unit'),
+                is_custom_ingredient=self.list_ing2.get('is_custom_ingredient')
             )
 
         # Adding a item with too high of an amount raises an error
@@ -753,7 +823,8 @@ class UserListIngredientsQueries(TestCase):
                 list_name=self.list_name1,
                 ingredient=self.list_ing2.get('ingredient_name'),
                 amount=15000,
-                unit=self.list_ing2.get('unit')
+                unit=self.list_ing2.get('unit'),
+                is_custom_ingredient=self.list_ing2.get('is_custom_ingredient')
             )
 
     def test_set_list_ingredient(self):
@@ -774,10 +845,12 @@ class UserListIngredientsQueries(TestCase):
             old_ingredient=self.list_ing2.get('ingredient_name'),
             old_amount=0,
             old_unit=self.list_ing2.get('unit'),
+            old_is_custom_ingredient=self.list_ing2.get('is_custom_ingredient'),
             new_list_name=self.list_name1.list_name,
             new_ingredient=self.list_ing1.get('ingredient_name'),
             new_amount=self.list_ing1.get('amount'),
-            new_unit=self.list_ing1.get('unit')
+            new_unit=self.list_ing1.get('unit'),
+            new_is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         self.assertEqual(len(user_list.ingredients), 1)
@@ -795,10 +868,12 @@ class UserListIngredientsQueries(TestCase):
             old_ingredient=self.list_ing1.get('ingredient_name'),
             old_amount=self.list_ing1.get('amount'),
             old_unit=self.list_ing1.get('unit'),
+            old_is_custom_ingredient=self.list_ing1.get('is_custom_ingredient'),
             new_list_name=self.list_name1.list_name,
             new_ingredient=updated_ing1.get('ingredient_name'),
             new_amount=updated_ing1.get('amount'),
-            new_unit=updated_ing1.get('unit')
+            new_unit=updated_ing1.get('unit'),
+            new_is_custom_ingredient=updated_ing1.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         self.assertEqual(len(user_list.ingredients), 1)
@@ -811,10 +886,12 @@ class UserListIngredientsQueries(TestCase):
             old_ingredient=updated_ing1.get('ingredient_name'),
             old_amount=updated_ing1.get('amount') / 2,
             old_unit=updated_ing1.get('unit'),
+            old_is_custom_ingredient=updated_ing1.get('is_custom_ingredient'),
             new_list_name=self.list_name1.list_name,
             new_ingredient=updated_ing1.get('ingredient_name'),
             new_amount=updated_ing1.get('amount'),
-            new_unit=updated_ing1.get('unit')
+            new_unit=updated_ing1.get('unit'),
+            new_is_custom_ingredient=updated_ing1.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         updated_ing1 = {
@@ -836,10 +913,12 @@ class UserListIngredientsQueries(TestCase):
             old_ingredient=updated_ing1.get('ingredient_name'),
             old_amount=updated_ing2.get('amount'),
             old_unit=updated_ing1.get('unit'),
+            old_is_custom_ingredient=updated_ing1.get('is_custom_ingredient'),
             new_list_name=self.list_name1.list_name,
             new_ingredient=updated_ing2.get('ingredient_name'),
             new_amount=updated_ing2.get('amount'),
-            new_unit=updated_ing2.get('unit')
+            new_unit=updated_ing2.get('unit'),
+            new_is_custom_ingredient=updated_ing2.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         updated_ing1 = {
@@ -856,10 +935,12 @@ class UserListIngredientsQueries(TestCase):
             old_ingredient=self.list_ing2.get('ingredient_name'),
             old_amount=0,
             old_unit=self.list_ing2.get('unit'),
+            old_is_custom_ingredient=self.list_ing2.get('is_custom_ingredient'),
             new_list_name=self.list_name1.list_name,
             new_ingredient=self.list_ing2.get('ingredient_name'),
             new_amount=self.list_ing2.get('amount'),
-            new_unit=self.list_ing2.get('unit')
+            new_unit=self.list_ing2.get('unit'),
+            new_is_custom_ingredient=self.list_ing2.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         self.assertEqual(len(user_list.ingredients), 3)
@@ -873,10 +954,12 @@ class UserListIngredientsQueries(TestCase):
                 old_ingredient=self.list_ing2.get('ingredient_name'),
                 old_amount=0,
                 old_unit=self.list_ing2.get('unit'),
+                old_is_custom_ingredient=self.list_ing2.get('is_custom_ingredient'),
                 new_list_name=self.empty_list_name1.list_name,
                 new_ingredient=self.list_ing2.get('ingredient_name'),
                 new_amount=self.list_ing2.get('amount'),
-                new_unit=self.list_ing2.get('unit')
+                new_unit=self.list_ing2.get('unit'),
+                new_is_custom_ingredient=self.list_ing2.get('is_custom_ingredient')
             )
 
         # Moving the ingredient entirely from one list to another
@@ -891,10 +974,12 @@ class UserListIngredientsQueries(TestCase):
             old_ingredient=updated_ing2.get('ingredient_name'),
             old_amount=updated_ing2.get('amount'),
             old_unit=updated_ing2.get('unit'),
+            old_is_custom_ingredient=updated_ing2.get('is_custom_ingredient'),
             new_list_name=self.list_name2.list_name,
             new_ingredient=updated_ing2.get('ingredient_name'),
             new_amount=updated_ing2.get('amount'),
-            new_unit=updated_ing2.get('unit')
+            new_unit=updated_ing2.get('unit'),
+            new_is_custom_ingredient=updated_ing2.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         self.assertEqual(len(user_list.ingredients), 2)
@@ -911,10 +996,12 @@ class UserListIngredientsQueries(TestCase):
             old_ingredient=updated_ing2.get('ingredient_name'),
             old_amount=updated_ing2.get('amount'),
             old_unit=updated_ing2.get('unit'),
+            old_is_custom_ingredient=updated_ing2.get('is_custom_ingredient'),
             new_list_name=self.list_name2.list_name,
             new_ingredient=updated_ing2.get('ingredient_name'),
             new_amount=updated_ing2.get('amount'),
-            new_unit=updated_ing2.get('unit')
+            new_unit=updated_ing2.get('unit'),
+            new_is_custom_ingredient=updated_ing2.get('is_custom_ingredient')
         )
         user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
         self.assertEqual(len(user_list.ingredients), 2)
@@ -936,10 +1023,12 @@ class UserListIngredientsQueries(TestCase):
             old_ingredient=updated_ing1.get('ingredient_name'),
             old_amount=updated_ing1.get('amount') / 2,
             old_unit=updated_ing1.get('unit'),
+            old_is_custom_ingredient=updated_ing1.get('is_custom_ingredient'),
             new_list_name=self.list_name2.list_name,
             new_ingredient=updated_ing1.get('ingredient_name'),
             new_amount=updated_ing1.get('amount') / 2,
-            new_unit=updated_ing1.get('unit')
+            new_unit=updated_ing1.get('unit'),
+            new_is_custom_ingredient=updated_ing1.get('is_custom_ingredient')
         )
 
         updated_ing1 = {
@@ -963,8 +1052,28 @@ class UserListIngredientsQueries(TestCase):
                 old_ingredient=updated_ing1.get('ingredient_name'),
                 old_amount=updated_ing1.get('amount') / 2,
                 old_unit=updated_ing1.get('unit'),
+                old_is_custom_ingredient=updated_ing1.get('is_custom_ingredient'),
                 new_list_name=self.list_name1,
                 new_ingredient=updated_ing1.get('ingredient_name'),
                 new_amount=15000,
-                new_unit=updated_ing1.get('unit')
+                new_unit=updated_ing1.get('unit'),
+                new_is_custom_ingredient=updated_ing1.get('is_custom_ingredient')
             )
+
+        # Setting a custom ingredient in a list
+        set_list_ingredient(
+            username=self.user1.username,
+            old_list_name=self.list_name1.list_name,
+            old_ingredient=self.list_ing2.get('ingredient_name'),
+            old_amount=self.list_ing2.get('amount'),
+            old_unit=self.list_ing2.get('unit'),
+            old_is_custom_ingredient=self.list_ing2.get('is_custom_ingredient'),
+            new_list_name=self.list_name1.list_name,
+            new_ingredient=self.list_cust_ing1.get('ingredient_name'),
+            new_amount=self.list_cust_ing1.get('amount'),
+            new_unit=self.list_cust_ing1.get('unit'),
+            new_is_custom_ingredient=self.list_cust_ing1.get('is_custom_ingredient')
+        )
+        user_list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
+        self.assertEqual(len(user_list.ingredients), 2)
+        self.assertEqual(user_list.ingredients, [updated_ing1, self.list_cust_ing1])

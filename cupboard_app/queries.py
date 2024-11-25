@@ -270,15 +270,18 @@ def create_list_ingredient(
             "ingredient_name": name,
             'ingredient_type': type,
             "amount": amount,
-            "unit": unit
+            "unit": unit,
+            "is_custom_ingredient": bool if custom ingredient or not
         }
         Exception raised if the ingredient or unit does not exist in the database
         or amount is not int or float type
     """
-    try:
+    if user_id:
         ingredient_object = CustomIngredient.objects.get(name=ingredient, user__id=user_id)
-    except CustomIngredient.DoesNotExist:
+        is_custom_ingredient = True
+    else:
         ingredient_object = Ingredient.objects.get(name=ingredient)
+        is_custom_ingredient = False
 
     unit = Measurement.objects.get(unit=unit)
 
@@ -288,7 +291,8 @@ def create_list_ingredient(
                 'ingredient_name': ingredient_object.name,
                 'ingredient_type': ingredient_object.type,
                 'amount': amount,
-                'unit': unit.unit
+                'unit': unit.unit,
+                'is_custom_ingredient': is_custom_ingredient
             }
         else:
             raise ValueError('Amount must be less than 10,000.')
@@ -302,7 +306,8 @@ def delete_list_ingredient(
     username: str,
     list_name: str,
     ingredient: str,
-    unit: str
+    unit: str,
+    is_custom_ingredient: bool
 ) -> UserListIngredients:
     """
     Deletes an ingredient in the user's list.
@@ -312,10 +317,14 @@ def delete_list_ingredient(
         list_name: Name of the list to update
         ingredient: Ingredient name
         unit: The unit of measure for the ingredient
+        is_custom_ingredient: Whether the ingredient is custom or not
 
     Returns:
         The updated list.
     """
+    if isinstance(is_custom_ingredient, str):
+        is_custom_ingredient = is_custom_ingredient == 'True'
+
     user_list = UserListIngredients.objects.filter(
         user__username=username,
         list_name__list_name=list_name
@@ -328,6 +337,7 @@ def delete_list_ingredient(
                 if (
                     dictionary.get('ingredient_name', None) == ingredient
                     and dictionary.get('unit', None) == unit
+                    and dictionary.get('is_custom_ingredient', None) == is_custom_ingredient
                 ):
                     user_list.ingredients.remove(dictionary)
             user_list.save()
@@ -342,7 +352,8 @@ def add_list_ingredient(
     list_name: str,
     ingredient: str,
     amount: int | float,
-    unit: str
+    unit: str,
+    is_custom_ingredient: bool
 ) -> UserListIngredients:
     """
     Adds an ingredient in the user's list.
@@ -356,15 +367,24 @@ def add_list_ingredient(
         ingredient: Ingredient name
         amount: Quantity of the ingredient
         unit: The unit of measure for the ingredient
+        is_custom_ingredient: Whether the ingredient we are adding is custom
 
     Returns:
         The updated list.
     """
+    if isinstance(is_custom_ingredient, str):
+        is_custom_ingredient = is_custom_ingredient == 'True'
+
+    user_id = None
+    if is_custom_ingredient:
+        user_id = User.objects.get(username=username).id
+
     # Create the ingredient to put into list
     list_ingredient = create_list_ingredient(
         ingredient=ingredient,
         amount=amount,
-        unit=unit
+        unit=unit,
+        user_id=user_id
     )
 
     user_list = UserListIngredients.objects.filter(
@@ -379,6 +399,7 @@ def add_list_ingredient(
         elif not any(
             dictionary.get('ingredient_name', None) == ingredient
             and dictionary.get('unit', None) == unit
+            and dictionary.get('is_custom_ingredient') == is_custom_ingredient
             for dictionary in user_list.ingredients
         ):
             # ingredient does not exist so insert
@@ -386,7 +407,11 @@ def add_list_ingredient(
         else:
             # ingredient exists so add or set the ingredient
             for i in user_list.ingredients:
-                if i['ingredient_name'] == ingredient and i['unit'] == unit:
+                if (
+                    i['ingredient_name'] == ingredient
+                    and i['unit'] == unit
+                    and i['is_custom_ingredient'] == is_custom_ingredient
+                ):
                     i['amount'] += amount
         user_list.save()
     else:
@@ -401,10 +426,12 @@ def set_list_ingredient(
     old_ingredient: str,
     old_amount: int | float,
     old_unit: str,
+    old_is_custom_ingredient: bool,
     new_list_name: str,
     new_ingredient: str,
     new_amount: int | float,
-    new_unit: str
+    new_unit: str,
+    new_is_custom_ingredient: bool
 ) -> QuerySet:
     """
     Sets an ingredient's unit and amount in the user's list.
@@ -418,19 +445,32 @@ def set_list_ingredient(
         old_ingredient: Name of the ingredient to update
         old_amount: Quantity of the ingredient to remove
         old_unit: The unit of measure for the ingredient to update
+        old_is_custom_ingredient: The custom ingredient flag of the ingredient to update
         new_list_name: Name of the list to update
         new_ingredient: Name of the ingredient to change to
         new_amount: Quantity of the ingredient to change to
         new_unit: The unit of measure for the ingredient to change to
+        new_is_custom_ingredient: The custom ingredient flag of the ingredient to change to
 
     Returns:
         All of the user's updated lists.
     """
+    if isinstance(old_is_custom_ingredient, str):
+        old_is_custom_ingredient = old_is_custom_ingredient == 'True'
+
+    if isinstance(new_is_custom_ingredient, str):
+        new_is_custom_ingredient = new_is_custom_ingredient == 'True'
+
+    user_id = None
+    if new_is_custom_ingredient:
+        user_id = User.objects.get(username=username).id
+
     # Create the ingredient to put into list
     list_ingredient = create_list_ingredient(
         ingredient=new_ingredient,
         amount=new_amount,
-        unit=new_unit
+        unit=new_unit,
+        user_id=user_id
     )
 
     # Get the list to set/remove ingredient from
@@ -454,6 +494,7 @@ def set_list_ingredient(
             if (
                 ingredient['ingredient_name'] == old_ingredient
                 and ingredient['unit'] == old_unit
+                and ingredient['is_custom_ingredient'] == old_is_custom_ingredient
             ):
                 if ingredient['amount'] <= old_amount:
                     old_user_list.ingredients.remove(ingredient)
@@ -476,6 +517,7 @@ def set_list_ingredient(
     elif not any(
         ingredient['ingredient_name'] == new_ingredient
         and ingredient['unit'] == new_unit
+        and ingredient['is_custom_ingredient'] == new_is_custom_ingredient
         for ingredient in new_user_list.ingredients
     ):
         # ingredient does not exist so insert
@@ -486,6 +528,7 @@ def set_list_ingredient(
             if (
                 ingredient['ingredient_name'] == new_ingredient
                 and ingredient['unit'] == new_unit
+                and ingredient['is_custom_ingredient'] == new_is_custom_ingredient
             ):
                 ingredient['amount'] += new_amount
 
