@@ -1536,8 +1536,8 @@ class CustomIngredientsApi(TestCase):
     @patch.object(TokenBackend, 'decode')
     def test_create_custom_ingredient_nonexistant_user(self, mock_decode):
         """
-        Testing create_custom_ingredient creates a custom ingredient
-        in the database
+        Testing create_custom_ingredient works properly when
+        a username doesn't exist in a custom ingredient
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
@@ -1579,7 +1579,7 @@ class CustomIngredientsApi(TestCase):
     @patch.object(TokenBackend, 'decode')
     def test_delete_nonexistant_custom_ingredient(self, mock_decode):
         """
-        Testing delete_custom_ingredient gives a 400 when a custom
+        Testing delete_custom_ingredient works properly when a custom
         ingredient to be deleted isnt found in the database
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
