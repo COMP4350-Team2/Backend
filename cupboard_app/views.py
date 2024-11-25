@@ -24,6 +24,7 @@ from cupboard_app.queries import (
     create_user_list_ingredients,
     delete_user_list_ingredients,
     get_all_ingredients,
+    get_all_custom_ingredients,
     get_all_measurements,
     get_user_lists_ingredients,
     get_specific_user_lists_ingredients,
@@ -39,7 +40,8 @@ from cupboard_app.serializers import (
     IngredientSerializer,
     MeasurementSerializer,
     UserSerializer,
-    UserListIngredientsSerializer
+    UserListIngredientsSerializer,
+    CustomIngredientSerializer
 )
 
 INVALID_TOKEN = {'message': 'Given token not valid for any token type'}
@@ -670,13 +672,22 @@ class IngredientsViewSet(viewsets.ViewSet):
     @extend_schema(
         request=None,
         responses={
-            200: IngredientSerializer(many=True),
+            200: inline_serializer(
+                name='AllIngredientsSerializer',
+                fields={
+                    'common_ingredients': IngredientSerializer(many=True),
+                    'custom_ingredients': CustomIngredientSerializer(many=True)
+                }
+            ),
             401: auth_failed_response
         },
         examples=[
             OpenApiExample(
                 name='All Ingredients Returned',
-                value={'name': 'Beef', 'type': 'Meat'},
+                value={
+                    'common_ingredients': [{'name': 'Beef', 'type': 'Meat'}],
+                    'custom_ingredients': [{'user': 'teacup', 'name': 'Beef', 'type': 'Meat'}]
+                },
                 status_codes=[200]
             )
         ]
@@ -685,9 +696,19 @@ class IngredientsViewSet(viewsets.ViewSet):
         """
         Returns a list of all ingredients in the database.
         """
-        all_ingredients = get_all_ingredients()
-        serializer = IngredientSerializer(all_ingredients, many=True)
-        return Response(serializer.data)
+        username = get_auth_username_from_payload(request=request)
+
+        common_ingredients = get_all_ingredients()
+        custom_ingredients = get_all_custom_ingredients(username=username)
+        common_ing_serializer = IngredientSerializer(common_ingredients, many=True)
+        custom_ing_serializer = CustomIngredientSerializer(custom_ingredients, many=True)
+        return Response(
+            {
+                'common_ingredients': common_ing_serializer.data,
+                'custom_ingredients': custom_ing_serializer.data
+            },
+            status=200
+        )
 
 
 @extend_schema(tags=['Users'])

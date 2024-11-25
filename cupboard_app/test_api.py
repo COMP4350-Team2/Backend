@@ -1549,15 +1549,26 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
 
 
 class GetAllIngredientsApi(TestCase):
+    user1 = None
     ing1 = None
     ing2 = None
+    cust_ing1 = None
 
     def setUp(self):
         """
         Sets up a test database with test values
         """
+        self.user1 = User.objects.create(
+            username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
+        )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type2')
+        self.cust_ing1 = CustomIngredient.objects.create(
+            user=self.user1,
+            name='test_ingredient1',
+            type='test_type1'
+        )
 
     @patch.object(TokenBackend, 'decode')
     def test_get_all_ingredients(self, mock_decode):
@@ -1575,10 +1586,19 @@ class GetAllIngredientsApi(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
-            [
-                {'name': self.ing1.name, 'type': self.ing1.type},
-                {'name': self.ing2.name, 'type': self.ing2.type}
-            ]
+            {
+                'common_ingredients': [
+                    {'name': self.ing1.name, 'type': self.ing1.type},
+                    {'name': self.ing2.name, 'type': self.ing2.type}
+                ],
+                'custom_ingredients': [
+                    {
+                        'user': self.user1.username,
+                        'name': self.cust_ing1.name,
+                        'type': self.cust_ing1.type
+                    }
+                ]
+            }
         )
 
 
