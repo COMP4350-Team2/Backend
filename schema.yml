@@ -10,7 +10,9 @@ paths:
   /api/v3/ingredients:
     get:
       operationId: api_v3_ingredients_list
-      description: Returns a list of all ingredients in the database.
+      description: |-
+        Returns a dictionary containing the list of common ingredients
+        and the list of user's custom ingredients in the database.
       tags:
       - Ingredients
       security:
@@ -776,6 +778,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: Required query parameters missing from sent request.
+                      Please add the following query parameters?list_name=[LISTNAME]&ingredient=[INGREDIENT]&unit=[MEASURMENT
+                      UNIT]&is_custom_ingredient=[BOOLEAN]
+                  summary: Required Value Missing
           description: ''
         '401':
           content:

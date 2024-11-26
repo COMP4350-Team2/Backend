@@ -697,7 +697,8 @@ class IngredientsViewSet(viewsets.ViewSet):
     )
     def list(self, request: Request) -> Response:
         """
-        Returns a list of all ingredients in the database.
+        Returns a dictionary containing the list of common ingredients
+        and the list of user's custom ingredients in the database.
         """
         username = get_auth_username_from_payload(request=request)
 
