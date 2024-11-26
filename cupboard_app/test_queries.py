@@ -341,7 +341,7 @@ class UserListIngredientsQueries(TestCase):
         )
         self.cust_ing2 = CustomIngredient.objects.create(
             user=self.user2,
-            name='test_ingredient2',
+            name='test_ingredient1',
             type='test_type1'
         )
         self.list_name1 = ListName.objects.create(list_name='test_listname1')

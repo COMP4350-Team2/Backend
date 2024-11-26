@@ -1,6 +1,7 @@
 import json
 
 from django.db import models
+from django.core.exceptions import ValidationError
 
 
 class Message():
@@ -64,8 +65,17 @@ class Recipe(models.Model):
 
 class CustomIngredient(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=30, unique=True)
+    name = models.CharField(max_length=30)
     type = models.CharField(max_length=30)
+
+    def validate_unique(self, exclude=None):
+        super().validate_unique(exclude)
+
+        if type(self).objects.filter(
+            user__username=self.user.username,
+            name=self.name
+        ).exists():
+            raise ValidationError('Ingredient already exists for user.')
 
     def __str__(self):
         my_dictionary = {'name': self.name, 'type': self.type}
