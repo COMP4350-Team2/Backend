@@ -5,7 +5,8 @@ from cupboard_app.models import (
     ListName,
     Measurement,
     User,
-    UserListIngredients
+    UserListIngredients,
+    CustomIngredient
 )
 
 MAX_LISTS = 10
@@ -57,6 +58,58 @@ def get_ingredient(name: str, id: int = None) -> Ingredient | None:
         result = Ingredient.objects.get(id=id, name=name)
     else:
         result = Ingredient.objects.get(name=name)
+
+    return result
+
+
+def create_custom_ingredient(username: str, name: str, type: str) -> CustomIngredient:
+    """
+    Creates a custom ingredient in the custom ingredient dimension table.
+
+    Args:
+        username: User's username
+        name: Ingredient name
+        type: Ingredient type
+
+    Returns:
+        CustomIngredient object if new custom ingredient created or
+        custom ingredient already existed for the user.
+    """
+    user = User.objects.get(username=username)
+    obj, new_created = CustomIngredient.objects.get_or_create(user=user, name=name, type=type)
+    return obj
+
+
+def get_all_custom_ingredients(username: str) -> QuerySet:
+    """
+    Gets all the custom ingredients in the custom ingredients dimension table.
+
+    Returns:
+        QuerySet of all the custom ingredients.
+    """
+
+    user = User.objects.get(username=username)
+    return CustomIngredient.objects.all().filter(user=user)
+
+
+def get_custom_ingredient(username: str, name: str, id: int = None) -> CustomIngredient | None:
+    """
+    Gets the specific custom ingredient object from the user.
+
+    Args:
+        username: User's username
+        name: Ingredient name
+        id: Ingredient ID
+
+    Returns:
+        CustomIngredient object or exception if ingredient is not found.
+    """
+
+    user = User.objects.get(username=username)
+    if id:
+        result = CustomIngredient.objects.get(user=user, id=id, name=name)
+    else:
+        result = CustomIngredient.objects.get(user=user, name=name)
 
     return result
 
@@ -196,7 +249,12 @@ def get_user(username: str, id: int = None) -> User | None:
     return result
 
 
-def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> dict:
+def create_list_ingredient(
+    ingredient: str,
+    amount: int | float,
+    unit: str,
+    user_id: int = None
+) -> dict:
     """
     Creates the ingredient that will be in the user_list_ingredient
 
@@ -204,6 +262,7 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
         ingredient: Ingredient name
         amount: Ingredient quantity
         unit: unit of measure for the ingredient
+        user_id: User ID
 
     Returns:
         The ingredient dictionary in the form of:
@@ -218,17 +277,25 @@ def create_list_ingredient(ingredient: str, amount: int | float, unit: str) -> d
         Exception raised if the ingredient or unit does not exist in the database
         or amount is not int or float type
     """
-    ingredient = Ingredient.objects.get(name=ingredient)
+    try:
+        ingredient_object = CustomIngredient.objects.get(name=ingredient, user__id=user_id)
+    except CustomIngredient.DoesNotExist:
+        ingredient_object = Ingredient.objects.get(name=ingredient)
+
     unit = Measurement.objects.get(unit=unit)
+
     if isinstance(amount, int) or isinstance(amount, float):
-        ingredient_dict = {
-            'ingredient_id': ingredient.id,
-            'ingredient_name': ingredient.name,
-            'ingredient_type': ingredient.type,
-            'amount': amount,
-            'unit_id': unit.id,
-            'unit': unit.unit
-        }
+        if (amount < 10000):
+            ingredient_dict = {
+                'ingredient_id': ingredient_object.id,
+                'ingredient_name': ingredient_object.name,
+                'ingredient_type': ingredient_object.type,
+                'amount': amount,
+                'unit_id': unit.id,
+                'unit': unit.unit
+            }
+        else:
+            raise ValueError('Amount must be less than 10,000.')
     else:
         raise ValueError('Amount must be of type int or float.')
 
@@ -342,7 +409,7 @@ def set_list_ingredient(
     new_ingredient: str,
     new_amount: int | float,
     new_unit: str
-) -> tuple[UserListIngredients, UserListIngredients] | tuple[None, UserListIngredients]:
+) -> QuerySet:
     """
     Sets an ingredient's unit and amount in the user's list.
 
@@ -361,7 +428,7 @@ def set_list_ingredient(
         new_unit: The unit of measure for the ingredient to change to
 
     Returns:
-        The updated lists.
+        All of the user's updated lists.
     """
     # Create the ingredient to put into list
     list_ingredient = create_list_ingredient(
@@ -428,7 +495,7 @@ def set_list_ingredient(
 
     new_user_list.save()
 
-    return old_user_list, new_user_list
+    return get_user_lists_ingredients(username=username)
 
 
 def create_user_list_ingredients(

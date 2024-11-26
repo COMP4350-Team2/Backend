@@ -219,7 +219,7 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
             username
             and body.get('list_name', None)
             and body.get('ingredient', None)
-            and body.get('amount', -1) >= 0
+            and body.get('amount', None)
             and body.get('unit', None)
         ):
             # Adding ingredient to a list
@@ -321,7 +321,7 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
             and body.get('new_amount', None)
             and body.get('new_unit', None)
         ):
-            set_list_ingredient(
+            updated_lists = set_list_ingredient(
                 username=username,
                 old_list_name=body['old_list_name'],
                 old_ingredient=body['old_ingredient'],
@@ -333,7 +333,6 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
                 new_unit=body['new_unit']
             )
 
-            updated_lists = get_user_lists_ingredients(username=username)
             serializer = UserListIngredientsSerializer(updated_lists, many=True)
         else:
             raise MissingInformation(self.MISSING_SET_INGREDIENT_MSG)
