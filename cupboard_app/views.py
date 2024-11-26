@@ -779,4 +779,4 @@ class MeasurementsViewSet(viewsets.ViewSet):
         """
         all_measurements = get_all_measurements()
         serializer = MeasurementSerializer(all_measurements, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=200)
