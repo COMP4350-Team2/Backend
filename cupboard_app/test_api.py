@@ -1511,7 +1511,7 @@ class CustomIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.post(
-            reverse(f'{API_VERSION}:create_custom_ingredient'),
+            reverse(f'{API_VERSION}:custom_ingredient'),
             json.dumps(
                 {
                     'username': self.user1.username,
@@ -1537,7 +1537,7 @@ class CustomIngredientsApi(TestCase):
         mock_decode.return_value = {**USER_VALID_TOKEN_PAYLOAD, 'sub': 'Doesn''t exist user'}
 
         response = self.client.post(
-            reverse(f'{API_VERSION}:create_custom_ingredient'),
+            reverse(f'{API_VERSION}:custom_ingredient'),
             json.dumps(
                 {
                     'ingredient': 'Beef',
@@ -1559,7 +1559,7 @@ class CustomIngredientsApi(TestCase):
 
         response = self.client.delete(
             reverse(
-                f'{API_VERSION}:delete_custom_ingredient',
+                f'{API_VERSION}:specific_custom_ingredient',
                 kwargs={
                     'ingredient': self.cust_ing.name}
             ),
@@ -1578,7 +1578,7 @@ class CustomIngredientsApi(TestCase):
 
         response = self.client.delete(
             reverse(
-                f'{API_VERSION}:delete_custom_ingredient',
+                f'{API_VERSION}:specific_custom_ingredient',
                 kwargs={
                     'ingredient': self.cust_ing.name}
             ),

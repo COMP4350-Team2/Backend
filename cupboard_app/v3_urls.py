@@ -40,14 +40,14 @@ urlpatterns = [
         CustomIngredientsViewSet.as_view(
             {'post': 'create'}
         ),
-        name='create_custom_ingredient'
+        name='custom_ingredient'
     ),
     path(
         'user/ingredients/custom/<str:ingredient>',
         CustomIngredientsViewSet.as_view(
             {'delete': 'destroy'}
         ),
-        name='delete_custom_ingredient'
+        name='specific_custom_ingredient'
     ),
     path(
         'user/lists/<str:list_name>',
