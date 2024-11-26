@@ -171,13 +171,16 @@ class CustomIngredientQueries(TestCase):
         """
         Testing delete_custom_ingredient deletes a custom ingredient from the database
         """
-        self.assertEqual(len(get_all_custom_ingredients(self.user.username)), 2)
+        self.assertEqual(len(CustomIngredient.objects.all().filter(user=self.user)), 2)
         delete_custom_ingredient(self.user.username, self.ing1.name)
-        self.assertEqual(len(get_all_custom_ingredients(self.user.username)), 1)
+        self.assertEqual(len(CustomIngredient.objects.all().filter(user=self.user)), 1)
         delete_custom_ingredient(self.user.username, 'does not exist')
-        self.assertEqual(len(get_all_custom_ingredients(self.user.username)), 1)
+        self.assertEqual(len(CustomIngredient.objects.all().filter(user=self.user)), 1)
         with self.assertRaises(User.DoesNotExist):
             delete_custom_ingredient('does not exist', self.ing1.name)
+        delete_custom_ingredient(self.user.username, self.ing2.name)
+        self.assertEqual(len(CustomIngredient.objects.all().filter(user=self.user)), 0)
+        self.assertEqual(len(delete_custom_ingredient(self.user.username, self.ing2.name)), 0)
 
 
 class ListNameQueries(TestCase):

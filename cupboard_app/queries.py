@@ -92,9 +92,8 @@ def delete_custom_ingredient(
         ingredient: Ingredient name.
 
     Returns:
-        True if ingredient was deleted, False if it wasn't.
+        QuerySet of all the user's remaining custom ingredients.
     """
-    result = False
     user = User.objects.get(username=username)
     query = CustomIngredient.objects.all().filter(
         user=user,
@@ -103,9 +102,8 @@ def delete_custom_ingredient(
 
     if query.exists():
         query.get().delete()
-        result = True
 
-    return result
+    return get_all_custom_ingredients(username)
 
 
 def get_all_custom_ingredients(username: str) -> QuerySet:

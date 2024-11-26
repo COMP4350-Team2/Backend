@@ -36,11 +36,18 @@ urlpatterns = [
         name='add_set_ingredients'
     ),
     path(
-        'user/customingredients',
+        'user/ingredients/custom',
         CustomIngredientsViewSet.as_view(
-            {'post': 'create', 'delete': 'destroy'}
+            {'post': 'create'}
         ),
-        name='add_delete_customingredient'
+        name='create_custom_ingredient'
+    ),
+    path(
+        'user/ingredients/custom/<str:ingredient>',
+        CustomIngredientsViewSet.as_view(
+            {'delete': 'destroy'}
+        ),
+        name='delete_custom_ingredient'
     ),
     path(
         'user/lists/<str:list_name>',

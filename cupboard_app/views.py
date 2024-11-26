@@ -27,7 +27,6 @@ from cupboard_app.queries import (
     delete_custom_ingredient,
     get_all_ingredients,
     get_all_measurements,
-    get_user,
     get_user_lists_ingredients,
     get_specific_user_lists_ingredients,
     add_list_ingredient,
@@ -706,24 +705,24 @@ class MeasurementsViewSet(viewsets.ViewSet):
 
 @extend_schema(tags=['CustomIngredients'])
 class CustomIngredientsViewSet(viewsets.ViewSet):
-    MISSING_USER_INFO = 'User missing. Unable to create new custom ingredient.'
+    MISSING_ING = 'Missing ingredient and type in message body.'
 
     @extend_schema(
         request=None,
         responses={
-            200: CustomIngredientSerializer,
+            201: CustomIngredientSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
         },
         examples=[
             OpenApiExample(
-                name='Custom Ingredient Created/Deleted.',
+                name='Custom Ingredient Created',
                 value={'username': 'teacup', 'name': 'Beef', 'type': 'Meat'},
-                status_codes=[200]
+                status_codes=[201]
             ),
             OpenApiExample(
-                name='Unable to Create/Delete Custom Ingredient',
-                value={'message': MISSING_USER_INFO},
+                name='Required Value Missing',
+                value={'message': MISSING_ING},
                 status_codes=[400]
             )
         ]
@@ -736,35 +735,53 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
         body = request.data
-        user = get_user(username)
-        if username and user:
+        if username:
             custom_ingredient = create_custom_ingredient(
                 username=username,
                 name=body['ingredient'],
                 type=body['type']
             )
         else:
-            raise MissingInformation(self.MISSING_USER_INFO)
+            raise MissingInformation(self.MISSING_ING)
 
         serializer = CustomIngredientSerializer(custom_ingredient)
-        return Response(serializer.data, status=200)
+        return Response(serializer.data, status=201)
 
-    def destroy(self, request: Response) -> Response:
+    @extend_schema(
+        request=None,
+        responses={
+            200: CustomIngredientSerializer,
+            400: MessageSerializer,
+            401: auth_failed_response,
+        },
+        examples=[
+            OpenApiExample(
+                name='Custom Ingredient Deleted',
+                value={'username': 'teacup', 'name': 'Beef', 'type': 'Meat'},
+                status_codes=[200]
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_ING},
+                status_codes=[400]
+            )
+        ]
+    )
+    def destroy(self, request: Response, ingredient: str = None) -> Response:
         """
         Deletes a custom ingredient for the user.
         Returns the list of remaining custom ingredients for the user
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
-        body = request.data
 
-        if username:
-            delete_custom_ingredient(
+        if ingredient:
+            remaining_custom = delete_custom_ingredient(
                 username=username,
-                ingredient=body['ingredient']
+                ingredient=ingredient
             )
         else:
-            raise MissingInformation(self.MISSING_USER_INFO)
+            raise MissingInformation(self.MISSING_ING)
 
-        data = {'message': 'Deleted'}
-        return Response(data, status=200)
+        serializer = CustomIngredientSerializer(remaining_custom, many=True)
+        return Response(serializer.data)
