@@ -423,13 +423,16 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
                 value=GROCERY_LIST,
                 status_codes=[200],
                 response_only=True
-            )
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_DELETE_INGREDIENT_MSG},
+                status_codes=[400],
+                response_only=True
+            ),
         ]
     )
-    def destroy(
-        self,
-        request: Request
-    ) -> Response:
+    def destroy(self, request: Request) -> Response:
         """
         Deletes an ingredient from a specified user's list.
         """
