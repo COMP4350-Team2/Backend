@@ -2,6 +2,7 @@ import os
 import json
 from time import time
 from unittest.mock import patch
+from urllib.parse import urlencode
 
 from django.test import TestCase
 from django.urls.exceptions import NoReverseMatch
@@ -13,7 +14,8 @@ from cupboard_app.models import (
     ListName,
     Measurement,
     User,
-    UserListIngredients
+    UserListIngredients,
+    CustomIngredient
 )
 from cupboard_app.queries import (
     DOES_NOT_EXIST,
@@ -358,12 +360,11 @@ class ChangeUserListIngredientsApi(TestCase):
         self.list_name1 = ListName.objects.create(list_name=GROCERY_LIST_NAME)
         self.list_name2 = ListName.objects.create(list_name=PANTRY_LIST_NAME)
         self.list_ing1 = {
-            'ingredient_id': self.ing1.id,
             'ingredient_name': self.ing1.name,
             'ingredient_type': self.ing1.type,
             'amount': 500,
-            'unit_id': self.unit1.id,
-            'unit': self.unit1.unit
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
         }
         UserListIngredients.objects.create(
             user=self.user1,
@@ -544,6 +545,7 @@ class AddIngredientUserListIngredientsApi(TestCase):
     list_name1 = None
     list_name2 = None
     list_ing1 = None
+    list_cust_ing1 = None
 
     def setUp(self):
         """
@@ -555,6 +557,11 @@ class AddIngredientUserListIngredientsApi(TestCase):
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type2')
+        self.cust_ing1 = CustomIngredient.objects.create(
+            user=self.user1,
+            name='test_ingredient1',
+            type='test_type1'
+        )
         self.unit1 = Measurement.objects.create(unit='test_unit1')
         self.list_name1 = ListName.objects.create(list_name=GROCERY_LIST_NAME)
         self.list_name2 = ListName.objects.create(list_name=PANTRY_LIST_NAME)
@@ -564,12 +571,18 @@ class AddIngredientUserListIngredientsApi(TestCase):
             ingredients=[]
         )
         self.list_ing1 = {
-            'ingredient_id': self.ing1.id,
             'ingredient_name': self.ing1.name,
             'ingredient_type': self.ing1.type,
             'amount': 5,
-            'unit_id': self.unit1.id,
-            'unit': self.unit1.unit
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
+        }
+        self.list_cust_ing1 = {
+            'ingredient_name': self.cust_ing1.name,
+            'ingredient_type': self.cust_ing1.type,
+            'amount': 5,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': True
         }
 
     @patch.object(TokenBackend, 'decode')
@@ -580,13 +593,14 @@ class AddIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.post(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
                     'ingredient': self.ing1.name,
                     'amount': self.list_ing1.get('amount'),
-                    'unit': self.unit1.unit
+                    'unit': self.unit1.unit,
+                    'is_custom_ingredient': False
                 }
             ),
             content_type='application/json',
@@ -604,6 +618,33 @@ class AddIngredientUserListIngredientsApi(TestCase):
         ).first()
         self.assertEqual(modified_list.ingredients, [self.list_ing1])
 
+        # Test adding custom ingredient to the list
+        response = self.client.post(
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
+            json.dumps(
+                {
+                    'list_name': self.list_name1.list_name,
+                    'ingredient': self.list_cust_ing1.get('ingredient_name'),
+                    'amount': self.list_cust_ing1.get('amount'),
+                    'unit': self.list_cust_ing1.get('unit'),
+                    'is_custom_ingredient': self.list_cust_ing1.get('is_custom_ingredient')
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        # Ensures correct response given by view response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('ingredients'), [self.list_ing1, self.list_cust_ing1])
+
+        # Ensures the item was actually added to the list
+        modified_list = UserListIngredients.objects.filter(
+            user__username=self.user1.username,
+            list_name__list_name=self.list_name1.list_name
+        ).first()
+        self.assertEqual(modified_list.ingredients, [self.list_ing1, self.list_cust_ing1])
+
     @patch.object(TokenBackend, 'decode')
     def test_add_ingredient_to_list_missing_data(self, mock_decode):
         """
@@ -613,7 +654,7 @@ class AddIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.post(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
@@ -649,13 +690,14 @@ class AddIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.post(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'list_name': 'Does not exist',
                     'ingredient': self.ing1.name,
                     'amount': 5,
-                    'unit': self.unit1.unit
+                    'unit': self.unit1.unit,
+                    'is_custom_ingredient': False
                 }
             ),
             content_type='application/json',
@@ -680,13 +722,14 @@ class AddIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.post(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'list_name': self.list_name1.list_name,
                     'ingredient': 'test_ingredient_fake',
                     'amount': 5,
-                    'unit': self.unit1.unit
+                    'unit': self.unit1.unit,
+                    'is_custom_ingredient': False
                 }
             ),
             content_type='application/json',
@@ -720,6 +763,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
     list_name2 = None
     list_ing1 = None
     list_ing2 = None
+    list_cust_ing1 = None
 
     def setUp(self):
         """
@@ -731,25 +775,35 @@ class SetIngredientUserListIngredientsApi(TestCase):
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type2')
+        self.cust_ing1 = CustomIngredient.objects.create(
+            user=self.user1,
+            name='test_ingredient1',
+            type='test_type1'
+        )
         self.unit1 = Measurement.objects.create(unit='test_unit1')
         self.unit2 = Measurement.objects.create(unit='test_unit2')
         self.list_name1 = ListName.objects.create(list_name=GROCERY_LIST_NAME)
         self.list_name2 = ListName.objects.create(list_name=PANTRY_LIST_NAME)
         self.list_ing1 = {
-            'ingredient_id': self.ing1.id,
             'ingredient_name': self.ing1.name,
             'ingredient_type': self.ing1.type,
             'amount': 50,
-            'unit_id': self.unit1.id,
-            'unit': self.unit1.unit
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
         }
         self.list_ing2 = {
-            'ingredient_id': self.ing2.id,
             'ingredient_name': self.ing2.name,
             'ingredient_type': self.ing2.type,
             'amount': 50,
-            'unit_id': self.unit1.id,
-            'unit': self.unit1.unit
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
+        }
+        self.list_cust_ing1 = {
+            'ingredient_name': self.cust_ing1.name,
+            'ingredient_type': self.cust_ing1.type,
+            'amount': 50,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': True
         }
         UserListIngredients.objects.create(
             user=self.user1,
@@ -775,17 +829,19 @@ class SetIngredientUserListIngredientsApi(TestCase):
             'amount': self.list_ing1.get('amount') + 10
         }
         response = self.client.patch(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': self.list_name1.list_name,
                     'old_ingredient': self.list_ing1.get('ingredient_name'),
                     'old_amount': self.list_ing1.get('amount'),
                     'old_unit': self.list_ing1.get('unit'),
+                    'old_is_custom_ingredient': self.list_ing1.get('is_custom_ingredient'),
                     'new_list_name': self.list_name1.list_name,
                     'new_ingredient': updated_ing1.get('ingredient_name'),
                     'new_amount': updated_ing1.get('amount'),
-                    'new_unit': updated_ing1.get('unit')
+                    'new_unit': updated_ing1.get('unit'),
+                    'new_is_custom_ingredient': updated_ing1.get('is_custom_ingredient')
                 }
             ),
             content_type='application/json',
@@ -805,17 +861,19 @@ class SetIngredientUserListIngredientsApi(TestCase):
 
         # Changing unit of an ingredient
         response = self.client.patch(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': self.list_name1.list_name,
                     'old_ingredient': updated_ing1.get('ingredient_name'),
                     'old_amount': updated_ing1.get('amount'),
                     'old_unit': updated_ing1.get('unit'),
+                    'old_is_custom_ingredient': updated_ing1.get('is_custom_ingredient'),
                     'new_list_name': self.list_name1.list_name,
                     'new_ingredient': updated_ing1.get('ingredient_name'),
                     'new_amount': updated_ing1.get('amount'),
-                    'new_unit': self.unit2.unit
+                    'new_unit': self.unit2.unit,
+                    'new_is_custom_ingredient': updated_ing1.get('is_custom_ingredient')
                 }
             ),
             content_type='application/json',
@@ -824,7 +882,6 @@ class SetIngredientUserListIngredientsApi(TestCase):
 
         updated_ing1 = {
             **updated_ing1,
-            'unit_id': self.unit2.id,
             'unit': self.unit2.unit
         }
 
@@ -841,17 +898,19 @@ class SetIngredientUserListIngredientsApi(TestCase):
 
         # Changing unit and amount of an ingredient
         response = self.client.patch(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': self.list_name1.list_name,
                     'old_ingredient': updated_ing1.get('ingredient_name'),
                     'old_amount': updated_ing1.get('amount'),
                     'old_unit': updated_ing1.get('unit'),
+                    'old_is_custom_ingredient': updated_ing1.get('is_custom_ingredient'),
                     'new_list_name': self.list_name1.list_name,
                     'new_ingredient': self.list_ing1.get('ingredient_name'),
                     'new_amount': self.list_ing1.get('amount'),
-                    'new_unit': self.list_ing1.get('unit')
+                    'new_unit': self.list_ing1.get('unit'),
+                    'new_is_custom_ingredient': self.list_ing1.get('is_custom_ingredient')
                 }
             ),
             content_type='application/json',
@@ -877,22 +936,24 @@ class SetIngredientUserListIngredientsApi(TestCase):
             list_name=list_name3,
             ingredients=[
                 self.list_ing1,
-                {**self.list_ing1, 'unit_id': self.unit2.id, 'unit': self.unit2.unit}
+                {**self.list_ing1, 'unit': self.unit2.unit}
             ]
         )
 
         response = self.client.patch(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': list_name3.list_name,
                     'old_ingredient': self.list_ing1.get('ingredient_name'),
                     'old_amount': self.list_ing1.get('amount'),
                     'old_unit': self.unit2.unit,
+                    'old_is_custom_ingredient': self.list_ing1.get('is_custom_ingredient'),
                     'new_list_name': list_name3.list_name,
                     'new_ingredient': self.list_ing1.get('ingredient_name'),
                     'new_amount': self.list_ing1.get('amount'),
                     'new_unit': self.list_ing1.get('unit'),
+                    'new_is_custom_ingredient': self.list_ing1.get('is_custom_ingredient')
                 }
             ),
             content_type='application/json',
@@ -915,6 +976,38 @@ class SetIngredientUserListIngredientsApi(TestCase):
         ).first()
         self.assertEqual(modified_list.ingredients, [updated_ing1])
 
+        # Set custom ingredient
+        response = self.client.patch(
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
+            json.dumps(
+                {
+                    'old_list_name': list_name3.list_name,
+                    'old_ingredient': updated_ing1.get('ingredient_name'),
+                    'old_amount': updated_ing1.get('amount'),
+                    'old_unit': updated_ing1.get('unit'),
+                    'old_is_custom_ingredient': updated_ing1.get('is_custom_ingredient'),
+                    'new_list_name': list_name3.list_name,
+                    'new_ingredient': self.list_cust_ing1.get('ingredient_name'),
+                    'new_amount': self.list_cust_ing1.get('amount'),
+                    'new_unit': self.list_cust_ing1.get('unit'),
+                    'new_is_custom_ingredient': self.list_cust_ing1.get('is_custom_ingredient')
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        result = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result[2].get('ingredients'), [self.list_cust_ing1])
+
+        modified_list = UserListIngredients.objects.filter(
+            user__username=self.user1.username,
+            list_name__list_name=list_name3
+        ).first()
+        self.assertEqual(modified_list.ingredients, [self.list_cust_ing1])
+
     @patch.object(TokenBackend, 'decode')
     def test_set_ingredient_not_in_list(self, mock_decode):
         """
@@ -923,17 +1016,19 @@ class SetIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.patch(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': self.list_name2.list_name,
                     'old_ingredient': self.list_ing2.get('ingredient_name'),
                     'old_amount': 0,
                     'old_unit': self.list_ing2.get('unit'),
+                    'old_is_custom_ingredient': self.list_ing2.get('is_custom_ingredient'),
                     'new_list_name': self.list_name2.list_name,
                     'new_ingredient': self.list_ing2.get('ingredient_name'),
                     'new_amount': self.list_ing2.get('amount'),
-                    'new_unit': self.list_ing2.get('unit')
+                    'new_unit': self.list_ing2.get('unit'),
+                    'new_is_custom_ingredient': self.list_ing2.get('is_custom_ingredient')
                 }
             ),
             content_type='application/json',
@@ -962,7 +1057,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.patch(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': self.list_name2.list_name,
@@ -999,17 +1094,19 @@ class SetIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.patch(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': 'Does not exist',
                     'old_ingredient': self.list_ing2.get('ingredient_name'),
                     'old_amount': 0,
                     'old_unit': self.list_ing2.get('unit'),
+                    'old_is_custom_ingredient': self.list_ing2.get('is_custom_ingredient'),
                     'new_list_name': 'Does not exist',
                     'new_ingredient': self.list_ing2.get('ingredient_name'),
                     'new_amount': self.list_ing2.get('amount'),
-                    'new_unit': self.list_ing2.get('unit')
+                    'new_unit': self.list_ing2.get('unit'),
+                    'new_is_custom_ingredient': self.list_ing2.get('is_custom_ingredient')
                 }
             ),
             content_type='application/json',
@@ -1034,17 +1131,19 @@ class SetIngredientUserListIngredientsApi(TestCase):
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
         response = self.client.patch(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': self.list_name2.list_name,
                     'old_ingredient': self.list_ing2.get('ingredient_name'),
                     'old_amount': 0,
                     'old_unit': self.list_ing2.get('unit'),
+                    'old_is_custom_ingredient': self.list_ing2.get('is_custom_ingredient'),
                     'new_list_name': self.list_name2.list_name,
                     'new_ingredient': 'Does not exist',
                     'new_amount': self.list_ing2.get('amount'),
-                    'new_unit': self.list_ing2.get('unit')
+                    'new_unit': self.list_ing2.get('unit'),
+                    'new_is_custom_ingredient': self.list_ing2.get('is_custom_ingredient')
                 }
             ),
             content_type='application/json',
@@ -1075,17 +1174,19 @@ class SetIngredientUserListIngredientsApi(TestCase):
 
         # Full amount of the ingredient moved from one list to another list
         response = self.client.patch(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': self.list_name1.list_name,
                     'old_ingredient': self.list_ing1.get('ingredient_name'),
                     'old_amount': self.list_ing1.get('amount'),
                     'old_unit': self.list_ing1.get('unit'),
+                    'old_is_custom_ingredient': self.list_ing1.get('is_custom_ingredient'),
                     'new_list_name': self.list_name2.list_name,
                     'new_ingredient': self.list_ing1.get('ingredient_name'),
                     'new_amount': self.list_ing1.get('amount'),
                     'new_unit': self.list_ing1.get('unit'),
+                    'new_is_custom_ingredient': self.list_ing1.get('is_custom_ingredient')
                 }
             ),
             content_type='application/json',
@@ -1119,17 +1220,19 @@ class SetIngredientUserListIngredientsApi(TestCase):
         }
 
         response = self.client.patch(
-            reverse(f'{API_VERSION}:add_set_ingredients'),
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
             json.dumps(
                 {
                     'old_list_name': self.list_name2.list_name,
                     'old_ingredient': updated_ing1.get('ingredient_name'),
                     'old_amount': updated_ing1.get('amount'),
                     'old_unit': updated_ing1.get('unit'),
+                    'old_is_custom_ingredient': updated_ing1.get('is_custom_ingredient'),
                     'new_list_name': self.list_name1.list_name,
                     'new_ingredient': updated_ing1.get('ingredient_name'),
                     'new_amount': updated_ing1.get('amount'),
                     'new_unit': updated_ing1.get('unit'),
+                    'new_is_custom_ingredient': updated_ing1.get('is_custom_ingredient')
                 }
             ),
             content_type='application/json',
@@ -1156,6 +1259,47 @@ class SetIngredientUserListIngredientsApi(TestCase):
         ).first()
         self.assertEqual(modified_list.ingredients, [updated_ing1])
 
+        # Test moving custom ingredient
+        response = self.client.patch(
+            reverse(f'{API_VERSION}:edit_user_list_ingredients'),
+            json.dumps(
+                {
+                    'old_list_name': self.list_name2.list_name,
+                    'old_ingredient': updated_ing1.get('ingredient_name'),
+                    'old_amount': updated_ing1.get('amount'),
+                    'old_unit': updated_ing1.get('unit'),
+                    'old_is_custom_ingredient': updated_ing1.get('is_custom_ingredient'),
+                    'new_list_name': self.list_name1.list_name,
+                    'new_ingredient': self.list_cust_ing1.get('ingredient_name'),
+                    'new_amount': self.list_cust_ing1.get('amount'),
+                    'new_unit': self.list_cust_ing1.get('unit'),
+                    'new_is_custom_ingredient': self.list_cust_ing1.get('is_custom_ingredient')
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        # Ensures correct response given by view response
+        result = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0].get('ingredients'), [updated_ing1, self.list_cust_ing1])
+        self.assertEqual(result[1].get('ingredients'), [])
+
+        # Ensures the item was actually added to the list and removed from the other
+        modified_list = UserListIngredients.objects.filter(
+            user__username=self.user1.username,
+            list_name__list_name=self.list_name1.list_name
+        ).first()
+        self.assertEqual(modified_list.ingredients, [updated_ing1, self.list_cust_ing1])
+
+        modified_list = UserListIngredients.objects.filter(
+            user__username=self.user1.username,
+            list_name__list_name=self.list_name2.list_name
+        ).first()
+        self.assertEqual(modified_list.ingredients, [])
+
 
 class DeleteIngredientUserListIngredientsApi(TestCase):
     user1 = None
@@ -1164,7 +1308,9 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
     unit1 = None
     list_name1 = None
     list_name2 = None
+    list_name3 = None
     list_ing1 = None
+    list_cust_ing1 = None
 
     def setUp(self):
         """
@@ -1176,16 +1322,28 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type2')
+        self.cust_ing1 = CustomIngredient.objects.create(
+            user=self.user1,
+            name='test_ingredient1',
+            type='test_type1'
+        )
         self.unit1 = Measurement.objects.create(unit='test_unit1')
         self.list_name1 = ListName.objects.create(list_name=GROCERY_LIST_NAME)
         self.list_name2 = ListName.objects.create(list_name=PANTRY_LIST_NAME)
+        self.list_name3 = ListName.objects.create(list_name='custom_list')
         self.list_ing1 = {
-            'ingredient_id': self.ing1.id,
             'ingredient_name': self.ing1.name,
             'ingredient_type': self.ing1.type,
             'amount': 5,
-            'unit_id': self.unit1.id,
-            'unit': self.unit1.unit
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
+        }
+        self.list_cust_ing1 = {
+            'ingredient_name': self.cust_ing1.name,
+            'ingredient_type': self.cust_ing1.type,
+            'amount': 5,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': True
         }
         UserListIngredients.objects.create(
             user=self.user1,
@@ -1197,6 +1355,11 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
             list_name=self.list_name2,
             ingredients=[]
         )
+        UserListIngredients.objects.create(
+            user=self.user1,
+            list_name=self.list_name3,
+            ingredients=[self.list_cust_ing1]
+        )
 
     @patch.object(TokenBackend, 'decode')
     def test_remove_ingredient_from_list(self, mock_decode):
@@ -1205,14 +1368,16 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
+        query_params = {
+            'list_name': self.list_name1.list_name,
+            'ingredient': self.ing1.name,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
+        }
         response = self.client.delete(
-            reverse(
-                f'{API_VERSION}:delete_ingredient',
-                kwargs={
-                    'list_name': self.list_name1.list_name,
-                    'ingredient': self.ing1.name,
-                    'unit': self.unit1.unit
-                }
+            '{base_url}?{query_string}'.format(
+                base_url=reverse(f'{API_VERSION}:edit_user_list_ingredients'),
+                query_string=urlencode(query_params)
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -1231,9 +1396,44 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
 
         # Check the database values as well
         user_lists = UserListIngredients.objects.filter(user__username=self.user1.username)
-        self.assertEqual(len(user_lists), 2)
+        self.assertEqual(len(user_lists), 3)
         self.assertEqual(user_lists[0].ingredients, [])
         self.assertEqual(user_lists[1].ingredients, [])
+        self.assertEqual(user_lists[2].ingredients, [self.list_cust_ing1])
+
+        # Test deleting a custom ingredient
+        query_params = {
+            'list_name': self.list_name3.list_name,
+            'ingredient': self.list_cust_ing1.get('ingredient_name'),
+            'unit': self.list_cust_ing1.get('unit'),
+            'is_custom_ingredient': self.list_cust_ing1.get('is_custom_ingredient')
+        }
+        response = self.client.delete(
+            '{base_url}?{query_string}'.format(
+                base_url=reverse(f'{API_VERSION}:edit_user_list_ingredients'),
+                query_string=urlencode(query_params)
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        # Ensures remove is working normally
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'list_name': self.list_name3.list_name,
+                'ingredients': []
+            }
+        )
+
+        # Check the database values as well
+        user_lists = UserListIngredients.objects.filter(user__username=self.user1.username)
+        self.assertEqual(len(user_lists), 3)
+        self.assertEqual(user_lists[0].ingredients, [])
+        self.assertEqual(user_lists[1].ingredients, [])
+        self.assertEqual(user_lists[2].ingredients, [])
 
     @patch.object(TokenBackend, 'decode')
     def test_remove_ingredient_from_empty_list(self, mock_decode):
@@ -1242,14 +1442,16 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
+        query_params = {
+            'list_name': self.list_name2.list_name,
+            'ingredient': self.ing1.name,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
+        }
         response = self.client.delete(
-            reverse(
-                f'{API_VERSION}:delete_ingredient',
-                kwargs={
-                    'list_name': self.list_name2.list_name,
-                    'ingredient': self.ing1.name,
-                    'unit': self.unit1.unit
-                }
+            '{base_url}?{query_string}'.format(
+                base_url=reverse(f'{API_VERSION}:edit_user_list_ingredients'),
+                query_string=urlencode(query_params)
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -1268,9 +1470,10 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
 
         # Check the database values as well
         user_lists = UserListIngredients.objects.filter(user__username=self.user1.username)
-        self.assertEqual(len(user_lists), 2)
+        self.assertEqual(len(user_lists), 3)
         self.assertEqual(user_lists[0].ingredients, [self.list_ing1])
         self.assertEqual(user_lists[1].ingredients, [])
+        self.assertEqual(user_lists[2].ingredients, [self.list_cust_ing1])
 
     @patch.object(TokenBackend, 'decode')
     def test_remove_ingredient_from_list_incorrect_list(self, mock_decode):
@@ -1279,14 +1482,16 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
+        query_params = {
+            'list_name': 'Does not exist',
+            'ingredient': self.ing1.name,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
+        }
         response = self.client.delete(
-            reverse(
-                f'{API_VERSION}:delete_ingredient',
-                kwargs={
-                    'list_name': 'Does not exist',
-                    'ingredient': self.ing1.name,
-                    'unit': self.unit1.unit
-                }
+            '{base_url}?{query_string}'.format(
+                base_url=reverse(f'{API_VERSION}:edit_user_list_ingredients'),
+                query_string=urlencode(query_params)
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -1298,9 +1503,10 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
 
         # Ensures the list items have not been changed
         user_lists = UserListIngredients.objects.filter(user__username=self.user1.username)
-        self.assertEqual(len(user_lists), 2)
+        self.assertEqual(len(user_lists), 3)
         self.assertEqual(user_lists[0].ingredients, [self.list_ing1])
         self.assertEqual(user_lists[1].ingredients, [])
+        self.assertEqual(user_lists[2].ingredients, [self.list_cust_ing1])
 
     @patch.object(TokenBackend, 'decode')
     def test_remove_ingredient_from_list_nonexisting_ingredient(self, mock_decode):
@@ -1309,14 +1515,16 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
+        query_params = {
+            'list_name': self.list_name2.list_name,
+            'ingredient': 'nonexisting_ingredient',
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
+        }
         response = self.client.delete(
-            reverse(
-                f'{API_VERSION}:delete_ingredient',
-                kwargs={
-                    'list_name': self.list_name2.list_name,
-                    'ingredient': 'nonexisting_ingredient',
-                    'unit': self.unit1.unit
-                }
+            '{base_url}?{query_string}'.format(
+                base_url=reverse(f'{API_VERSION}:edit_user_list_ingredients'),
+                query_string=urlencode(query_params)
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -1334,21 +1542,33 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         )
 
         user_lists = UserListIngredients.objects.filter(user__username=self.user1.username)
-        self.assertEqual(len(user_lists), 2)
+        self.assertEqual(len(user_lists), 3)
         self.assertEqual(user_lists[0].ingredients, [self.list_ing1])
         self.assertEqual(user_lists[1].ingredients, [])
+        self.assertEqual(user_lists[2].ingredients, [self.list_cust_ing1])
 
 
 class GetAllIngredientsApi(TestCase):
+    user1 = None
     ing1 = None
     ing2 = None
+    cust_ing1 = None
 
     def setUp(self):
         """
         Sets up a test database with test values
         """
+        self.user1 = User.objects.create(
+            username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
+        )
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type2')
+        self.cust_ing1 = CustomIngredient.objects.create(
+            user=self.user1,
+            name='test_ingredient1',
+            type='test_type1'
+        )
 
     @patch.object(TokenBackend, 'decode')
     def test_get_all_ingredients(self, mock_decode):
@@ -1366,10 +1586,19 @@ class GetAllIngredientsApi(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
-            [
-                {'name': self.ing1.name, 'type': self.ing1.type},
-                {'name': self.ing2.name, 'type': self.ing2.type}
-            ]
+            {
+                'common_ingredients': [
+                    {'name': self.ing1.name, 'type': self.ing1.type},
+                    {'name': self.ing2.name, 'type': self.ing2.type}
+                ],
+                'custom_ingredients': [
+                    {
+                        'user': self.user1.username,
+                        'name': self.cust_ing1.name,
+                        'type': self.cust_ing1.type
+                    }
+                ]
+            }
         )
 
 

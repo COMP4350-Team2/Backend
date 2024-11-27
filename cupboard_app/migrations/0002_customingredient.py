@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
                         verbose_name='ID'
                     )
                 ),
-                ('name', models.CharField(max_length=30, unique=True)),
+                ('name', models.CharField(max_length=30)),
                 ('type', models.CharField(max_length=30)),
             ],
         ),
