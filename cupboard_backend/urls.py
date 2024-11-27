@@ -18,11 +18,11 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework.versioning import NamespaceVersioning
 
-from cupboard_app import v2_urls
+from cupboard_app import v3_urls
 
 versioning_class = NamespaceVersioning
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v2/', include((v2_urls, 'v2'), namespace='v2'))
+    path('api/v3/', include((v3_urls, 'v3'), namespace='v3'))
 ]

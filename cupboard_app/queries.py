@@ -281,7 +281,9 @@ def create_list_ingredient(
         ingredient_object = CustomIngredient.objects.get(name=ingredient, user__id=user_id)
     except CustomIngredient.DoesNotExist:
         ingredient_object = Ingredient.objects.get(name=ingredient)
+
     unit = Measurement.objects.get(unit=unit)
+
     if isinstance(amount, int) or isinstance(amount, float):
         if (amount < 10000):
             ingredient_dict = {
@@ -399,13 +401,15 @@ def add_list_ingredient(
 
 def set_list_ingredient(
     username: str,
-    list_name: str,
+    old_list_name: str,
     old_ingredient: str,
+    old_amount: int | float,
     old_unit: str,
+    new_list_name: str,
     new_ingredient: str,
     new_amount: int | float,
     new_unit: str
-) -> UserListIngredients:
+) -> QuerySet:
     """
     Sets an ingredient's unit and amount in the user's list.
 
@@ -414,42 +418,84 @@ def set_list_ingredient(
 
     Args:
         username: User's username
-        list_name: Name of the list to update
+        old_list_name: Name of the list to delete from
         old_ingredient: Name of the ingredient to update
+        old_amount: Quantity of the ingredient to remove
         old_unit: The unit of measure for the ingredient to update
+        new_list_name: Name of the list to update
         new_ingredient: Name of the ingredient to change to
         new_amount: Quantity of the ingredient to change to
         new_unit: The unit of measure for the ingredient to change to
 
     Returns:
-        The updated list.
+        All of the user's updated lists.
     """
-    user_list = UserListIngredients.objects.filter(
+    # Create the ingredient to put into list
+    list_ingredient = create_list_ingredient(
+        ingredient=new_ingredient,
+        amount=new_amount,
+        unit=new_unit
+    )
+
+    # Get the list to set/remove ingredient from
+    old_user_list = UserListIngredients.objects.filter(
         user__username=username,
-        list_name__list_name=list_name
+        list_name__list_name=old_list_name
     ).first()
 
-    if user_list:
-        # Deletes the ingredient from the list
-        user_list = delete_list_ingredient(
-            username=username,
-            list_name=list_name,
-            ingredient=old_ingredient,
-            unit=old_unit
-        )
+    # Get the list to set/move ingredient to
+    new_user_list = UserListIngredients.objects.filter(
+        user__username=username,
+        list_name__list_name=new_list_name
+    ).first()
 
-        # Add the ingredient to the list
-        user_list = add_list_ingredient(
-            username=username,
-            list_name=list_name,
-            ingredient=new_ingredient,
-            amount=new_amount,
-            unit=new_unit
-        )
-    else:
+    if not old_user_list or not new_user_list:
         raise ValueError(INVALID_USER_LIST)
 
-    return user_list
+    # Update the old list
+    if old_user_list.ingredients:
+        for ingredient in old_user_list.ingredients:
+            if (
+                ingredient['ingredient_name'] == old_ingredient
+                and ingredient['unit'] == old_unit
+            ):
+                if ingredient['amount'] <= old_amount:
+                    old_user_list.ingredients.remove(ingredient)
+                else:
+                    ingredient['amount'] -= old_amount
+
+    if old_list_name == new_list_name:
+        # Same list so update the old_user_list
+        new_user_list = old_user_list
+        old_user_list = None
+    else:
+        # Different list so save the old_user_list
+        # and continue with the new_user_list
+        old_user_list.save()
+
+    # Update the new list
+    if not new_user_list.ingredients:
+        # Empty list so set the list
+        new_user_list.ingredients = [list_ingredient]
+    elif not any(
+        ingredient['ingredient_name'] == new_ingredient
+        and ingredient['unit'] == new_unit
+        for ingredient in new_user_list.ingredients
+    ):
+        # ingredient does not exist so insert
+        new_user_list.ingredients.append(list_ingredient)
+    else:
+        # ingredient exists so add or set the ingredient
+        for ingredient in new_user_list.ingredients:
+            if (
+                ingredient['ingredient_name'] == new_ingredient
+                and ingredient['unit'] == new_unit
+            ):
+                ingredient['amount'] += new_amount
+
+    new_user_list.save()
+
+    return get_user_lists_ingredients(username=username)
 
 
 def create_user_list_ingredients(

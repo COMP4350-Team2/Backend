@@ -180,8 +180,8 @@ REST_FRAMEWORK = {
     },
     'EXCEPTION_HANDLER': 'cupboard_app.views.api_exception_handler',
     # API version
-    'ALLOWED_VERSIONS': ['v2'],
-    'DEFAULT_VERSION': 'v2',
+    'ALLOWED_VERSIONS': ['v3'],
+    'DEFAULT_VERSION': 'v3',
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
 }
 

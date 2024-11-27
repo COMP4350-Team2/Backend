@@ -9,17 +9,14 @@ from drf_spectacular.utils import (
 from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
 from rest_framework import viewsets
-from rest_framework.views import APIView, exception_handler
+from rest_framework.views import exception_handler
 
 from utils.api_helper import (
     get_auth_username_from_payload,
     get_auth_email_from_payload
 )
-from utils.permissions import HasMessagesPermission
 from cupboard_app.exceptions import MissingInformation
-from cupboard_app.models import Message
 from cupboard_app.queries import (
     add_default_user_lists,
     create_user,
@@ -154,81 +151,6 @@ def api_exception_handler(exc, context=None) -> Response:
     return response
 
 
-@extend_schema(tags=['Messages'])
-class PublicMessageAPIView(APIView):
-    permission_classes = [AllowAny]
-    text = "Hello from a public endpoint! You don't need to be authenticated to see this."
-
-    @extend_schema(
-        request=None,
-        responses=MessageSerializer,
-        examples=[
-            OpenApiExample(name='Success', value={'message': text}, status_codes=[200])
-        ]
-    )
-    def get(self, request: Request) -> Response:
-        """
-        This is an example of a public message API request.
-        """
-        message = Message(message=self.text)
-        serializer = MessageSerializer(message)
-        return Response(serializer.data)
-
-
-@extend_schema(tags=['Messages'])
-class PrivateMessageAPIView(APIView):
-    text = 'Hello from a private endpoint! You need to be authenticated to see this.'
-
-    @extend_schema(
-        request=None,
-        responses={
-            200: MessageSerializer,
-            401: auth_failed_response
-        },
-        examples=[
-            OpenApiExample(name='Success', value={'message': text}, status_codes=[200])
-        ]
-    )
-    def get(self, request: Request) -> Response:
-        """
-        This is an example of a private message API request.
-        A valid access token is required to access this route.
-        """
-        message = Message(message=self.text)
-        serializer = MessageSerializer(message)
-        return Response(serializer.data)
-
-
-@extend_schema(tags=['Messages'])
-class PrivateScopedMessageAPIView(APIView):
-    permission_classes = [HasMessagesPermission]
-    text = (
-        'Hello from a private endpoint! You need to be authenticated '
-        'and have a permission of read:messages to see this.'
-    )
-
-    @extend_schema(
-        request=None,
-        responses={
-            200: MessageSerializer,
-            401: auth_failed_response,
-            403: auth_no_permissions_response
-        },
-        examples=[
-            OpenApiExample(name='Success', value={'message': text}, status_codes=[200])
-        ]
-    )
-    def get(self, request: Request) -> Response:
-        """
-        This is an example of a private scoped message API request.
-        A valid access token and an appropriate permissions
-        are required to access this route.
-        """
-        message = Message(message=self.text)
-        serializer = MessageSerializer(message)
-        return Response(serializer.data)
-
-
 @extend_schema(tags=["User's List"])
 class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
     MISSING_ADD_INGREDIENT_MSG = (
@@ -236,14 +158,11 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
         '{list_name: [LISTNAME], ingredient: [INGREDIENT], '
         'amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}'
     )
-    MISSING_DELETE_INGREDIENT_MSG = (
-        f'{REQUIRED_VALUE_MISSING}'
-        '{list_name: [LISTNAME], ingredient: [INGREDIENT], unit: [MEASURMENT UNIT]}'
-    )
     MISSING_SET_INGREDIENT_MSG = (
         f'{REQUIRED_VALUE_MISSING}'
-        '{list_name: [LISTNAME], old_ingredient: [INGREDIENT], '
-        'old_unit: [MEASURMENT UNIT], new_ingredient: [INGREDIENT], '
+        '{old_list_name: [LISTNAME], old_ingredient: [INGREDIENT], '
+        'old_amount: [AMOUNT/QUANTITY], old_unit: [MEASURMENT UNIT], '
+        'new_list_name: [LISTNAME], new_ingredient: [INGREDIENT], '
         'new_amount: [AMOUNT/QUANTITY], new_unit: [MEASURMENT UNIT]}'
     )
 
@@ -321,28 +240,46 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
         request=inline_serializer(
             name='UpdateIngredientInListRequest',
             fields={
-                'list_name': serializers.CharField(),
+                'old_list_name': serializers.CharField(),
                 'old_ingredient': serializers.CharField(),
+                'old_amount': serializers.FloatField(),
                 'old_unit': serializers.CharField(),
+                'new_list_name': serializers.CharField(),
                 'new_ingredient': serializers.CharField(),
                 'new_amount': serializers.FloatField(),
                 'new_unit': serializers.CharField()
             }
         ),
         responses={
-            200: UserListIngredientsSerializer,
+            200: UserListIngredientsSerializer(many=True),
             400: MessageSerializer,
             401: auth_failed_response,
             500: invalid_user_list_response
         },
         examples=[
             OpenApiExample(
-                name='Update Ingredient in List',
+                name='Update Ingredient in same List',
                 value={
-                    'list_name': 'Grocery',
-                    'old_ingredient': 'Pork',
+                    'old_list_name': 'Grocery',
+                    'old_ingredient': 'Beef',
+                    'old_amount': 400,
                     'old_unit': 'lb',
+                    'new_list_name': 'Grocery',
                     'new_ingredient': 'Beef',
+                    'new_amount': 500,
+                    'new_unit': 'g'
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name='Move Ingredient in List to Another List',
+                value={
+                    'old_list_name': 'Grocery',
+                    'old_ingredient': 'Pork',
+                    'old_amount': 500,
+                    'old_unit': 'g',
+                    'new_list_name': 'Pantry',
+                    'new_ingredient': 'Pork',
                     'new_amount': 500,
                     'new_unit': 'g'
                 },
@@ -364,7 +301,10 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
     )
     def update(self, request: Request) -> Response:
         """
-        Sets an ingredient in a specified user's list.
+        Sets or moves an ingredient in a specified user's list.
+        Subtracts the old ingredient amount from the specified "old" list and
+        adds the new ingredient amount to the specified "new" list.
+        Returns all of the user's lists.
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
@@ -372,38 +312,50 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
 
         if (
             username
-            and body.get('list_name', None)
+            and body.get('old_list_name', None)
             and body.get('old_ingredient', None)
+            and body.get('old_amount', -1) >= 0
             and body.get('old_unit', None)
+            and body.get('new_list_name', None)
             and body.get('new_ingredient', None)
             and body.get('new_amount', None)
             and body.get('new_unit', None)
         ):
-            # Adding ingredient to a list
-            list = set_list_ingredient(
+            updated_lists = set_list_ingredient(
                 username=username,
-                list_name=body['list_name'],
+                old_list_name=body['old_list_name'],
                 old_ingredient=body['old_ingredient'],
+                old_amount=body['old_amount'],
                 old_unit=body['old_unit'],
+                new_list_name=body['new_list_name'],
                 new_ingredient=body['new_ingredient'],
                 new_amount=body['new_amount'],
                 new_unit=body['new_unit']
             )
-            serializer = UserListIngredientsSerializer(list)
+
+            serializer = UserListIngredientsSerializer(updated_lists, many=True)
         else:
             raise MissingInformation(self.MISSING_SET_INGREDIENT_MSG)
 
         return Response(serializer.data, status=200)
 
     @extend_schema(
-        request=inline_serializer(
-            name='DeleteIngredientFromListRequest',
-            fields={
-                'list_name': serializers.CharField(),
-                'ingredient': serializers.CharField(),
-                'unit': serializers.CharField()
-            }
-        ),
+        parameters=[
+            list_name_param,
+            OpenApiParameter(
+                name='ingredient',
+                description='Name of the ingredient.',
+                type=str,
+                location=OpenApiParameter.PATH
+            ),
+            OpenApiParameter(
+                name='unit',
+                description='Unit of measurement for the ingredient.',
+                type=str,
+                location=OpenApiParameter.PATH
+            )
+        ],
+        request=None,
         responses={
             200: UserListIngredientsSerializer,
             400: MessageSerializer,
@@ -412,51 +364,33 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
         },
         examples=[
             OpenApiExample(
-                name='Delete Ingredient from List',
-                value={
-                    'list_name': 'Grocery',
-                    'ingredient': 'Pork',
-                    'unit': 'g'
-                },
-                request_only=True
-            ),
-            OpenApiExample(
                 name='Ingredient Deleted',
                 value=GROCERY_LIST,
                 status_codes=[200],
                 response_only=True
-            ),
-            OpenApiExample(
-                name='Required Value Missing',
-                value={'message': MISSING_DELETE_INGREDIENT_MSG},
-                status_codes=[400],
-                response_only=True
             )
         ]
     )
-    def destroy(self, request: Request) -> Response:
+    def destroy(
+        self,
+        request: Request,
+        list_name: str = None,
+        ingredient: str = None,
+        unit: str = None
+    ) -> Response:
         """
         Deletes an ingredient from a specified user's list.
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
-        body = request.data
 
-        if (
-            username
-            and body.get('list_name', None)
-            and body.get('ingredient', None)
-            and body.get('unit', None)
-        ):
-            list = delete_list_ingredient(
-                username=username,
-                list_name=body['list_name'],
-                ingredient=body['ingredient'],
-                unit=body['unit']
-            )
-            serializer = UserListIngredientsSerializer(list)
-        else:
-            raise MissingInformation(self.MISSING_DELETE_INGREDIENT_MSG)
+        list = delete_list_ingredient(
+            username=username,
+            list_name=list_name,
+            ingredient=ingredient,
+            unit=unit
+        )
+        serializer = UserListIngredientsSerializer(list)
 
         return Response(serializer.data, status=200)
 
@@ -467,21 +401,6 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
     MISSING_UPDATE_INGREDIENT_MSG = (
         f'{REQUIRED_VALUE_MISSING}'
         '{old_list_name: [LISTNAME], new_list_name: [LISTNAME]}'
-    )
-    MISSING_ADD_INGREDIENT_MSG = (
-        f'{REQUIRED_VALUE_MISSING}'
-        '{list_name: [LISTNAME], ingredient: [INGREDIENT], '
-        'amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT]}'
-    )
-    MISSING_DELETE_INGREDIENT_MSG = (
-        f'{REQUIRED_VALUE_MISSING}'
-        '{list_name: [LISTNAME], ingredient: [INGREDIENT], unit: [MEASURMENT UNIT]}'
-    )
-    MISSING_SET_INGREDIENT_MSG = (
-        f'{REQUIRED_VALUE_MISSING}'
-        '{list_name: [LISTNAME], old_ingredient: [INGREDIENT], '
-        'old_unit: [MEASURMENT UNIT], new_ingredient: [INGREDIENT], '
-        'new_amount: [AMOUNT/QUANTITY], new_unit: [MEASURMENT UNIT]}'
     )
 
     @extend_schema(
@@ -703,7 +622,7 @@ class IngredientsViewSet(viewsets.ViewSet):
     )
     def list(self, request: Request) -> Response:
         """
-        Returns a list of all ingredients in database.
+        Returns a list of all ingredients in the database.
         """
         all_ingredients = get_all_ingredients()
         serializer = IngredientSerializer(all_ingredients, many=True)
@@ -774,7 +693,7 @@ class MeasurementsViewSet(viewsets.ViewSet):
     )
     def list(self, request: Request) -> Response:
         """
-        Returns a list of all measurements in database.
+        Returns a list of all measurements in the database.
         """
         all_measurements = get_all_measurements()
         serializer = MeasurementSerializer(all_measurements, many=True)
