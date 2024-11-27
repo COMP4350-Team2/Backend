@@ -2,6 +2,7 @@ import os
 from time import strftime, localtime
 from urllib.parse import quote_plus, urlencode
 
+import requests
 from authlib.integrations.django_client import OAuth
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
@@ -9,9 +10,7 @@ from django.urls import reverse
 from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
-    OpenApiExample,
-    OpenApiParameter,
-    OpenApiResponse
+    OpenApiExample
 )
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
@@ -19,7 +18,9 @@ from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.backends import TokenBackend
 
+from cupboard_app.exceptions import MissingInformation
 from cupboard_app.models import Message
 from cupboard_app.serializers import MessageSerializer
 from cupboard_app.queries import (
@@ -28,7 +29,8 @@ from cupboard_app.queries import (
 )
 from utils.api_helper import (
     get_auth_username_from_payload,
-    get_auth_email_from_payload
+    get_auth_email_from_payload,
+    EMAIL_CLAIM
 ) 
 
 
@@ -36,6 +38,8 @@ AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 AUTH0_BACKEND_CLIENT_ID = os.getenv('AUTH0_BACKEND_CLIENT_ID')
 AUTH0_BACKEND_CLIENT_SECRET = os.getenv('AUTH0_BACKEND_CLIENT_SECRET')
+
+TOKEN_TIMESTAMP = '%Y-%m-%d %H:%M:%S'
 
 
 # Auth0 Client setup
@@ -76,13 +80,11 @@ def login_callback(request: Request) -> HttpResponseRedirect:
         add_default_user_lists(username=username)
 
     token = {
-        'token': {
-            'access_token': access_token,
-            'refresh_token': refresh_token,
-            'id_token': token.get('id_token'),
-            'issued_time': strftime('%Y-%m-%d %H:%M:%S', localtime(issued_time)),
-            'expire_time': strftime('%Y-%m-%d %H:%M:%S', localtime(expire_time))
-        },
+        'access_token': access_token,
+        'refresh_token': refresh_token,
+        'id_token': token.get('id_token'),
+        'issued_time': strftime(TOKEN_TIMESTAMP, localtime(issued_time)),
+        'expire_time': strftime(TOKEN_TIMESTAMP, localtime(expire_time)),
         'user_info': token.get('userinfo')
     }
 
@@ -197,5 +199,86 @@ class LogoutAPIView(APIView):
             message = Message(message=self.text)
             serializer = MessageSerializer(message)
             result = Response(serializer.data, status=200)
+
+        return result
+
+
+def set_session(request: Request, token_info: str):
+    access_token = token_info.get('access_token')
+    refresh_token = token_info.get('refresh_token')
+    id_token = token_info.get('id_token')
+
+    payload = AccessToken(access_token)
+    issued_time = payload.get('iat')
+    expire_time = payload.get('exp')
+
+    new_session = {
+        'access_token': access_token,
+        'refresh_token': refresh_token,
+        'id_token': id_token,
+        'issued_time': strftime(TOKEN_TIMESTAMP, localtime(issued_time)),
+        'expire_time': strftime(TOKEN_TIMESTAMP, localtime(expire_time)),
+        'user_info': request.session.get('user').get('user_info')
+    }
+
+    request.session['user'] = new_session
+
+    '''
+    print(f'Bearer {access_token}')
+    try:
+        response = requests.get(
+            f'https://{AUTH0_DOMAIN}/userinfo',
+            headers = {'Authorization': f'Bearer {access_token}'},
+            data={'scope': 'openid', 'audience': AUTH0_API_IDENTIFIER}
+        )
+        print(response.json())
+    except Exception as e:
+        print(e)
+
+    try:
+        token_backend = TokenBackend(
+            algorithm='RS256',
+            audience=AUTH0_API_IDENTIFIER,
+            issuer=f'https://{AUTH0_DOMAIN}/',
+            jwk_url=f'https://{AUTH0_DOMAIN}/.well-known/jwks.json'
+        )
+        token_backend.decode(token=id_token)
+    except Exception as e:
+        print(e)
+    '''
+
+
+@extend_schema(tags=['Authentication'])
+class RefreshAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request: Request) -> Response | HttpResponseRedirect:
+        """
+        Refreshes the access token for the user from Auth0.
+        """
+        session = request.session.get('user')
+        refresh_token = session.get('refresh_token')
+
+        if refresh_token:
+            response = requests.post(
+                f'https://{AUTH0_DOMAIN}/oauth/token',
+                headers={'content-type': 'application/x-www-form-urlencoded'},
+                data={
+                    'grant_type': 'refresh_token',
+                    'client_id': AUTH0_BACKEND_CLIENT_ID,
+                    'client_secret': AUTH0_BACKEND_CLIENT_SECRET,
+                    'audience': AUTH0_API_IDENTIFIER,
+                    'refresh_token': refresh_token
+                }
+            )
+
+            if response.status_code == 200:
+                set_session(request=request, token_info=response.json())
+                session = request.session.get('user')
+                result = Response(session, status=200)
+            else:
+                print('Failed operation')
+        else:
+            MissingInformation('Refresh Token missing.')
 
         return result
