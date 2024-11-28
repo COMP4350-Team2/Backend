@@ -83,22 +83,12 @@ FRIDGE_LIST = {
     'list_name': 'Fridge',
     'ingredients': INGREDIENTS
 }
-CUSTOM_INGREDIENTS = [
-    {
+SINGLE_CUSTOM_INGREDIENT_DICT = {
         'user': 'teacup',
         'name': 'Beef',
         'type': 'Meat'
-    },
-    {
-        'user': 'teacup',
-        'name': '2% Milk',
-        'type': 'Dairy'
-    },
-]
-
-CUSTOM_LIST = {
-    'ingredients': CUSTOM_INGREDIENTS
 }
+
 
 # OpenAPI response types
 auth_failed_response = OpenApiResponse(
@@ -775,7 +765,7 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
         examples=[
             OpenApiExample(
                 name='Custom Ingredient Deleted',
-                value=CUSTOM_LIST,
+                value=SINGLE_CUSTOM_INGREDIENT_DICT,
                 status_codes=[200]
             )
         ]
