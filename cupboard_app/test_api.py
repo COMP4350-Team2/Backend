@@ -1584,6 +1584,10 @@ class DeleteCustomIngredientsApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            []
+        )
 
     @patch.object(TokenBackend, 'decode')
     def test_delete_nonexistant_custom_ingredient(self, mock_decode):
@@ -1596,9 +1600,19 @@ class DeleteCustomIngredientsApi(TestCase):
         response = self.client.delete(
             reverse(
                 f'{API_VERSION}:specific_custom_ingredient',
-                kwargs={'ingredient': self.cust_ing.name}
+                kwargs={'ingredient': 'does_not_exist'}
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    'user': self.cust_ing.user.username,
+                    'name': self.cust_ing.name,
+                    'type': self.cust_ing.type
+                }
+            ]
+        )

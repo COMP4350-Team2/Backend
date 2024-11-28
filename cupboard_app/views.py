@@ -96,6 +96,10 @@ CUSTOM_INGREDIENTS = [
     },
 ]
 
+CUSTOM_LIST = {
+    'ingredients': CUSTOM_INGREDIENTS
+}
+
 # OpenAPI response types
 auth_failed_response = OpenApiResponse(
     response=MessageSerializer,
@@ -771,7 +775,7 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
         examples=[
             OpenApiExample(
                 name='Custom Ingredient Deleted',
-                value=CUSTOM_INGREDIENTS,
+                value=CUSTOM_LIST,
                 status_codes=[200]
             )
         ]
