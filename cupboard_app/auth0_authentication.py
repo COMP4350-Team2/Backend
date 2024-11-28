@@ -314,7 +314,7 @@ class CLILoginAPIView(APIView):
                 name='Login Credentials',
                 value={
                     'username': 'cupboard@teacup.ca',
-                    'password': "WeAreNumberOneDevelopers!"
+                    'password': 'Fake_password'
                 },
                 request_only=True
             ),
