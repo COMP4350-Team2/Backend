@@ -138,6 +138,102 @@ paths:
                     message: Given token not valid for any token type
                   summary: Invalid token
           description: ''
+  /api/v3/user/ingredients/custom:
+    post:
+      operationId: api_v3_user_ingredients_custom_create
+      description: |-
+        Creates a custom ingredient for the user.
+        Returns the custom ingredient object.
+      tags:
+      - CustomIngredients
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomIngredient'
+              examples:
+                CustomIngredientCreated:
+                  value:
+                    name: Beef
+                    type: Meat
+                  summary: Custom Ingredient Created
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: Missing ingredient and type in message body.
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+  /api/v3/user/ingredients/custom/{ingredient}:
+    delete:
+      operationId: api_v3_user_ingredients_custom_destroy
+      description: |-
+        Deletes a custom ingredient for the user.
+        Returns the list of remaining custom ingredients for the user
+      parameters:
+      - in: path
+        name: ingredient
+        schema:
+          type: string
+        required: true
+      tags:
+      - CustomIngredients
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomIngredient'
+              examples:
+                CustomIngredientDeleted:
+                  value:
+                  - user: teacup
+                    name: Beef
+                    type: Meat
+                  summary: Custom Ingredient Deleted
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
   /api/v3/user/lists:
     get:
       operationId: api_v3_user_lists_list

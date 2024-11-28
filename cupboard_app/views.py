@@ -23,6 +23,8 @@ from cupboard_app.queries import (
     create_list_name,
     create_user_list_ingredients,
     delete_user_list_ingredients,
+    create_custom_ingredient,
+    delete_custom_ingredient,
     get_all_ingredients,
     get_all_custom_ingredients,
     get_all_measurements,
@@ -87,6 +89,11 @@ FRIDGE_LIST = {
     'list_name': 'Fridge',
     'ingredients': INGREDIENTS
 }
+SINGLE_CUSTOM_INGREDIENT_DICT = {
+        'user': 'teacup',
+        'name': 'Beef',
+        'type': 'Meat'
+}
 
 
 # OpenAPI response types
@@ -128,6 +135,12 @@ invalid_user_list_response = OpenApiResponse(
 list_name_param = OpenApiParameter(
     name='list_name',
     description='Name of the list.',
+    type=str,
+    location=OpenApiParameter.PATH
+)
+custom_ingredient_name_param = OpenApiParameter(
+    name='ingredient',
+    description='Name of the custom ingredient.',
     type=str,
     location=OpenApiParameter.PATH
 )
@@ -783,4 +796,92 @@ class MeasurementsViewSet(viewsets.ViewSet):
         """
         all_measurements = get_all_measurements()
         serializer = MeasurementSerializer(all_measurements, many=True)
+        return Response(serializer.data, status=200)
+
+
+@extend_schema(tags=['CustomIngredients'])
+class CustomIngredientsViewSet(viewsets.ViewSet):
+    MISSING_ING = 'Missing ingredient and type in message body.'
+
+    @extend_schema(
+        request=inline_serializer(
+            name='AddCustomIngredientRequest',
+            fields={
+                'ingredient': serializers.CharField(),
+                'type': serializers.CharField()
+            }
+        ),
+        responses={
+            201: CustomIngredientSerializer,
+            400: MessageSerializer,
+            401: auth_failed_response,
+        },
+        examples=[
+            OpenApiExample(
+                name='Custom Ingredient Created',
+                value=SINGLE_CUSTOM_INGREDIENT_DICT,
+                status_codes=[201],
+                response_only=True
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_ING},
+                status_codes=[400],
+                response_only=True
+            )
+        ]
+    )
+    def create(self, request: Request) -> Response:
+        """
+        Creates a custom ingredient for the user.
+        Returns the custom ingredient object.
+        """
+        # Extract username from the access token
+        username = get_auth_username_from_payload(request=request)
+        body = request.data
+        if (
+            username
+            and body.get('ingredient', None)
+            and body.get('type', None)
+        ):
+            custom_ingredient = create_custom_ingredient(
+                username=username,
+                name=body['ingredient'],
+                type=body['type']
+            )
+        else:
+            raise MissingInformation(self.MISSING_ING)
+
+        serializer = CustomIngredientSerializer(custom_ingredient)
+        return Response(serializer.data, status=201)
+
+    @extend_schema(
+        parameters=[custom_ingredient_name_param],
+        request=None,
+        responses={
+            200: CustomIngredientSerializer(many=True),
+            401: auth_failed_response,
+        },
+        examples=[
+            OpenApiExample(
+                name='Custom Ingredient Deleted',
+                value=SINGLE_CUSTOM_INGREDIENT_DICT,
+                status_codes=[200]
+            )
+        ]
+    )
+    def destroy(self, request: Response, ingredient: str = None) -> Response:
+        """
+        Deletes a custom ingredient for the user.
+        Returns the list of remaining custom ingredients for the user
+        """
+        # Extract username from the access token
+        username = get_auth_username_from_payload(request=request)
+
+        remaining_custom = delete_custom_ingredient(
+            username=username,
+            ingredient=ingredient
+        )
+
+        serializer = CustomIngredientSerializer(remaining_custom, many=True)
         return Response(serializer.data, status=200)
