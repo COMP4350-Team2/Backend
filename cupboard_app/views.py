@@ -791,7 +791,6 @@ class MeasurementsViewSet(viewsets.ViewSet):
         all_measurements = get_all_measurements()
         serializer = MeasurementSerializer(all_measurements, many=True)
         return Response(serializer.data, status=200)
-        return Response(serializer.data)
 
 
 @extend_schema(tags=['CustomIngredients'])
@@ -799,7 +798,13 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
     MISSING_ING = 'Missing ingredient and type in message body.'
 
     @extend_schema(
-        request=None,
+        request=inline_serializer(
+            name='AddCustomIngredientRequest',
+            fields={
+                'ingredient': serializers.CharField(),
+                'type': serializers.CharField()
+            }
+        ),
         responses={
             201: CustomIngredientSerializer,
             400: MessageSerializer,
