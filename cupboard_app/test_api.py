@@ -1483,7 +1483,72 @@ class CreateUserApi(TestCase):
         )
 
 
-class CustomIngredientsApi(TestCase):
+class CreateCustomIngredientsApi(TestCase):
+    unit1 = None
+    unit2 = None
+
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        self.user1 = User.objects.create(
+            username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
+        )
+
+        self.cust_ing = {
+            'user': self.user1.username,
+            'name': 'Beef',
+            'type': 'Meat'
+        }
+
+    @patch.object(TokenBackend, 'decode')
+    def test_create_custom_ingredient(self, mock_decode):
+        """
+        Testing create_custom_ingredient creates a custom ingredient
+        in the database
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+        response = self.client.post(
+            reverse(f'{API_VERSION}:custom_ingredient'),
+            json.dumps(
+                {
+                    'ingredient': self.cust_ing['name'],
+                    'type': self.cust_ing['type']
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertDictEqual(
+            response.json(),
+            self.cust_ing
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_create_custom_ingredient_nonexistant_user(self, mock_decode):
+        """
+        Testing create_custom_ingredient works properly when
+        a username doesn't exist in a custom ingredient
+        """
+        mock_decode.return_value = {**USER_VALID_TOKEN_PAYLOAD, 'sub': 'fake_user'}
+
+        response = self.client.post(
+            reverse(f'{API_VERSION}:custom_ingredient'),
+            json.dumps(
+                {
+                    'ingredient': self.cust_ing['name'],
+                    'type': self.cust_ing['type']
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 500)
+
+
+class DeleteCustomIngredientsApi(TestCase):
     unit1 = None
     unit2 = None
 
@@ -1503,53 +1568,6 @@ class CustomIngredientsApi(TestCase):
         )
 
     @patch.object(TokenBackend, 'decode')
-    def test_create_custom_ingredient(self, mock_decode):
-        """
-        Testing create_custom_ingredient creates a custom ingredient
-        in the database
-        """
-        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
-
-        response = self.client.post(
-            reverse(f'{API_VERSION}:custom_ingredient'),
-            json.dumps(
-                {
-                    'username': self.user1.username,
-                    'ingredient': 'Beef',
-                    'type': 'Meat'
-                }
-            ),
-            content_type='application/json',
-            HTTP_AUTHORIZATION='Bearer valid-token'
-        )
-        self.assertEqual(response.status_code, 201)
-        self.assertDictEqual(
-            response.json(),
-            {'user': self.user1.username, 'name': 'Beef', 'type': 'Meat'}
-        )
-
-    @patch.object(TokenBackend, 'decode')
-    def test_create_custom_ingredient_nonexistant_user(self, mock_decode):
-        """
-        Testing create_custom_ingredient works properly when
-        a username doesn't exist in a custom ingredient
-        """
-        mock_decode.return_value = {**USER_VALID_TOKEN_PAYLOAD, 'sub': 'Doesn''t exist user'}
-
-        response = self.client.post(
-            reverse(f'{API_VERSION}:custom_ingredient'),
-            json.dumps(
-                {
-                    'ingredient': 'Beef',
-                    'type': 'Meat'
-                }
-            ),
-            content_type='application/json',
-            HTTP_AUTHORIZATION='Bearer valid-token'
-        )
-        self.assertEqual(response.status_code, 500)
-
-    @patch.object(TokenBackend, 'decode')
     def test_delete_custom_ingredient(self, mock_decode):
         """
         Testing delete_custom_ingredient deletes a custom ingredient
@@ -1560,8 +1578,7 @@ class CustomIngredientsApi(TestCase):
         response = self.client.delete(
             reverse(
                 f'{API_VERSION}:specific_custom_ingredient',
-                kwargs={
-                    'ingredient': self.cust_ing.name}
+                kwargs={'ingredient': self.cust_ing.name}
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -1579,8 +1596,7 @@ class CustomIngredientsApi(TestCase):
         response = self.client.delete(
             reverse(
                 f'{API_VERSION}:specific_custom_ingredient',
-                kwargs={
-                    'ingredient': self.cust_ing.name}
+                kwargs={'ingredient': self.cust_ing.name}
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'

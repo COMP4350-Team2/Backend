@@ -83,7 +83,18 @@ FRIDGE_LIST = {
     'list_name': 'Fridge',
     'ingredients': INGREDIENTS
 }
-
+CUSTOM_INGREDIENTS = [
+    {
+        'user': 'teacup',
+        'name': 'Beef',
+        'type': 'Meat'
+    },
+    {
+        'user': 'teacup',
+        'name': '2% Milk',
+        'type': 'Dairy'
+    },
+]
 
 # OpenAPI response types
 auth_failed_response = OpenApiResponse(
@@ -717,7 +728,7 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
         examples=[
             OpenApiExample(
                 name='Custom Ingredient Created',
-                value={'username': 'teacup', 'name': 'Beef', 'type': 'Meat'},
+                value={'name': 'Beef', 'type': 'Meat'},
                 status_codes=[201]
             ),
             OpenApiExample(
@@ -735,7 +746,11 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
         body = request.data
-        if username:
+        if (
+            username
+            and body.get('ingredient', None)
+            and body.get('type', None)
+        ):
             custom_ingredient = create_custom_ingredient(
                 username=username,
                 name=body['ingredient'],
@@ -750,20 +765,14 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
     @extend_schema(
         request=None,
         responses={
-            200: CustomIngredientSerializer,
-            400: MessageSerializer,
+            200: CustomIngredientSerializer(many=True),
             401: auth_failed_response,
         },
         examples=[
             OpenApiExample(
                 name='Custom Ingredient Deleted',
-                value={'username': 'teacup', 'name': 'Beef', 'type': 'Meat'},
+                value=CUSTOM_INGREDIENTS,
                 status_codes=[200]
-            ),
-            OpenApiExample(
-                name='Required Value Missing',
-                value={'message': MISSING_ING},
-                status_codes=[400]
             )
         ]
     )
@@ -775,13 +784,10 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
 
-        if ingredient:
-            remaining_custom = delete_custom_ingredient(
-                username=username,
-                ingredient=ingredient
-            )
-        else:
-            raise MissingInformation(self.MISSING_ING)
+        remaining_custom = delete_custom_ingredient(
+            username=username,
+            ingredient=ingredient
+        )
 
         serializer = CustomIngredientSerializer(remaining_custom, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=200)
