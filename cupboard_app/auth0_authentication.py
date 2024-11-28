@@ -54,16 +54,16 @@ session_example = OpenApiExample(
         'expire_time': '2024-11-17 01:49:09',
         'user_info': {
             'nickname': 'teacup.backend',
-            'name': 'teacup.backend@gmail.com',
+            'name': 'cupboard@teacup.ca',
             'picture': 'image_url',
             'updated_at': '2024-11-16T07:49:07.640Z',
-            'email': 'teacup.backend@gmail.com',
+            'email': 'cupboard@teacup.ca',
             'email_verified': True,
-            'iss': 'https://dev-cupboard.ca.auth0.com/',
+            'iss': 'issuer_string',
             'aud': 'audience_string',
             'iat': 1731743349,
             'exp': 1731779349,
-            'sub': 'auth0|982734jhe98whjhw8',
+            'sub': 'auth0|fake_user_string',
             'sid': 'session_id'
         }
     },
