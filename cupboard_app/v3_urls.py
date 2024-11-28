@@ -24,16 +24,11 @@ urlpatterns = [
     path('ingredients', IngredientsViewSet.as_view({'get': 'list'}), name='ingredients'),
     path('measurements', MeasurementsViewSet.as_view({'get': 'list'}), name='measurements'),
     path(
-        'user/lists/<str:list_name>/ingredients/<str:ingredient>/units/<str:unit>',
-        UpdateUserListIngredientsViewSet.as_view({'delete': 'destroy'}),
-        name='delete_ingredient'
-    ),
-    path(
         'user/lists/ingredients',
         UpdateUserListIngredientsViewSet.as_view(
-            {'post': 'create', 'patch': 'update'}
+            {'post': 'create', 'patch': 'update', 'delete': 'destroy'}
         ),
-        name='add_set_ingredients'
+        name='edit_user_list_ingredients'
     ),
     path(
         'user/ingredients/custom',

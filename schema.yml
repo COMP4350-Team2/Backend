@@ -10,7 +10,9 @@ paths:
   /api/v3/ingredients:
     get:
       operationId: api_v3_ingredients_list
-      description: Returns a list of all ingredients in the database.
+      description: |-
+        Returns a dictionary containing the list of common ingredients
+        and the list of user's custom ingredients in the database.
       tags:
       - Ingredients
       security:
@@ -22,12 +24,17 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Ingredient'
+                  $ref: '#/components/schemas/AllIngredients'
               examples:
                 AllIngredientsReturned:
                   value:
-                  - name: Beef
-                    type: Meat
+                  - common_ingredients:
+                    - name: Beef
+                      type: Meat
+                    custom_ingredients:
+                    - user: teacup
+                      name: Beef
+                      type: Meat
                   summary: All Ingredients Returned
           description: ''
         '401':
@@ -153,18 +160,21 @@ paths:
                   - user: teacup
                     list_name: Grocery
                     ingredients:
-                    - ingredient_id: 1
-                      ingredient_name: Beef
+                    - ingredient_name: Beef
                       ingredient_type: Meat
                       amount: 500
-                      unit_id: 1
                       unit: g
-                    - ingredient_id: 1
-                      ingredient_name: 2% Milk
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
                       ingredient_type: Dairy
                       amount: 2
-                      unit_id: 2
                       unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
                   summary: All User Lists Retrieved
           description: ''
         '401':
@@ -219,18 +229,21 @@ paths:
                     user: teacup
                     list_name: Fridge
                     ingredients:
-                    - ingredient_id: 1
-                      ingredient_name: Beef
+                    - ingredient_name: Beef
                       ingredient_type: Meat
                       amount: 500
-                      unit_id: 1
                       unit: g
-                    - ingredient_id: 1
-                      ingredient_name: 2% Milk
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
                       ingredient_type: Dairy
                       amount: 2
-                      unit_id: 2
                       unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
                   summary: List Name Changed
           description: ''
         '400':
@@ -299,18 +312,21 @@ paths:
                     user: teacup
                     list_name: Grocery
                     ingredients:
-                    - ingredient_id: 1
-                      ingredient_name: Beef
+                    - ingredient_name: Beef
                       ingredient_type: Meat
                       amount: 500
-                      unit_id: 1
                       unit: g
-                    - ingredient_id: 1
-                      ingredient_name: 2% Milk
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
                       ingredient_type: Dairy
                       amount: 2
-                      unit_id: 2
                       unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
                   summary: User List Retrieved
           description: ''
         '401':
@@ -436,18 +452,21 @@ paths:
                   - user: teacup
                     list_name: Grocery
                     ingredients:
-                    - ingredient_id: 1
-                      ingredient_name: Beef
+                    - ingredient_name: Beef
                       ingredient_type: Meat
                       amount: 500
-                      unit_id: 1
                       unit: g
-                    - ingredient_id: 1
-                      ingredient_name: 2% Milk
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
                       ingredient_type: Dairy
                       amount: 2
-                      unit_id: 2
                       unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
                   summary: List Deleted
           description: ''
         '401':
@@ -464,91 +483,6 @@ paths:
                   value:
                     message: Given token not valid for any token type
                   summary: Invalid token
-          description: ''
-  /api/v3/user/lists/{list_name}/ingredients/{ingredient}/units/{unit}:
-    delete:
-      operationId: api_v3_user_lists_ingredients_units_destroy
-      description: Deletes an ingredient from a specified user's list.
-      parameters:
-      - in: path
-        name: ingredient
-        schema:
-          type: string
-        description: Name of the ingredient.
-        required: true
-      - in: path
-        name: list_name
-        schema:
-          type: string
-        description: Name of the list.
-        required: true
-      - in: path
-        name: unit
-        schema:
-          type: string
-        description: Unit of measurement for the ingredient.
-        required: true
-      tags:
-      - User's List
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserListIngredients'
-              examples:
-                IngredientDeleted:
-                  value:
-                    user: teacup
-                    list_name: Grocery
-                    ingredients:
-                    - ingredient_id: 1
-                      ingredient_name: Beef
-                      ingredient_type: Meat
-                      amount: 500
-                      unit_id: 1
-                      unit: g
-                    - ingredient_id: 1
-                      ingredient_name: 2% Milk
-                      ingredient_type: Dairy
-                      amount: 2
-                      unit_id: 2
-                      unit: L
-                  summary: Ingredient Deleted
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-              examples:
-                AuthenticationNotProvided:
-                  value:
-                    message: Authentication credentials were not provided.
-                  summary: Authentication not provided
-                InvalidToken:
-                  value:
-                    message: Given token not valid for any token type
-                  summary: Invalid token
-          description: ''
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-              examples:
-                UserListNotFound:
-                  value:
-                    message: User list does not exist.
-                  summary: User List not found
           description: ''
   /api/v3/user/lists/ingredients:
     post:
@@ -568,7 +502,16 @@ paths:
                   ingredient: Beef
                   amount: 500
                   unit: g
+                  is_custom_ingredient: false
                 summary: Add Ingredient in List
+              AddCustomIngredientInList:
+                value:
+                  list_name: Grocery
+                  ingredient: Homemade Meatball
+                  amount: 25
+                  unit: count
+                  is_custom_ingredient: true
+                summary: Add Custom Ingredient in List
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/AddIngredientInListRequest'
@@ -590,18 +533,21 @@ paths:
                     user: teacup
                     list_name: Grocery
                     ingredients:
-                    - ingredient_id: 1
-                      ingredient_name: Beef
+                    - ingredient_name: Beef
                       ingredient_type: Meat
                       amount: 500
-                      unit_id: 1
                       unit: g
-                    - ingredient_id: 1
-                      ingredient_name: 2% Milk
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
                       ingredient_type: Dairy
                       amount: 2
-                      unit_id: 2
                       unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
                   summary: Ingredient Added
           description: ''
         '400':
@@ -615,7 +561,7 @@ paths:
                     message: 'Required value missing from sent request, please ensure
                       all items are sent in the following format: {list_name: [LISTNAME],
                       ingredient: [INGREDIENT], amount: [AMOUNT/QUANTITY], unit: [MEASURMENT
-                      UNIT]}'
+                      UNIT], is_custom_ingredient: [CUSTOM INGREDIENT BOOLEAN]}'
                   summary: Required Value Missing
           description: ''
         '401':
@@ -665,10 +611,12 @@ paths:
                   old_ingredient: Beef
                   old_amount: 400
                   old_unit: lb
+                  old_is_custom_ingredient: false
                   new_list_name: Grocery
                   new_ingredient: Beef
                   new_amount: 500
                   new_unit: g
+                  new_is_custom_ingredient: false
                 summary: Update Ingredient in same List
               MoveIngredientInListToAnotherList:
                 value:
@@ -676,10 +624,12 @@ paths:
                   old_ingredient: Pork
                   old_amount: 500
                   old_unit: g
+                  old_is_custom_ingredient: false
                   new_list_name: Pantry
                   new_ingredient: Pork
                   new_amount: 500
                   new_unit: g
+                  new_is_custom_ingredient: false
                 summary: Move Ingredient in List to Another List
           application/x-www-form-urlencoded:
             schema:
@@ -703,18 +653,21 @@ paths:
                   - user: teacup
                     list_name: Grocery
                     ingredients:
-                    - ingredient_id: 1
-                      ingredient_name: Beef
+                    - ingredient_name: Beef
                       ingredient_type: Meat
                       amount: 500
-                      unit_id: 1
                       unit: g
-                    - ingredient_id: 1
-                      ingredient_name: 2% Milk
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
                       ingredient_type: Dairy
                       amount: 2
-                      unit_id: 2
                       unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
                   summary: Ingredient Updated
           description: ''
         '400':
@@ -730,7 +683,107 @@ paths:
                       [LISTNAME], old_ingredient: [INGREDIENT], old_amount: [AMOUNT/QUANTITY],
                       old_unit: [MEASURMENT UNIT], new_list_name: [LISTNAME], new_ingredient:
                       [INGREDIENT], new_amount: [AMOUNT/QUANTITY], new_unit: [MEASURMENT
-                      UNIT]}'
+                      UNIT] is_custom_ingredient: [CUSTOM INGREDIENT BOOLEAN]}'
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                UserListNotFound:
+                  value:
+                    message: User list does not exist.
+                  summary: User List not found
+          description: ''
+    delete:
+      operationId: api_v3_user_lists_ingredients_destroy
+      description: Deletes an ingredient from a specified user's list.
+      parameters:
+      - in: query
+        name: ingredient
+        schema:
+          type: string
+        description: Name of the ingredient.
+        required: true
+      - in: query
+        name: is_custom_ingredient
+        schema:
+          type: boolean
+        description: Flag if ingredient is a custom ingredient or not.
+        required: true
+      - in: query
+        name: list_name
+        schema:
+          type: string
+        description: Name of the list.
+        required: true
+      - in: query
+        name: unit
+        schema:
+          type: string
+        description: Unit of measurement for the ingredient.
+        required: true
+      tags:
+      - User's List
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListIngredients'
+              examples:
+                IngredientDeleted:
+                  value:
+                    user: teacup
+                    list_name: Grocery
+                    ingredients:
+                    - ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit: g
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
+                  summary: Ingredient Deleted
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: Required query parameters missing from sent request.
+                      Please add the following query parameters?list_name=[LISTNAME]&ingredient=[INGREDIENT]&unit=[MEASURMENT
+                      UNIT]&is_custom_ingredient=[BOOLEAN]
                   summary: Required Value Missing
           description: ''
         '401':
@@ -773,11 +826,28 @@ components:
           format: double
         unit:
           type: string
+        is_custom_ingredient:
+          type: boolean
       required:
       - amount
       - ingredient
+      - is_custom_ingredient
       - list_name
       - unit
+    AllIngredients:
+      type: object
+      properties:
+        common_ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+        custom_ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomIngredient'
+      required:
+      - common_ingredients
+      - custom_ingredients
     ChangeUserIngredientsListNameRequest:
       type: object
       properties:
@@ -788,6 +858,22 @@ components:
       required:
       - new_list_name
       - old_list_name
+    CustomIngredient:
+      type: object
+      properties:
+        user:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 30
+        type:
+          type: string
+          maxLength: 30
+      required:
+      - name
+      - type
+      - user
     Ingredient:
       type: object
       properties:
@@ -827,6 +913,8 @@ components:
           format: double
         old_unit:
           type: string
+        old_is_custom_ingredient:
+          type: boolean
         new_list_name:
           type: string
         new_ingredient:
@@ -836,6 +924,8 @@ components:
           format: double
         new_unit:
           type: string
+        new_is_custom_ingredient:
+          type: boolean
     User:
       type: object
       properties:
