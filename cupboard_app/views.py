@@ -791,3 +791,83 @@ class MeasurementsViewSet(viewsets.ViewSet):
         all_measurements = get_all_measurements()
         serializer = MeasurementSerializer(all_measurements, many=True)
         return Response(serializer.data, status=200)
+        return Response(serializer.data)
+
+
+@extend_schema(tags=['CustomIngredients'])
+class CustomIngredientsViewSet(viewsets.ViewSet):
+    MISSING_ING = 'Missing ingredient and type in message body.'
+
+    @extend_schema(
+        request=None,
+        responses={
+            201: CustomIngredientSerializer,
+            400: MessageSerializer,
+            401: auth_failed_response,
+        },
+        examples=[
+            OpenApiExample(
+                name='Custom Ingredient Created',
+                value={'name': 'Beef', 'type': 'Meat'},
+                status_codes=[201]
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_ING},
+                status_codes=[400]
+            )
+        ]
+    )
+    def create(self, request: Request) -> Response:
+        """
+        Creates a custom ingredient for the user.
+        Returns the custom ingredient object.
+        """
+        # Extract username from the access token
+        username = get_auth_username_from_payload(request=request)
+        body = request.data
+        if (
+            username
+            and body.get('ingredient', None)
+            and body.get('type', None)
+        ):
+            custom_ingredient = create_custom_ingredient(
+                username=username,
+                name=body['ingredient'],
+                type=body['type']
+            )
+        else:
+            raise MissingInformation(self.MISSING_ING)
+
+        serializer = CustomIngredientSerializer(custom_ingredient)
+        return Response(serializer.data, status=201)
+
+    @extend_schema(
+        request=None,
+        responses={
+            200: CustomIngredientSerializer(many=True),
+            401: auth_failed_response,
+        },
+        examples=[
+            OpenApiExample(
+                name='Custom Ingredient Deleted',
+                value=SINGLE_CUSTOM_INGREDIENT_DICT,
+                status_codes=[200]
+            )
+        ]
+    )
+    def destroy(self, request: Response, ingredient: str = None) -> Response:
+        """
+        Deletes a custom ingredient for the user.
+        Returns the list of remaining custom ingredients for the user
+        """
+        # Extract username from the access token
+        username = get_auth_username_from_payload(request=request)
+
+        remaining_custom = delete_custom_ingredient(
+            username=username,
+            ingredient=ingredient
+        )
+
+        serializer = CustomIngredientSerializer(remaining_custom, many=True)
+        return Response(serializer.data, status=200)
