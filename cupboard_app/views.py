@@ -139,11 +139,11 @@ list_name_param = OpenApiParameter(
     location=OpenApiParameter.PATH
 )
 custom_ingredient_name_param = OpenApiParameter(
-    name='custom_ingredient',
+    name='ingredient',
     description='Name of the custom ingredient.',
     type=str,
     location=OpenApiParameter.PATH
-) 
+)
 
 
 def api_exception_handler(exc, context=None) -> Response:
