@@ -816,9 +816,9 @@ paths:
     get:
       operationId: login_retrieve
       description: |-
-        Redirects to the Auth0 universal login for user to enter credentials.
-        The user is then sent the access token, refresh token, issued time and
-        expire time.
+        Redirects to the Auth0 universal login for user to enter credentials if
+        session is not set. Returns the access token, refresh token, id token,
+        and user info.
       tags:
       - Authentication
       security:
@@ -829,16 +829,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Login'
+                $ref: '#/components/schemas/Session'
               examples:
-                LoginSuccessful:
+                LoginSuccess:
                   value:
-                    token:
-                      access_token: very_long_jwt_token
-                      refresh_token: refresh_token
-                      expire_time: '2024-11-17 01:49:09'
-                      issued_time: '2024-11-16 01:49:09'
-                      id_token: very_long_jwt_token
+                    access_token: very_long_jwt_token
+                    refresh_token: refresh_token
+                    id_token: very_long_jwt_token
+                    issued_time: '2024-11-16 01:49:09'
+                    expire_time: '2024-11-17 01:49:09'
                     user_info:
                       nickname: teacup.backend
                       name: teacup.backend@gmail.com
@@ -852,13 +851,81 @@ paths:
                       exp: 1731779349
                       sub: auth0|982734jhe98whjhw8
                       sid: session_id
-                      nonce: random_value
-                  summary: Login successful
+                  summary: Login Success
+          description: ''
+  /login/cli:
+    post:
+      operationId: login_cli_create
+      description: |-
+        Logs in user using Auth0 if session is not set.
+        Returns the access token, refresh token, id token, and user info.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CLILoginRequest'
+            examples:
+              LoginCredentials:
+                value:
+                  username: cupboard@teacup.ca
+                  password: WeAreNumberOneDevelopers!
+                summary: Login Credentials
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CLILoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CLILoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              examples:
+                LoginSuccess:
+                  value:
+                    access_token: very_long_jwt_token
+                    refresh_token: refresh_token
+                    id_token: very_long_jwt_token
+                    issued_time: '2024-11-16 01:49:09'
+                    expire_time: '2024-11-17 01:49:09'
+                    user_info:
+                      nickname: teacup.backend
+                      name: teacup.backend@gmail.com
+                      picture: image_url
+                      updated_at: '2024-11-16T07:49:07.640Z'
+                      email: teacup.backend@gmail.com
+                      email_verified: true
+                      iss: https://dev-cupboard.ca.auth0.com/
+                      aud: audience_string
+                      iat: 1731743349
+                      exp: 1731779349
+                      sub: auth0|982734jhe98whjhw8
+                      sid: session_id
+                  summary: Login Success
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: Username or password missing.
+                  summary: Required Value Missing
           description: ''
   /logout:
     get:
       operationId: logout_retrieve
-      description: Logs out the user from Auth0.
+      description: Logs out the user from Auth0 and clears the session.
       tags:
       - Authentication
       security:
@@ -871,9 +938,80 @@ paths:
               schema:
                 $ref: '#/components/schemas/Message'
               examples:
-                Success:
+                LogoutSuccess:
                   value:
                     message: Logout successful. Login again using the login endpoint.
+                  summary: Logout Success
+          description: ''
+  /logout/cli:
+    post:
+      operationId: logout_cli_create
+      description: Logs out the user from Auth0 and clears the session.
+      tags:
+      - Authentication
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                LogoutSuccess:
+                  value:
+                    message: Logout successful. Login again using the login endpoint.
+                  summary: Logout Success
+          description: ''
+  /refresh-token:
+    post:
+      operationId: refresh_token_create
+      description: Refreshes the access token for the user from Auth0.
+      tags:
+      - Authentication
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              examples:
+                LoginSuccess:
+                  value:
+                    access_token: very_long_jwt_token
+                    refresh_token: refresh_token
+                    id_token: very_long_jwt_token
+                    issued_time: '2024-11-16 01:49:09'
+                    expire_time: '2024-11-17 01:49:09'
+                    user_info:
+                      nickname: teacup.backend
+                      name: teacup.backend@gmail.com
+                      picture: image_url
+                      updated_at: '2024-11-16T07:49:07.640Z'
+                      email: teacup.backend@gmail.com
+                      email_verified: true
+                      iss: https://dev-cupboard.ca.auth0.com/
+                      aud: audience_string
+                      iat: 1731743349
+                      exp: 1731779349
+                      sub: auth0|982734jhe98whjhw8
+                      sid: session_id
+                  summary: Login Success
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: Refresh token is missing.
+                  summary: Required Value Missing
           description: ''
 components:
   schemas:
@@ -911,6 +1049,16 @@ components:
       required:
       - common_ingredients
       - custom_ingredients
+    CLILoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+      - password
+      - username
     ChangeUserIngredientsListNameRequest:
       type: object
       properties:
@@ -949,14 +1097,6 @@ components:
       required:
       - name
       - type
-    Login:
-      type: object
-      properties:
-        token: {}
-        user_info: {}
-      required:
-      - token
-      - user_info
     Measurement:
       type: object
       properties:
@@ -997,6 +1137,27 @@ components:
           type: string
         new_is_custom_ingredient:
           type: boolean
+    Session:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        id_token:
+          type: string
+        issued_time:
+          type: string
+        expire_time:
+          type: string
+        user_info: {}
+      required:
+      - access_token
+      - expire_time
+      - id_token
+      - issued_time
+      - refresh_token
+      - user_info
     User:
       type: object
       properties:

@@ -171,8 +171,7 @@ class LoginAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: SessionSerializer,
-            302: HttpResponseRedirect
+            200: SessionSerializer
         },
         examples=[session_example]
     )
@@ -203,8 +202,7 @@ class LogoutAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: MessageSerializer,
-            302: HttpResponseRedirect
+            200: MessageSerializer
         },
         examples=[
             OpenApiExample(
