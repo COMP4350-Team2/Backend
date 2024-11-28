@@ -1709,3 +1709,138 @@ class CreateUserApi(TestCase):
                 'message': UserViewSet.MISSING_USER_INFO
             }
         )
+
+
+class CreateCustomIngredientsApi(TestCase):
+    unit1 = None
+    unit2 = None
+
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        self.user1 = User.objects.create(
+            username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
+        )
+
+        self.cust_ing = {
+            'user': self.user1.username,
+            'name': 'Beef',
+            'type': 'Meat'
+        }
+
+    @patch.object(TokenBackend, 'decode')
+    def test_create_custom_ingredient(self, mock_decode):
+        """
+        Testing create_custom_ingredient creates a custom ingredient
+        in the database
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+        response = self.client.post(
+            reverse(f'{API_VERSION}:custom_ingredient'),
+            json.dumps(
+                {
+                    'ingredient': self.cust_ing['name'],
+                    'type': self.cust_ing['type']
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertDictEqual(
+            response.json(),
+            self.cust_ing
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_create_custom_ingredient_nonexistant_user(self, mock_decode):
+        """
+        Testing create_custom_ingredient works properly when
+        a username doesn't exist in a custom ingredient
+        """
+        mock_decode.return_value = {**USER_VALID_TOKEN_PAYLOAD, 'sub': 'fake_user'}
+
+        response = self.client.post(
+            reverse(f'{API_VERSION}:custom_ingredient'),
+            json.dumps(
+                {
+                    'ingredient': self.cust_ing['name'],
+                    'type': self.cust_ing['type']
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 500)
+
+
+class DeleteCustomIngredientsApi(TestCase):
+    unit1 = None
+    unit2 = None
+
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        self.user1 = User.objects.create(
+            username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
+        )
+
+        self.cust_ing = CustomIngredient.objects.create(
+            user=self.user1,
+            name='test_ingredient1',
+            type='test_type1'
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_delete_custom_ingredient(self, mock_decode):
+        """
+        Testing delete_custom_ingredient deletes a custom ingredient
+        in the database
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.delete(
+            reverse(
+                f'{API_VERSION}:specific_custom_ingredient',
+                kwargs={'ingredient': self.cust_ing.name}
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            []
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_delete_nonexistant_custom_ingredient(self, mock_decode):
+        """
+        Testing delete_custom_ingredient works properly when a custom
+        ingredient to be deleted isnt found in the database
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.delete(
+            reverse(
+                f'{API_VERSION}:specific_custom_ingredient',
+                kwargs={'ingredient': 'does_not_exist'}
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    'user': self.cust_ing.user.username,
+                    'name': self.cust_ing.name,
+                    'type': self.cust_ing.type
+                }
+            ]
+        )

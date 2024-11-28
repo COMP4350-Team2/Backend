@@ -10,7 +10,8 @@ from cupboard_app.views import (
     MeasurementsViewSet,
     UserViewSet,
     UserListIngredientsViewSet,
-    UpdateUserListIngredientsViewSet
+    UpdateUserListIngredientsViewSet,
+    CustomIngredientsViewSet
 )
 
 """
@@ -30,6 +31,20 @@ urlpatterns = [
         name='edit_user_list_ingredients'
     ),
     path(
+        'user/ingredients/custom',
+        CustomIngredientsViewSet.as_view(
+            {'post': 'create'}
+        ),
+        name='custom_ingredient'
+    ),
+    path(
+        'user/ingredients/custom/<str:ingredient>',
+        CustomIngredientsViewSet.as_view(
+            {'delete': 'destroy'}
+        ),
+        name='specific_custom_ingredient'
+    ),
+    path(
         'user/lists/<str:list_name>',
         UserListIngredientsViewSet.as_view(
             {'get': 'retrieve', 'post': 'create', 'delete': 'destroy'}
@@ -40,7 +55,7 @@ urlpatterns = [
         'user/lists',
         UserListIngredientsViewSet.as_view({'get': 'list', 'put': 'update'}),
         name='user_list_ingredients'
-    ),
+    )
 ]
 
 # API Documentation versions
