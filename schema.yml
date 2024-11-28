@@ -146,6 +146,18 @@ paths:
         Returns the custom ingredient object.
       tags:
       - CustomIngredients
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCustomIngredientRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddCustomIngredientRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AddCustomIngredientRequest'
+        required: true
       security:
       - jwtAuth: []
       responses:
@@ -157,6 +169,7 @@ paths:
               examples:
                 CustomIngredientCreated:
                   value:
+                    user: teacup
                     name: Beef
                     type: Meat
                   summary: Custom Ingredient Created
@@ -198,6 +211,7 @@ paths:
         name: ingredient
         schema:
           type: string
+        description: Name of the custom ingredient.
         required: true
       tags:
       - CustomIngredients
@@ -1111,6 +1125,16 @@ paths:
           description: ''
 components:
   schemas:
+    AddCustomIngredientRequest:
+      type: object
+      properties:
+        ingredient:
+          type: string
+        type:
+          type: string
+      required:
+      - ingredient
+      - type
     AddIngredientInListRequest:
       type: object
       properties:
