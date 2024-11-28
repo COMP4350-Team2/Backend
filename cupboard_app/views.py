@@ -138,6 +138,12 @@ list_name_param = OpenApiParameter(
     type=str,
     location=OpenApiParameter.PATH
 )
+custom_ingredient_name_param = OpenApiParameter(
+    name='custom_ingredient',
+    description='Name of the custom ingredient.',
+    type=str,
+    location=OpenApiParameter.PATH
+) 
 
 
 def api_exception_handler(exc, context=None) -> Response:
@@ -813,13 +819,15 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
         examples=[
             OpenApiExample(
                 name='Custom Ingredient Created',
-                value={'name': 'Beef', 'type': 'Meat'},
-                status_codes=[201]
+                value=SINGLE_CUSTOM_INGREDIENT_DICT,
+                status_codes=[201],
+                response_only=True
             ),
             OpenApiExample(
                 name='Required Value Missing',
                 value={'message': MISSING_ING},
-                status_codes=[400]
+                status_codes=[400],
+                response_only=True
             )
         ]
     )
@@ -848,6 +856,7 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=201)
 
     @extend_schema(
+        parameters=[custom_ingredient_name_param],
         request=None,
         responses={
             200: CustomIngredientSerializer(many=True),
