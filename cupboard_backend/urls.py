@@ -31,7 +31,9 @@ urlpatterns = [
 urlpatterns += [
     path('login/callback', auth0_authentication.login_callback, name='login_callback'),
     path('login', auth0_authentication.LoginAPIView.as_view(), name='login'),
+    path('login/cli', auth0_authentication.CLILoginAPIView.as_view(), name='cli_login'),
     path('logout/callback', auth0_authentication.logout_callback, name='logout_callback'),
     path('logout', auth0_authentication.LogoutAPIView.as_view(), name='logout'),
-    path('refresh-tokens', auth0_authentication.RefreshAPIView.as_view(), name='refresh_token')
+    path('logout/cli', auth0_authentication.CLILogoutAPIView.as_view(), name='cli_logout'),
+    path('refresh-token', auth0_authentication.RefreshTokenAPIView.as_view(), name='refresh_token')
 ]
