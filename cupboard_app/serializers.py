@@ -15,6 +15,15 @@ class MessageSerializer(serializers.Serializer):
     message = serializers.CharField()
 
 
+class SessionSerializer(serializers.Serializer):
+    access_token = serializers.CharField()
+    refresh_token = serializers.CharField()
+    id_token = serializers.CharField()
+    issued_time = serializers.CharField()
+    expire_time = serializers.CharField()
+    user_info = serializers.JSONField()
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
