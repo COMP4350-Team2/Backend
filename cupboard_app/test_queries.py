@@ -127,7 +127,11 @@ class CustomIngredientQueries(TestCase):
         # Test creating custom ingredient with same name as a common ingredient
         common_ing1 = Ingredient.objects.create(name='common_ing1', type='test_type1')
         with self.assertRaises(ValueError):
-            create_custom_ingredient(username='test_user', name=common_ing1.name, type=common_ing1.type)
+            create_custom_ingredient(
+                username='test_user',
+                name=common_ing1.name,
+                type=common_ing1.type
+            )
 
     def test_get_all_custom_ingredients(self):
         """
