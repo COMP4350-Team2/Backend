@@ -1739,6 +1739,21 @@ class CreateCustomIngredientsApi(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertDictEqual(response.json(), self.cust_ing)
 
+        # Test creation when the ingredient is one of the common ingredients
+        common_ing = Ingredient.objects.create(name='common_ingredient', type='test_type1')
+        response = self.client.post(
+            reverse(f'{API_VERSION}:custom_ingredient'),
+            json.dumps(
+                {
+                    'ingredient': common_ing.name,
+                    'type': common_ing.type
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 400)
+
     @patch.object(TokenBackend, 'decode')
     def test_create_custom_ingredient_nonexistant_user(self, mock_decode):
         """
