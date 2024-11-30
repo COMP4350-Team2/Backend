@@ -18,6 +18,7 @@ from cupboard_app.models import (
     CustomIngredient
 )
 from cupboard_app.queries import (
+    CANNOT_CREATE_INGREDIENT,
     DOES_NOT_EXIST,
     GROCERY_LIST_NAME,
     PANTRY_LIST_NAME,
@@ -1753,6 +1754,7 @@ class CreateCustomIngredientsApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'message': CANNOT_CREATE_INGREDIENT})
 
     @patch.object(TokenBackend, 'decode')
     def test_create_custom_ingredient_nonexistant_user(self, mock_decode):
