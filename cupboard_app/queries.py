@@ -6,6 +6,7 @@ from cupboard_app.models import (
     Measurement,
     User,
     UserListIngredients,
+    Recipe,
     CustomIngredient
 )
 
@@ -109,9 +110,36 @@ def delete_custom_ingredient(username: str, ingredient: str):
         user=user,
         name=ingredient
     )
+    lists = UserListIngredients.objects.all().filter(user=user)
+    recipes = Recipe.objects.all().filter(user=user)
 
     if query.exists():
         query.get().delete()
+
+        # Check if ingredient used in the lists or the recipes. If it is then delete.
+        for list in lists:
+            list_updated = False
+            for list_ingredient in list.ingredients:
+                if (
+                    list_ingredient.get('ingredient_name') == ingredient
+                    and list_ingredient.get('is_custom_ingredient')
+                ):
+                    list_updated = True
+                    list.ingredients.remove(list_ingredient)
+            if list_updated:
+                list.save()
+
+        for recipe in recipes:
+            recipe_updated = False
+            for recipe_ingredient in recipe.ingredients:
+                if (
+                    recipe_ingredient.get('ingredient_name') == ingredient
+                    and recipe_ingredient.get('is_custom_ingredient')
+                ):
+                    recipe_updated = True
+                    recipe.ingredients.remove(recipe_ingredient)
+            if recipe_updated:
+                recipe.save()
 
     return get_all_custom_ingredients(username)
 
