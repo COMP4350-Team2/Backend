@@ -842,7 +842,7 @@ def add_ingredient_to_recipe(
                     and i['unit'] == unit
                     and i['is_custom_ingredient'] == is_custom_ingredient
                 ):
-                    i['amount'] += amount
+                    i['amount'] = amount
         user_recipe.save()
     else:
         raise ValueError(INVALID_RECIPE)
@@ -996,6 +996,19 @@ def get_all_recipes(username: str) -> QuerySet:
 
     user = User.objects.get(username=username)
     return Recipe.objects.all().filter(user=user)
-    
 
-    
+def get_recipe(username: str, recipe_name: str) -> Recipe | None:
+    """
+    Gets the specific ingredient object from the database.
+
+    Args:
+        username: User's username
+        recipe_name: Name of the recipe to get
+
+    Returns:
+        Recipe object or exception if recipe is not found.
+    """
+
+    result = Recipe.objects.get(username=username, recipe_name=recipe_name)
+
+    return result

@@ -1615,3 +1615,32 @@ class RecipeQueries(TestCase):
 
         all_recipes = get_all_recipes(self.user1.username)
         self.assertEqual(len(all_recipes), 2)
+
+    
+    def test_get_all_recipes(self):
+        """
+        Testing add_ingredient_to_recipe correctly adds an ingredient in a user's recipe
+        """
+
+        with self.assertRaises(Recipe.DoesNotExist):
+            get_recipe = get_recipe(self.user1.username, self.recipe_name1)
+
+        Recipe.objects.create(
+            user=self.user1,
+            recipe_name=self.recipe_name1,
+            steps=[],
+            ingredients=[]
+        )
+
+        get_recipe = get_recipe(self.user1.username, self.recipe_name1)
+        self.assertEqual(get_recipe, Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1))
+        
+        Recipe.objects.create(
+            user=self.user1,
+            recipe_name=self.recipe_name2,
+            steps=[],
+            ingredients=[]
+        )
+
+        get_recipe = get_recipe(self.user1.username, self.recipe_name2)
+        self.assertEqual(get_recipe, Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name2))
