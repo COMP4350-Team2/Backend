@@ -359,7 +359,7 @@ def delete_list_ingredient(
         The updated list.
     """
     if isinstance(is_custom_ingredient, str):
-        is_custom_ingredient = is_custom_ingredient == 'True'
+        is_custom_ingredient = is_custom_ingredient.lower() == 'true'
 
     user_list = UserListIngredients.objects.get(
         user__username=username,
@@ -406,7 +406,7 @@ def add_list_ingredient(
         The updated list.
     """
     if isinstance(is_custom_ingredient, str):
-        is_custom_ingredient = is_custom_ingredient == 'True'
+        is_custom_ingredient = is_custom_ingredient.lower() == 'true'
 
     user_id = None
     if is_custom_ingredient:
