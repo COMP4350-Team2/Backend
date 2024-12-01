@@ -1779,8 +1779,6 @@ class CreateCustomIngredientsApi(TestCase):
 
 
 class DeleteCustomIngredientsApi(TestCase):
-    unit1 = None
-    unit2 = None
 
     def setUp(self):
         """
@@ -1790,11 +1788,24 @@ class DeleteCustomIngredientsApi(TestCase):
             username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
             email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
         )
-
         self.cust_ing = CustomIngredient.objects.create(
             user=self.user1,
             name='test_ingredient1',
             type='test_type1'
+        )
+        self.unit1 = Measurement.objects.create(unit='test_unit1')
+        self.list_name1 = ListName.objects.create(list_name='test_listname1')
+        self.list_cust_ing1 = {
+            'ingredient_name': self.cust_ing.name,
+            'ingredient_type': self.cust_ing.type,
+            'amount': 500,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': True
+        }
+        self.list1 = UserListIngredients.objects.create(
+            user=self.user1,
+            list_name=self.list_name1,
+            ingredients=[self.list_cust_ing1]
         )
 
     @patch.object(TokenBackend, 'decode')
@@ -1815,6 +1826,9 @@ class DeleteCustomIngredientsApi(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [])
+
+        list = UserListIngredients.objects.get(user=self.user1, list_name=self.list_name1)
+        self.assertEqual(len(list.ingredients), 0)
 
     @patch.object(TokenBackend, 'decode')
     def test_delete_nonexistant_custom_ingredient(self, mock_decode):
