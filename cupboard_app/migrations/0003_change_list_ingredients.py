@@ -13,7 +13,7 @@ def change_list_ingredients_format(apps, schema_editor):
                 'ingredient_type': ingredient.get('ingredient_type'),
                 'amount': ingredient.get('amount'),
                 'unit': ingredient.get('unit'),
-                'is_custom_ingredient': False
+                'is_custom_ingredient': ingredient.get('is_custom_ingredient', False)
             }
             new_ingredients.append(new_ingredient)
         list.ingredients = new_ingredients

@@ -18,6 +18,7 @@ from cupboard_app.models import (
     CustomIngredient
 )
 from cupboard_app.queries import (
+    CANNOT_CREATE_INGREDIENT,
     DOES_NOT_EXIST,
     GROCERY_LIST_NAME,
     PANTRY_LIST_NAME,
@@ -218,9 +219,7 @@ class CreateUserListIngredientsApi(TestCase):
             self.assertEqual(response.status_code, 400)
             self.assertDictEqual(
                 response.json(),
-                {
-                    'message': UserListIngredientsViewSet.MISSING_USER_LIST_PARAM_MSG
-                }
+                {'message': UserListIngredientsViewSet.MISSING_USER_LIST_PARAM_MSG}
             )
 
     @patch.object(TokenBackend, 'decode')
@@ -255,7 +254,7 @@ class CreateUserListIngredientsApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'message': MAX_LISTS_PER_USER})
 
         # Check how many lists we have
@@ -335,7 +334,7 @@ class GetSpecificUserListIngredientsApi(TestCase):
         )
 
         # Check how many lists we have
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {'message': INVALID_USER_LIST})
 
 
@@ -428,7 +427,7 @@ class ChangeUserListIngredientsApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
 
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {'message': INVALID_USER_LIST})
 
         # Make sure user has the correct list and it is correct
@@ -670,9 +669,7 @@ class AddIngredientUserListIngredientsApi(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertDictEqual(
             response.json(),
-            {
-                'message': UpdateUserListIngredientsViewSet.MISSING_ADD_INGREDIENT_MSG
-            }
+            {'message': UpdateUserListIngredientsViewSet.MISSING_ADD_INGREDIENT_MSG}
         )
 
         # Ensures the list items have not been changed
@@ -705,7 +702,7 @@ class AddIngredientUserListIngredientsApi(TestCase):
         )
 
         # Ensures correct response given by view response
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {'message': INVALID_USER_LIST})
 
         # Ensures the list items have not been changed
@@ -737,12 +734,10 @@ class AddIngredientUserListIngredientsApi(TestCase):
         )
 
         # Ensures correct response given by view response
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 404)
         self.assertDictEqual(
             response.json(),
-            {
-                'message': f'Ingredient {DOES_NOT_EXIST}'
-            }
+            {'message': f'Ingredient {DOES_NOT_EXIST}'}
         )
 
         # Ensures the list items have not been changed
@@ -1076,9 +1071,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertDictEqual(
             response.json(),
-            {
-                'message': UpdateUserListIngredientsViewSet.MISSING_SET_INGREDIENT_MSG
-            }
+            {'message': UpdateUserListIngredientsViewSet.MISSING_SET_INGREDIENT_MSG}
         )
 
         user_lists = UserListIngredients.objects.filter(user__username=self.user1.username)
@@ -1114,7 +1107,7 @@ class SetIngredientUserListIngredientsApi(TestCase):
         )
 
         # Ensures correct response given by view response
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {'message': INVALID_USER_LIST})
 
         # Ensures the list items have not been changed
@@ -1151,12 +1144,10 @@ class SetIngredientUserListIngredientsApi(TestCase):
         )
 
         # Ensures correct response given by view response
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 404)
         self.assertDictEqual(
             response.json(),
-            {
-                'message': f'Ingredient {DOES_NOT_EXIST}'
-            }
+            {'message': f'Ingredient {DOES_NOT_EXIST}'}
         )
 
         # Ensures the list items have not been changed
@@ -1498,7 +1489,7 @@ class DeleteIngredientUserListIngredientsApi(TestCase):
         )
 
         # Ensures correct response given by view response
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {'message': INVALID_USER_LIST})
 
         # Ensures the list items have not been changed
@@ -1705,9 +1696,7 @@ class CreateUserApi(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertDictEqual(
             response.json(),
-            {
-                'message': UserViewSet.MISSING_USER_INFO
-            }
+            {'message': UserViewSet.MISSING_USER_INFO}
         )
 
 
@@ -1749,10 +1738,23 @@ class CreateCustomIngredientsApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         self.assertEqual(response.status_code, 201)
-        self.assertDictEqual(
-            response.json(),
-            self.cust_ing
+        self.assertDictEqual(response.json(), self.cust_ing)
+
+        # Test creation when the ingredient is one of the common ingredients
+        common_ing = Ingredient.objects.create(name='common_ingredient', type='test_type1')
+        response = self.client.post(
+            reverse(f'{API_VERSION}:custom_ingredient'),
+            json.dumps(
+                {
+                    'ingredient': common_ing.name,
+                    'type': common_ing.type
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
         )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {'message': CANNOT_CREATE_INGREDIENT})
 
     @patch.object(TokenBackend, 'decode')
     def test_create_custom_ingredient_nonexistant_user(self, mock_decode):
@@ -1773,7 +1775,7 @@ class CreateCustomIngredientsApi(TestCase):
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, 404)
 
 
 class DeleteCustomIngredientsApi(TestCase):
@@ -1812,10 +1814,7 @@ class DeleteCustomIngredientsApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json(),
-            []
-        )
+        self.assertEqual(response.json(), [])
 
     @patch.object(TokenBackend, 'decode')
     def test_delete_nonexistant_custom_ingredient(self, mock_decode):

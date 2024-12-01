@@ -1,5 +1,6 @@
 import json
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase
 
 from cupboard_app.models import (
@@ -122,6 +123,15 @@ class CustomIngredientQueries(TestCase):
 
         create_custom_ingredient(username='test_user', name='test_ingredient3', type='test_type2')
         self.assertEqual(len(CustomIngredient.objects.all()), 3)
+
+        # Test creating custom ingredient with same name as a common ingredient
+        common_ing1 = Ingredient.objects.create(name='common_ing1', type='test_type1')
+        with self.assertRaises(ValueError):
+            create_custom_ingredient(
+                username='test_user',
+                name=common_ing1.name,
+                type=common_ing1.type
+            )
 
     def test_get_all_custom_ingredients(self):
         """
@@ -546,7 +556,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(result, list_created)
 
         # Getting a non-existent list raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ObjectDoesNotExist):
             get_specific_user_lists_ingredients(
                 username=self.user1.username,
                 list_name=self.empty_list_name1.list_name
@@ -591,7 +601,7 @@ class UserListIngredientsQueries(TestCase):
         )
 
         # Changing in a non-existent list raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ObjectDoesNotExist):
             change_user_list_ingredient_name(
                 username=self.user1.username,
                 old_list_name=self.empty_list_name1.list_name,
@@ -750,7 +760,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_list.ingredients, [self.list_ing1, self.list_ing2])
 
         # Deleting in a non-existent list raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ObjectDoesNotExist):
             delete_list_ingredient(
                 username=self.user2.username,
                 list_name=self.empty_list_name1.list_name,
@@ -827,7 +837,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2, self.list_cust_ing1])
 
         # Adding a non-existent list raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ObjectDoesNotExist):
             add_list_ingredient(
                 username=self.user1.username,
                 list_name=self.empty_list_name1.list_name,
@@ -968,7 +978,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_list.ingredients, [updated_ing1, updated_ing2, self.list_ing2])
 
         # Setting a non-existent list raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ObjectDoesNotExist):
             set_list_ingredient(
                 username=self.user1.username,
                 old_list_name=self.empty_list_name1.list_name,
