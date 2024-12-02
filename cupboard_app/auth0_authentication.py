@@ -180,8 +180,10 @@ class LoginAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: SessionSerializer,
-            302: RedirectURLSerializer
+            200: [
+                SessionSerializer,
+                RedirectURLSerializer
+            ]
         },
         examples=[
             session_example,
@@ -203,7 +205,7 @@ class LoginAPIView(APIView):
                 request.build_absolute_uri(reverse('login_callback')),
                 audience=AUTH0_API_IDENTIFIER
             )
-            result = Response({'url': redirect_info.url}, status=302)
+            result = Response({'url': redirect_info.url}, status=200)
 
         return result
 
@@ -216,8 +218,10 @@ class LogoutAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: MessageSerializer,
-            302: RedirectURLSerializer
+            200: [
+                MessageSerializer,
+                RedirectURLSerializer
+            ]
         },
         examples=[
             OpenApiExample(
@@ -244,7 +248,7 @@ class LogoutAPIView(APIView):
                     quote_via=quote_plus,
                 )
             )
-            result = Response({'url': redirect_info.url}, status=302)
+            result = Response({'url': redirect_info.url}, status=200)
         else:
             message = Message(message=self.LOGOUT_MSG)
             serializer = MessageSerializer(message)
