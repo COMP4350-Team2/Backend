@@ -1,0 +1,8 @@
+services:
+  backend:
+    image: cupboard_backend:latest
+    env_file:
+      - .env
+    build: .
+    ports:
+      - "6060:6060"
