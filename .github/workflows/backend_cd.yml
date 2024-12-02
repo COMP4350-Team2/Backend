@@ -2,7 +2,6 @@ name: backend_cd
 
 on:
   workflow_dispatch:
-  push:
 
 env:
   env_file: ${{ secrets.ENV_PROD }}
