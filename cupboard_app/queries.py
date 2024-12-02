@@ -15,7 +15,7 @@ GROCERY_LIST_NAME = 'Grocery'
 PANTRY_LIST_NAME = 'Pantry'
 INVALID_USER_LIST = 'User list does not exist.'
 INVALID_RECIPE = 'Recipe does not exist.'
-INVALID_STEP = 'Step does not exist.' 
+INVALID_STEP = 'Step does not exist.'
 DOES_NOT_EXIST = 'matching query does not exist.'
 MAX_LISTS_PER_USER = f'User has {MAX_LISTS} lists. Max limit per user reached.'
 
@@ -739,6 +739,7 @@ def add_default_user_lists(username: str):
     create_user_list_ingredients(username=username, list_name=GROCERY_LIST_NAME)
     create_user_list_ingredients(username=username, list_name=PANTRY_LIST_NAME)
 
+
 def create_recipe(username: str, recipe_name: str):
     """
     Creates a recipe in the recipe dimension table.
@@ -752,8 +753,14 @@ def create_recipe(username: str, recipe_name: str):
         recipe already existed in the database.
     """
     user = User.objects.get(username=username)
-    obj, new_created = Recipe.objects.get_or_create(user=user, recipe_name=recipe_name, steps=[], ingredients=[])
+    obj, new_created = Recipe.objects.get_or_create(
+        user=user,
+        recipe_name=recipe_name,
+        steps=[],
+        ingredients=[]
+    )
     return obj
+
 
 def delete_recipe(username: str, recipe_name: str):
     """
@@ -776,6 +783,7 @@ def delete_recipe(username: str, recipe_name: str):
         query.get().delete()
 
     return get_all_recipes(username)
+
 
 def add_ingredient_to_recipe(
     username: str,
@@ -848,7 +856,8 @@ def add_ingredient_to_recipe(
         raise ValueError(INVALID_RECIPE)
 
     return user_recipe
-    
+
+
 def remove_ingredient_from_recipe(
     username: str,
     recipe_name: str,
@@ -891,7 +900,8 @@ def remove_ingredient_from_recipe(
         raise ValueError(INVALID_RECIPE)
 
     return user_recipe
-    
+
+
 def add_step_to_recipe(
     username: str,
     recipe_name: str,
@@ -925,7 +935,8 @@ def add_step_to_recipe(
         raise ValueError(INVALID_RECIPE)
 
     return user_recipe
-    
+
+
 def remove_step_from_recipe(
     username: str,
     recipe_name: str,
@@ -941,7 +952,7 @@ def remove_step_from_recipe(
     Returns:
         The updated recipe.
     """
-    
+
     user_recipe = Recipe.objects.filter(
         user__username=username,
         recipe_name=recipe_name
@@ -952,8 +963,9 @@ def remove_step_from_recipe(
         user_recipe.save()
     elif not user_recipe:
         raise ValueError(INVALID_RECIPE)
-        
+
     return user_recipe
+
 
 def edit_step_in_recipe(
     username: str,
@@ -983,8 +995,9 @@ def edit_step_in_recipe(
         user_recipe.save()
     elif not user_recipe:
         raise ValueError(INVALID_RECIPE)
-    
+
     return user_recipe
+
 
 def get_all_recipes(username: str) -> QuerySet:
     """
@@ -997,6 +1010,7 @@ def get_all_recipes(username: str) -> QuerySet:
     user = User.objects.get(username=username)
     return Recipe.objects.all().filter(user=user)
 
+
 def get_recipe(username: str, recipe_name: str) -> Recipe | None:
     """
     Gets the specific ingredient object from the database.
@@ -1008,7 +1022,7 @@ def get_recipe(username: str, recipe_name: str) -> Recipe | None:
     Returns:
         Recipe object or exception if recipe is not found.
     """
-
-    result = Recipe.objects.get(username=username, recipe_name=recipe_name)
+    user = User.objects.get(username=username)
+    result = Recipe.objects.get(user=user, recipe_name=recipe_name)
 
     return result
