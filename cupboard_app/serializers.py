@@ -15,6 +15,10 @@ class MessageSerializer(serializers.Serializer):
     message = serializers.CharField()
 
 
+class RedirectURLSerializer(serializers.Serializer):
+    url = serializers.CharField()
+
+
 class SessionSerializer(serializers.Serializer):
     access_token = serializers.CharField()
     refresh_token = serializers.CharField()

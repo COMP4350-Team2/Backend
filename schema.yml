@@ -962,6 +962,17 @@ paths:
                       sid: session_id
                   summary: Login Success
           description: ''
+        '302':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedirectURL'
+              examples:
+                RedirectURL:
+                  value:
+                    url: https:some-redirect-url.com
+                  summary: Redirect URL
+          description: ''
   /login/cli:
     post:
       operationId: login_cli_create
@@ -1051,6 +1062,17 @@ paths:
                   value:
                     message: Logout successful. Login again using the login endpoint.
                   summary: Logout Success
+          description: ''
+        '302':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedirectURL'
+              examples:
+                RedirectURL:
+                  value:
+                    url: https:some-redirect-url.com
+                  summary: Redirect URL
           description: ''
   /logout/cli:
     post:
@@ -1256,6 +1278,13 @@ components:
           type: string
         new_is_custom_ingredient:
           type: boolean
+    RedirectURL:
+      type: object
+      properties:
+        url:
+          type: string
+      required:
+      - url
     Session:
       type: object
       properties:

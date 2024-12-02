@@ -27,6 +27,7 @@ from cupboard_app.exceptions import (
 from cupboard_app.models import Message
 from cupboard_app.serializers import (
     MessageSerializer,
+    RedirectURLSerializer,
     SessionSerializer
 )
 from cupboard_app.queries import (
@@ -70,7 +71,12 @@ session_example = OpenApiExample(
     status_codes=[200],
     response_only=True
 )
-
+redirect_url_example = OpenApiExample(
+    name='Redirect URL',
+    value={'url': 'https:some-redirect-url.com'},
+    status_codes=[302],
+    response_only=True
+)
 
 # Auth0 Client setup
 login_oauth = OAuth()
@@ -174,9 +180,13 @@ class LoginAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: SessionSerializer
+            200: SessionSerializer,
+            302: RedirectURLSerializer
         },
-        examples=[session_example]
+        examples=[
+            session_example,
+            redirect_url_example
+        ]
     )
     def get(self, request: Request) -> Response | HttpResponseRedirect:
         """
@@ -188,11 +198,12 @@ class LoginAPIView(APIView):
         if session:
             result = Response(session, status=200)
         else:
-            result = login_oauth.auth0.authorize_redirect(
+            redirect_info = login_oauth.auth0.authorize_redirect(
                 request,
                 request.build_absolute_uri(reverse('login_callback')),
                 audience=AUTH0_API_IDENTIFIER
             )
+            result = Response({'url': redirect_info.url}, status=302)
 
         return result
 
@@ -205,7 +216,8 @@ class LogoutAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: MessageSerializer
+            200: MessageSerializer,
+            302: RedirectURLSerializer
         },
         examples=[
             OpenApiExample(
@@ -213,7 +225,8 @@ class LogoutAPIView(APIView):
                 value={'message': LOGOUT_MSG},
                 status_codes=[200],
                 response_only=True
-            )
+            ),
+            redirect_url_example
         ]
     )
     def get(self, request: Request) -> Response | HttpResponseRedirect:
@@ -221,7 +234,7 @@ class LogoutAPIView(APIView):
         Logs out the user from Auth0 and clears the session.
         """
         if request.session.get('user'):
-            result = redirect(
+            redirect_info = redirect(
                 f'https://{AUTH0_DOMAIN}/v2/logout?'
                 + urlencode(
                     {
@@ -231,6 +244,7 @@ class LogoutAPIView(APIView):
                     quote_via=quote_plus,
                 )
             )
+            result = Response({'url': redirect_info.url}, status=302)
         else:
             message = Message(message=self.LOGOUT_MSG)
             serializer = MessageSerializer(message)
