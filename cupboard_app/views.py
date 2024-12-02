@@ -34,7 +34,13 @@ from cupboard_app.queries import (
     delete_list_ingredient,
     set_list_ingredient,
     change_user_list_ingredient_name,
+    add_ingredient_to_recipe,
+    get_all_recipes,
+    create_recipe,
+    get_recipe,
+    delete_recipe,
     INVALID_USER_LIST,
+    INVALID_RECIPE,
     MAX_LISTS_PER_USER
 )
 from cupboard_app.serializers import (
@@ -43,7 +49,8 @@ from cupboard_app.serializers import (
     MeasurementSerializer,
     UserSerializer,
     UserListIngredientsSerializer,
-    CustomIngredientSerializer
+    CustomIngredientSerializer,
+    RecipeSerializer
 )
 
 INVALID_TOKEN = {'message': 'Given token not valid for any token type'}
@@ -79,6 +86,11 @@ INGREDIENTS = [
         'is_custom_ingredient': True
     }
 ]
+STEPS = [
+    'Step one of my recipe!',
+    'Step two of my recipe!',
+    'Final step of my recipe!'
+]
 GROCERY_LIST = {
     'user': 'teacup',
     'list_name': 'Grocery',
@@ -90,9 +102,15 @@ FRIDGE_LIST = {
     'ingredients': INGREDIENTS
 }
 SINGLE_CUSTOM_INGREDIENT_DICT = {
-        'user': 'teacup',
-        'name': 'Beef',
-        'type': 'Meat'
+    'user': 'teacup',
+    'name': 'Beef',
+    'type': 'Meat'
+}
+SINGLE_RECIPE = {
+    'user': 'teacup',
+    'recipe_name': 'my_recipe',  
+    'ingredients': INGREDIENTS,
+    'steps': STEPS
 }
 
 
@@ -132,6 +150,16 @@ invalid_user_list_response = OpenApiResponse(
         )
     ]
 )
+invalid_recipe_response = OpenApiResponse(
+    response=MessageSerializer,
+    examples=[
+        OpenApiExample(
+            name='Recipe not found',
+            value={'message': INVALID_RECIPE},
+            status_codes=[500]
+        )
+    ]
+)
 list_name_param = OpenApiParameter(
     name='list_name',
     description='Name of the list.',
@@ -144,7 +172,12 @@ custom_ingredient_name_param = OpenApiParameter(
     type=str,
     location=OpenApiParameter.PATH
 )
-
+recipe_name_param = OpenApiParameter(
+    name='recipe_name',
+    description='Name of the recipe.',
+    type=str,
+    location=OpenApiParameter.PATH
+)
 
 def api_exception_handler(exc, context=None) -> Response:
     """
@@ -885,3 +918,251 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
 
         serializer = CustomIngredientSerializer(remaining_custom, many=True)
         return Response(serializer.data, status=200)
+
+
+@extend_schema(tags=['Recipes'])
+class UpdateRecipeIngredientsViewSet(viewsets.ViewSet):
+    MISSING_USER_LIST_PARAM_MSG = 'recipe_name parameter is missing or empty.'
+    MISSING_ADD_INGREDIENT_MSG = (
+        f'{REQUIRED_VALUE_MISSING}'
+        '{list_name: [LISTNAME], ingredient: [INGREDIENT], '
+        'amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT], '
+        'is_custom_ingredient: [CUSTOM INGREDIENT BOOLEAN]}'
+    )
+    @extend_schema(
+        parameters=[recipe_name_param],
+        request=inline_serializer(
+            name='AddIngredientInRecipeRequest',
+            fields={
+                'ingredient': serializers.CharField(),
+                'amount': serializers.FloatField(),
+                'unit': serializers.CharField(),
+                'is_custom_ingredient': serializers.BooleanField()
+            }
+        ),
+        responses={
+            200: RecipeSerializer,
+            400: MessageSerializer,
+            401: auth_failed_response,
+            500: invalid_recipe_response
+        },
+        examples=[
+            OpenApiExample(
+                name='Add Ingredient in Recipe',
+                value={
+                    'ingredient': 'Bread',
+                    'amount': 1,
+                    'unit': 'count',
+                    'is_custom_ingredient': False
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name='Add Custom Ingredient in Recipe',
+                value={
+                    'ingredient': 'Jam',
+                    'amount': 25,
+                    'unit': 'g',
+                    'is_custom_ingredient': True
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name='Ingredient Added',
+                value=SINGLE_RECIPE,
+                status_codes=[200],
+                response_only=True
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_ADD_INGREDIENT_MSG},
+                status_codes=[400],
+                response_only=True
+            )
+        ]
+    )
+    def create(self, request: Request, recipe_name: str = None) -> Response:
+        """
+        Adds an ingredient to a specified user's list.
+        """
+        # Extract username from the access token
+        username = get_auth_username_from_payload(request=request)
+        body = request.data
+
+        if (
+            username
+            and recipe_name
+            and body.get('ingredient', None)
+            and body.get('amount', None)
+            and body.get('unit', None)
+            and body.get('is_custom_ingredient', None) is not None
+        ):
+            # Adding ingredient to a list
+            my_recipe = add_ingredient_to_recipe(
+                username=username,
+                recipe_name=recipe_name,
+                ingredient=body['ingredient'],
+                amount=body['amount'],
+                unit=body['unit'],
+                is_custom_ingredient=body['is_custom_ingredient']
+            )
+            serializer = RecipeSerializer(my_recipe)
+        elif not recipe_name:
+            raise MissingInformation(self.MISSING_USER_LIST_PARAM_MSG)
+        else:
+            raise MissingInformation(self.MISSING_ADD_INGREDIENT_MSG)
+
+        return Response(serializer.data, status=200)
+
+
+
+@extend_schema(tags=['Recipes'])
+class UpdateRecipeStepsViewSet(viewsets.ViewSet):
+    MISSING_USER_LIST_PARAM_MSG = 'recipe_name parameter is missing or empty.'
+    MISSING_ADD_INGREDIENT_MSG = (
+        f'{REQUIRED_VALUE_MISSING}'
+        '{list_name: [LISTNAME], ingredient: [INGREDIENT], '
+        'amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT], '
+        'is_custom_ingredient: [CUSTOM INGREDIENT BOOLEAN]}'
+    )
+
+
+@extend_schema(tags=['Recipes'])
+class RecipeViewSet(viewsets.ViewSet):
+    MISSING_USER_LIST_PARAM_MSG = 'recipe_name parameter is missing or empty.'
+
+    @extend_schema(
+        request=None,
+        responses={
+            200: RecipeSerializer(many=True),
+            401: auth_failed_response,
+        },
+        examples=[
+            OpenApiExample(
+                name="All User Lists Retrieved",
+                value=[SINGLE_RECIPE],
+                status_codes=[200]
+            )
+        ]
+    )
+    def list(self, request: Request) -> Response:
+        """
+        Retrieves all the recipes for a user.
+        """
+        username = get_auth_username_from_payload(request=request)
+
+        # Retrieves all the lists for the user
+        recipes = get_all_recipes(username=username)
+        serializer = RecipeSerializer(recipes, many=True)
+
+        return Response(serializer.data, status=200)
+
+    @extend_schema(
+        parameters=[recipe_name_param],
+        request=None,
+        responses={
+            201: RecipeSerializer,
+            400: MessageSerializer,
+            401: auth_failed_response,
+        },
+        examples=[
+            OpenApiExample(
+                name="Recipe Created",
+                value={
+                    'user': 'teacup',
+                    'recipe_name': 'Toast',
+                    'ingredients': [],
+                    'steps':[]
+                },
+                status_codes=[201]
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_USER_LIST_PARAM_MSG},
+                status_codes=[400]
+            )
+        ]
+    )
+    def create(self, request: Request, recipe_name: str = None) -> Response:
+        """
+        Creates a recipe for the user.
+        Returns the recipe object.
+        """
+        # Extract username from the access token
+        username = get_auth_username_from_payload(request=request)
+
+        if username and recipe_name:
+
+            # Create the list
+            my_recipe = create_recipe(
+                username,
+                recipe_name
+            )
+            serializer = RecipeSerializer(my_recipe)
+        else:
+            raise MissingInformation(self.MISSING_USER_LIST_PARAM_MSG)
+
+        return Response(serializer.data, status=201)
+    
+    @extend_schema(
+        parameters=[recipe_name_param],
+        request=None,
+        responses={
+            200: RecipeSerializer,
+            401: auth_failed_response,
+            500: invalid_recipe_response
+        },
+        examples=[
+            OpenApiExample(
+                name="Recipe Retrieved",
+                value=SINGLE_RECIPE,
+                status_codes=[200]
+            )
+        ]
+    )
+    def retrieve(self, request: Request, recipe_name: str = None) -> Response:
+        """
+        Retrieves the specific recipe for a user.
+        """
+        username = get_auth_username_from_payload(request=request)
+
+        # Retrieves the specific list for the user
+        my_recipe = get_recipe(
+            username=username,
+            recipe_name=recipe_name
+        )
+        serializer = RecipeSerializer(my_recipe)
+
+        return Response(serializer.data, status=200)
+    
+    @extend_schema(
+        parameters=[recipe_name_param],
+        request=None,
+        responses={
+            200: RecipeSerializer(many=True),
+            401: auth_failed_response
+        },
+        examples=[
+            OpenApiExample(
+                name='Recipe Deleted',
+                value=SINGLE_RECIPE,
+                status_codes=[200]
+            )
+        ]
+    )
+    def destroy(self, request: Response, recipe_name: str = None) -> Response:
+        """
+        Deletes the specified list from the user's lists and returns
+        all of the user's lists after the delete.
+        """
+        username = get_auth_username_from_payload(request=request)
+
+        # Delete the list for specified user
+        recipes = delete_recipe(
+            username=username,
+            recipe_name=recipe_name
+        )
+        serializer = RecipeSerializer(recipes, many=True)
+
+        return Response(serializer.data, status=200)
+    
