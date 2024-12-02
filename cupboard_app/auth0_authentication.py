@@ -119,6 +119,19 @@ def set_session(request: Request, token_info: str):
     request.session['user'] = new_session
 
 
+def initialize_user_in_db(session: dict):
+    if session:
+        payload = AccessToken(session.get('access_token'))
+        username = get_auth_username_from_payload(payload=payload)
+        email = get_auth_email_from_payload(payload=payload)
+
+        # Check if the user exists in the database, if not create the user
+        # and create default lists for the user
+        if username and email:
+            create_user(username=username, email=email)
+            add_default_user_lists(username=username)
+
+
 def login_callback(request: Request) -> HttpResponseRedirect:
     """
     Callback from the login. Creates a user if user does not exist in the database.
@@ -134,17 +147,7 @@ def login_callback(request: Request) -> HttpResponseRedirect:
 
     set_session(request=request, token_info=token)
     session = request.session.get('user')
-
-    if session:
-        payload = AccessToken(session.get('access_token'))
-        username = get_auth_username_from_payload(payload=payload)
-        email = get_auth_email_from_payload(payload=payload)
-
-        # Check if the user exists in the database, if not create the user
-        # and create default lists for the user
-        if username and email:
-            create_user(username=username, email=email)
-            add_default_user_lists(username=username)
+    initialize_user_in_db(session=session)
 
     return redirect(request.build_absolute_uri(reverse('login')))
 
@@ -359,6 +362,7 @@ class CLILoginAPIView(APIView):
                 if response.status_code == 200:
                     set_session(request=request, token_info=response.json())
                     session = request.session.get('user')
+                    initialize_user_in_db(session=session)
                     result = Response(session, status=200)
                 else:
                     raise FailedOperation(response.json())
