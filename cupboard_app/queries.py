@@ -968,11 +968,13 @@ def remove_step_from_recipe(
     Returns:
         The updated recipe.
     """
-
     user_recipe = Recipe.objects.get(
         user__username=username,
         recipe_name=recipe_name
     )
+
+    if isinstance(step_number, str):
+        step_number = int(step_number)
 
     if len(user_recipe.steps) >= step_number and step_number >= 1:
         del user_recipe.steps[step_number - 1]
@@ -998,7 +1000,6 @@ def edit_step_in_recipe(
     Returns:
         The updated recipe.
     """
-
     user_recipe = Recipe.objects.get(
         user__username=username,
         recipe_name=recipe_name

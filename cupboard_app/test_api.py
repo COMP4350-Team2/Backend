@@ -23,6 +23,7 @@ from cupboard_app.queries import (
     DOES_NOT_EXIST,
     GROCERY_LIST_NAME,
     PANTRY_LIST_NAME,
+    INVALID_RECIPE,
     INVALID_USER_LIST,
     MAX_LISTS,
     MAX_LISTS_PER_USER
@@ -1780,7 +1781,6 @@ class CreateCustomIngredientsApi(TestCase):
 
 
 class DeleteCustomIngredientsApi(TestCase):
-
     def setUp(self):
         """
         Sets up a test database with test values
@@ -1861,9 +1861,6 @@ class DeleteCustomIngredientsApi(TestCase):
 
 
 class CreateRecipeApi(TestCase):
-    unit1 = None
-    unit2 = None
-
     def setUp(self):
         """
         Sets up a test database with test values
@@ -1896,10 +1893,7 @@ class CreateRecipeApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(
-            response.json(),
-            self.recipe
-        )
+        self.assertEqual(response.json(), self.recipe)
 
     @patch.object(TokenBackend, 'decode')
     def test_create_recipe_nonexistant_user(self, mock_decode):
@@ -1921,7 +1915,6 @@ class CreateRecipeApi(TestCase):
 
 
 class DeleteRecipeApi(TestCase):
-
     def setUp(self):
         """
         Sets up a test database with test values
@@ -1954,10 +1947,7 @@ class DeleteRecipeApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json(),
-            []
-        )
+        self.assertEqual(response.json(), [])
 
     @patch.object(TokenBackend, 'decode')
     def test_delete_nonexistant_recipe(self, mock_decode):
@@ -1990,7 +1980,6 @@ class DeleteRecipeApi(TestCase):
 
 
 class GetRecipeApi(TestCase):
-
     def setUp(self):
         """
         Sets up a test database with test values
@@ -2061,7 +2050,7 @@ class GetRecipeApi(TestCase):
         self.assertEqual(
             response.json(),
             {
-                'message': 'Recipe matching query does not exist.'
+                'message': INVALID_RECIPE
             }
         )
 
@@ -2098,7 +2087,6 @@ class GetRecipeApi(TestCase):
 
 
 class RecipeStepApi(TestCase):
-
     def setUp(self):
         """
         Sets up a test database with test values
@@ -2138,11 +2126,7 @@ class RecipeStepApi(TestCase):
                 f'{API_VERSION}:recipe_steps',
                 kwargs={'recipe_name': self.recipe.recipe_name},
             ),
-            json.dumps(
-                {
-                    'step': self.step1,
-                }
-            ),
+            json.dumps({'step': self.step1}),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
@@ -2170,11 +2154,7 @@ class RecipeStepApi(TestCase):
                 f'{API_VERSION}:recipe_steps',
                 kwargs={'recipe_name': 'doesnt_exist'},
             ),
-            json.dumps(
-                {
-                    'step': self.step1,
-                }
-            ),
+            json.dumps({'step': self.step1}),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
@@ -2183,7 +2163,7 @@ class RecipeStepApi(TestCase):
     @patch.object(TokenBackend, 'decode')
     def test_edit_step_in_recipe(self, mock_decode):
         """
-        Testing remove_step_from_recipe properly
+        Testing edit_step_in_recipe properly
         edits a step from a user's recipe.
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
@@ -2196,7 +2176,7 @@ class RecipeStepApi(TestCase):
             json.dumps(
                 {
                     'step': self.step2,
-                    'step_number': len(self.recipe2.steps),
+                    'step_number': len(self.recipe2.steps)
                 }
             ),
             content_type='application/json',
@@ -2229,7 +2209,7 @@ class RecipeStepApi(TestCase):
             json.dumps(
                 {
                     'step': self.step2,
-                    'step_number': len(self.recipe2.steps),
+                    'step_number': len(self.recipe2.steps)
                 }
             ),
             content_type='application/json',
@@ -2253,7 +2233,7 @@ class RecipeStepApi(TestCase):
             json.dumps(
                 {
                     'step': self.step2,
-                    'step_number': len(self.recipe2.steps)+1,
+                    'step_number': len(self.recipe2.steps) + 1,
                 }
             ),
             content_type='application/json',
@@ -2278,15 +2258,38 @@ class RecipeStepApi(TestCase):
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
+        query_params = {'step_number': len(self.recipe2.steps)}
         response = self.client.delete(
-            reverse(
-                f'{API_VERSION}:recipe_steps',
-                kwargs={'recipe_name': self.recipe2.recipe_name},
+            '{base_url}?{query_string}'.format(
+                base_url=reverse(
+                    f'{API_VERSION}:recipe_steps',
+                    kwargs={'recipe_name': self.recipe2.recipe_name}
+                ),
+                query_string=urlencode(query_params)
             ),
-            json.dumps(
-                {
-                    'step_number': len(self.recipe2.steps),
-                }
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'recipe_name': self.recipe2.recipe_name,
+                'steps': [],
+                'ingredients': []
+            }
+        )
+
+        # Try removing steps when there are no steps
+        query_params = {'step_number': 1}
+        response = self.client.delete(
+            '{base_url}?{query_string}'.format(
+                base_url=reverse(
+                    f'{API_VERSION}:recipe_steps',
+                    kwargs={'recipe_name': self.recipe2.recipe_name}
+                ),
+                query_string=urlencode(query_params)
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -2310,15 +2313,14 @@ class RecipeStepApi(TestCase):
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
+        query_params = {'step_number': len(self.recipe2.steps) + 1}
         response = self.client.delete(
-            reverse(
-                f'{API_VERSION}:recipe_steps',
-                kwargs={'recipe_name': self.recipe2.recipe_name},
-            ),
-            json.dumps(
-                {
-                    'step_number': len(self.recipe2.steps)+1,
-                }
+            '{base_url}?{query_string}'.format(
+                base_url=reverse(
+                    f'{API_VERSION}:recipe_steps',
+                    kwargs={'recipe_name': self.recipe2.recipe_name}
+                ),
+                query_string=urlencode(query_params)
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -2336,7 +2338,6 @@ class RecipeStepApi(TestCase):
 
 
 class RecipeIngredientApi(TestCase):
-
     def setUp(self):
         """
         Sets up a test database with test values
@@ -2345,9 +2346,7 @@ class RecipeIngredientApi(TestCase):
             username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
             email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
         )
-
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
-        self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type2')
         self.cust_ing1 = CustomIngredient.objects.create(
             user=self.user1,
             name='test_ingredient1',
@@ -2356,12 +2355,14 @@ class RecipeIngredientApi(TestCase):
         self.unit1 = Measurement.objects.create(unit='test_unit1')
         self.list_ing1 = {
             'ingredient_name': self.ing1.name,
+            'ingredient_type': self.ing1.type,
             'amount': 5,
             'unit': self.unit1.unit,
             'is_custom_ingredient': False
         }
         self.list_cust_ing1 = {
             'ingredient_name': self.cust_ing1.name,
+            'ingredient_type': self.cust_ing1.type,
             'amount': 5,
             'unit': self.unit1.unit,
             'is_custom_ingredient': True
@@ -2372,7 +2373,6 @@ class RecipeIngredientApi(TestCase):
             steps=[],
             ingredients=[]
         )
-
         self.recipe2 = Recipe.objects.create(
             user=self.user1,
             recipe_name='My_Recipe3',
@@ -2398,7 +2398,7 @@ class RecipeIngredientApi(TestCase):
                     'ingredient': self.list_ing1['ingredient_name'],
                     'amount': self.list_ing1['amount'],
                     'unit': self.list_ing1['unit'],
-                    'is_custom_ingredient': False
+                    'is_custom_ingredient': self.list_ing1['is_custom_ingredient']
                 }
             ),
             content_type='application/json',
@@ -2412,6 +2412,34 @@ class RecipeIngredientApi(TestCase):
                 'recipe_name': self.recipe.recipe_name,
                 'steps': [],
                 'ingredients': [self.list_ing1]
+            }
+        )
+
+        # Try adding to a list with an ingredient already in it
+        response = self.client.post(
+            reverse(
+                f'{API_VERSION}:recipe_ingredients',
+                kwargs={'recipe_name': self.recipe.recipe_name},
+            ),
+            json.dumps(
+                {
+                    'ingredient': self.list_cust_ing1['ingredient_name'],
+                    'amount': self.list_cust_ing1['amount'],
+                    'unit': self.list_cust_ing1['unit'],
+                    'is_custom_ingredient': self.list_cust_ing1['is_custom_ingredient']
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'recipe_name': self.recipe.recipe_name,
+                'steps': [],
+                'ingredients': [self.list_ing1, self.list_cust_ing1]
             }
         )
 
@@ -2433,7 +2461,7 @@ class RecipeIngredientApi(TestCase):
                     'ingredient': 'doesnt_exist',
                     'amount': self.list_ing1['amount'],
                     'unit': self.list_ing1['unit'],
-                    'is_custom_ingredient': False
+                    'is_custom_ingredient': self.list_ing1['is_custom_ingredient']
                 }
             ),
             content_type='application/json',
@@ -2442,9 +2470,7 @@ class RecipeIngredientApi(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(
             response.json(),
-            {
-                'message': 'Ingredient matching query does not exist.'
-            }
+            {'message': f'Ingredient {DOES_NOT_EXIST}'}
         )
 
     @patch.object(TokenBackend, 'decode')
@@ -2455,17 +2481,18 @@ class RecipeIngredientApi(TestCase):
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
+        query_params = {
+            'ingredient': self.list_cust_ing1['ingredient_name'],
+            'unit': self.list_cust_ing1['unit'],
+            'is_custom_ingredient': self.list_cust_ing1['is_custom_ingredient']
+        }
         response = self.client.delete(
-            reverse(
-                f'{API_VERSION}:recipe_ingredients',
-                kwargs={'recipe_name': self.recipe2.recipe_name},
-            ),
-            json.dumps(
-                {
-                    'ingredient': self.cust_ing1.name,
-                    'unit': self.unit1.unit,
-                    'is_custom_ingredient': True
-                }
+            '{base_url}?{query_string}'.format(
+                base_url=reverse(
+                    f'{API_VERSION}:recipe_ingredients',
+                    kwargs={'recipe_name': self.recipe2.recipe_name},
+                ),
+                query_string=urlencode(query_params)
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
@@ -2490,17 +2517,18 @@ class RecipeIngredientApi(TestCase):
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
+        query_params = {
+            'ingredient': 'doesnt_exist',
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': True
+        }
         response = self.client.delete(
-            reverse(
-                f'{API_VERSION}:recipe_ingredients',
-                kwargs={'recipe_name': self.recipe2.recipe_name},
-            ),
-            json.dumps(
-                {
-                    'ingredient': 'doesnt_exist',
-                    'unit': self.unit1.unit,
-                    'is_custom_ingredient': True
-                }
+            '{base_url}?{query_string}'.format(
+                base_url=reverse(
+                    f'{API_VERSION}:recipe_ingredients',
+                    kwargs={'recipe_name': self.recipe2.recipe_name},
+                ),
+                query_string=urlencode(query_params)
             ),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'

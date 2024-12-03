@@ -1100,21 +1100,21 @@ class RecipeIngredientsViewSet(viewsets.ViewSet):
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
-        body = request.data
+        query_params = request.query_params
 
         if (
             username
             and recipe_name
-            and body.get('ingredient', None)
-            and body.get('unit', None)
-            and body.get('is_custom_ingredient', None) is not None
+            and query_params.get('ingredient', None)
+            and query_params.get('unit', None)
+            and query_params.get('is_custom_ingredient', None) is not None
         ):
             my_recipe = remove_ingredient_from_recipe(
                 username=username,
                 recipe_name=recipe_name,
-                ingredient=body['ingredient'],
-                unit=body['unit'],
-                is_custom_ingredient=body['is_custom_ingredient']
+                ingredient=query_params['ingredient'],
+                unit=query_params['unit'],
+                is_custom_ingredient=query_params['is_custom_ingredient']
             )
             serializer = RecipeSerializer(my_recipe)
         elif not recipe_name:
@@ -1223,11 +1223,6 @@ class RecipeStepsViewSet(viewsets.ViewSet):
         },
         examples=[
             OpenApiExample(
-                name='New Step in Recipe',
-                value={'step': 'Final step of my recipe!', 'step_number': 3},
-                request_only=True
-            ),
-            OpenApiExample(
                 name='Update Step in Recipe',
                 value={'step': 'Step two of my recipe!', 'step_number': 2},
                 request_only=True
@@ -1254,7 +1249,7 @@ class RecipeStepsViewSet(viewsets.ViewSet):
     )
     def update(self, request: Response, recipe_name: str = None) -> Response:
         """
-        Updates a step in a specified user's recipe.
+        Updates an existing step in a specified user's recipe.
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
