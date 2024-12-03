@@ -9,6 +9,7 @@ profiles/
 
 # Configuration
 .env
+old.env
 pip.conf
 
 # Node artifact files
