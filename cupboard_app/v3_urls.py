@@ -60,16 +60,6 @@ urlpatterns = [
         name='user_list_ingredients'
     ),
     path(
-        'user/recipe',
-        RecipeViewSet.as_view({'get': 'list'}),
-        name='recipe'
-    ),
-    path(
-        'user/recipe/<str:recipe_name>',
-        RecipeViewSet.as_view({'get': 'retrieve', 'post': 'create', 'delete': 'destroy'}),
-        name='specific_recipe'
-    ),
-    path(
         'user/recipe/<str:recipe_name>/ingredient',
         UpdateRecipeIngredientsViewSet.as_view({'post': 'create', 'delete': 'destroy'}),
         name='recipe_ingredients'
@@ -78,6 +68,16 @@ urlpatterns = [
         'user/recipe/<str:recipe_name>/step',
         UpdateRecipeStepsViewSet.as_view({'post': 'create', 'patch': 'update', 'delete': 'destroy'}),
         name='recipe_steps'
+    ),
+    path(
+        'user/recipe/<str:recipe_name>',
+        RecipeViewSet.as_view({'get': 'retrieve', 'post': 'create', 'delete': 'destroy'}),
+        name='specific_recipe'
+    ),
+    path(
+        'user/recipe',
+        RecipeViewSet.as_view({'get': 'list'}),
+        name='recipe'
     )
 ]
 
