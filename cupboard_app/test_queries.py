@@ -1,5 +1,6 @@
 import json
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase
 
 from cupboard_app.models import (
@@ -104,9 +105,14 @@ class IngredientsQueries(TestCase):
 
 
 class CustomIngredientQueries(TestCase):
+    user = None
     ing1 = None
     ing2 = None
-    user = None
+    unit1 = None
+    list_name1 = None
+    list_cust_ing1 = None
+    list_cust_ing2 = None
+    list1 = None
 
     def setUp(self):
         self.user = User.objects.create(username='test_user', email='test_user@cupboard.app')
@@ -115,6 +121,27 @@ class CustomIngredientQueries(TestCase):
         )
         self.ing2 = CustomIngredient.objects.create(
             user=self.user, name='test_ingredient2', type='test_type1'
+        )
+        self.unit1 = Measurement.objects.create(unit='test_unit1')
+        self.list_name1 = ListName.objects.create(list_name='test_listname1')
+        self.list_cust_ing1 = {
+            'ingredient_name': self.ing1.name,
+            'ingredient_type': self.ing1.type,
+            'amount': 500,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': True
+        }
+        self.list_cust_ing2 = {
+            'ingredient_name': self.ing2.name,
+            'ingredient_type': self.ing2.type,
+            'amount': 400,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': True
+        }
+        self.list1 = UserListIngredients.objects.create(
+            user=self.user,
+            list_name=self.list_name1,
+            ingredients=[self.list_cust_ing1, self.list_cust_ing2]
         )
 
     def test_create_custom_ingredient(self):
@@ -132,6 +159,15 @@ class CustomIngredientQueries(TestCase):
 
         create_custom_ingredient(username='test_user', name='test_ingredient3', type='test_type2')
         self.assertEqual(len(CustomIngredient.objects.all()), 3)
+
+        # Test creating custom ingredient with same name as a common ingredient
+        common_ing1 = Ingredient.objects.create(name='common_ing1', type='test_type1')
+        with self.assertRaises(ValueError):
+            create_custom_ingredient(
+                username='test_user',
+                name=common_ing1.name,
+                type=common_ing1.type
+            )
 
     def test_get_all_custom_ingredients(self):
         """
@@ -182,20 +218,30 @@ class CustomIngredientQueries(TestCase):
         Testing delete_custom_ingredient deletes a custom ingredient from the database
         """
         self.assertEqual(len(CustomIngredient.objects.all().filter(user=self.user)), 2)
+        list = UserListIngredients.objects.get(user=self.user, list_name=self.list_name1)
+        self.assertEqual(len(list.ingredients), 2)
 
         delete_custom_ingredient(self.user.username, self.ing1.name)
         self.assertEqual(len(CustomIngredient.objects.all().filter(user=self.user)), 1)
+        list = UserListIngredients.objects.get(user=self.user, list_name=self.list_name1)
+        self.assertEqual(len(list.ingredients), 1)
 
         delete_custom_ingredient(self.user.username, 'does not exist')
         self.assertEqual(len(CustomIngredient.objects.all().filter(user=self.user)), 1)
+        list = UserListIngredients.objects.get(user=self.user, list_name=self.list_name1)
+        self.assertEqual(len(list.ingredients), 1)
 
         with self.assertRaises(User.DoesNotExist):
             delete_custom_ingredient('does not exist', self.ing1.name)
 
         delete_custom_ingredient(self.user.username, self.ing2.name)
         self.assertEqual(len(CustomIngredient.objects.all().filter(user=self.user)), 0)
+        list = UserListIngredients.objects.get(user=self.user, list_name=self.list_name1)
+        self.assertEqual(len(list.ingredients), 0)
 
         self.assertEqual(len(delete_custom_ingredient(self.user.username, self.ing2.name)), 0)
+        list = UserListIngredients.objects.get(user=self.user, list_name=self.list_name1)
+        self.assertEqual(len(list.ingredients), 0)
 
 
 class ListNameQueries(TestCase):
@@ -556,7 +602,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(result, list_created)
 
         # Getting a non-existent list raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ObjectDoesNotExist):
             get_specific_user_lists_ingredients(
                 username=self.user1.username,
                 list_name=self.empty_list_name1.list_name
@@ -601,7 +647,7 @@ class UserListIngredientsQueries(TestCase):
         )
 
         # Changing in a non-existent list raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ObjectDoesNotExist):
             change_user_list_ingredient_name(
                 username=self.user1.username,
                 old_list_name=self.empty_list_name1.list_name,
@@ -760,7 +806,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_list.ingredients, [self.list_ing1, self.list_ing2])
 
         # Deleting in a non-existent list raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ObjectDoesNotExist):
             delete_list_ingredient(
                 username=self.user2.username,
                 list_name=self.empty_list_name1.list_name,
@@ -837,7 +883,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2, self.list_cust_ing1])
 
         # Adding a non-existent list raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ObjectDoesNotExist):
             add_list_ingredient(
                 username=self.user1.username,
                 list_name=self.empty_list_name1.list_name,
@@ -978,7 +1024,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_list.ingredients, [updated_ing1, updated_ing2, self.list_ing2])
 
         # Setting a non-existent list raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ObjectDoesNotExist):
             set_list_ingredient(
                 username=self.user1.username,
                 old_list_name=self.empty_list_name1.list_name,
@@ -1316,7 +1362,7 @@ class RecipeQueries(TestCase):
         )
 
         # Adding a non-existent recipe raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Recipe.DoesNotExist):
             add_ingredient_to_recipe(
                 username=self.user1.username,
                 recipe_name=self.empty_recipe_name,
@@ -1385,7 +1431,7 @@ class RecipeQueries(TestCase):
         self.assertEqual(len(user_recipe.ingredients), 1)
 
         # Removing ingredient from non-existant recipe raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Recipe.DoesNotExist):
             remove_ingredient_from_recipe(
                 username=self.user1.username,
                 recipe_name=self.empty_recipe_name,
@@ -1463,7 +1509,7 @@ class RecipeQueries(TestCase):
         self.assertEqual(len(user_recipe.steps), 2)
 
         # Adding a non-existent recipe raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Recipe.DoesNotExist):
             add_step_to_recipe(
                 username=self.user1.username,
                 recipe_name=self.empty_recipe_name,
@@ -1521,7 +1567,7 @@ class RecipeQueries(TestCase):
         self.assertEqual(len(user_recipe.steps), 0)
 
         # Removing from a non-existent recipe raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Recipe.DoesNotExist):
             remove_step_from_recipe(
                 username=self.user1.username,
                 recipe_name=self.empty_recipe_name,
@@ -1585,7 +1631,7 @@ class RecipeQueries(TestCase):
         self.assertEqual(user_recipe.steps[0], self.step2)
 
         # Removing from a non-existent recipe raises error
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Recipe.DoesNotExist):
             edit_step_in_recipe(
                 username=self.user1.username,
                 recipe_name=self.empty_recipe_name,

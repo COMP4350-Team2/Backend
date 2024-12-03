@@ -6,18 +6,23 @@ from cupboard_app.models import (
     Measurement,
     User,
     UserListIngredients,
-    CustomIngredient,
-    Recipe
+    Recipe,
+    CustomIngredient
 )
 
 MAX_LISTS = 10
 GROCERY_LIST_NAME = 'Grocery'
 PANTRY_LIST_NAME = 'Pantry'
-INVALID_USER_LIST = 'User list does not exist.'
-INVALID_RECIPE = 'Recipe does not exist.'
 INVALID_STEP = 'Step does not exist.'
 DOES_NOT_EXIST = 'matching query does not exist.'
+INVALID_RECIPE = f'Recipe {DOES_NOT_EXIST}'
+INVALID_USER_LIST = f'UserListIngredients {DOES_NOT_EXIST}'
 MAX_LISTS_PER_USER = f'User has {MAX_LISTS} lists. Max limit per user reached.'
+CANNOT_CREATE_INGREDIENT = (
+    'Cannot create because the ingredient '
+    'already exists in the common ingredients. '
+    'Please use the common ingredient instead.'
+)
 
 
 def create_ingredient(name: str, type: str) -> Ingredient:
@@ -46,7 +51,7 @@ def get_all_ingredients() -> QuerySet:
     return Ingredient.objects.all()
 
 
-def get_ingredient(name: str, id: int = None) -> Ingredient | None:
+def get_ingredient(name: str, id: int = None) -> Ingredient:
     """
     Gets the specific ingredient object from the database.
 
@@ -79,11 +84,19 @@ def create_custom_ingredient(username: str, name: str, type: str) -> CustomIngre
         custom ingredient already existed for the user.
     """
     user = User.objects.get(username=username)
-    obj, new_created = CustomIngredient.objects.get_or_create(user=user, name=name, type=type)
+
+    # Check if the same ingredient exists in the common ingredients
+    query = Ingredient.objects.filter(name=name)
+
+    if not query.exists():
+        obj, new_created = CustomIngredient.objects.get_or_create(user=user, name=name, type=type)
+    else:
+        raise ValueError(CANNOT_CREATE_INGREDIENT)
+
     return obj
 
 
-def delete_custom_ingredient(username: str, ingredient: str):
+def delete_custom_ingredient(username: str, ingredient: str) -> QuerySet:
     """
     Deletes a custom ingredient in the CustomIngredient dimension table.
 
@@ -99,9 +112,36 @@ def delete_custom_ingredient(username: str, ingredient: str):
         user=user,
         name=ingredient
     )
+    lists = UserListIngredients.objects.all().filter(user=user)
+    recipes = Recipe.objects.all().filter(user=user)
 
     if query.exists():
         query.get().delete()
+
+        # Check if ingredient used in the lists or the recipes. If it is then delete.
+        for list in lists:
+            list_updated = False
+            for list_ingredient in list.ingredients:
+                if (
+                    list_ingredient.get('ingredient_name') == ingredient
+                    and list_ingredient.get('is_custom_ingredient')
+                ):
+                    list_updated = True
+                    list.ingredients.remove(list_ingredient)
+            if list_updated:
+                list.save()
+
+        for recipe in recipes:
+            recipe_updated = False
+            for recipe_ingredient in recipe.ingredients:
+                if (
+                    recipe_ingredient.get('ingredient_name') == ingredient
+                    and recipe_ingredient.get('is_custom_ingredient')
+                ):
+                    recipe_updated = True
+                    recipe.ingredients.remove(recipe_ingredient)
+            if recipe_updated:
+                recipe.save()
 
     return get_all_custom_ingredients(username)
 
@@ -118,7 +158,7 @@ def get_all_custom_ingredients(username: str) -> QuerySet:
     return CustomIngredient.objects.all().filter(user=user)
 
 
-def get_custom_ingredient(username: str, name: str, id: int = None) -> CustomIngredient | None:
+def get_custom_ingredient(username: str, name: str, id: int = None) -> CustomIngredient:
     """
     Gets the specific custom ingredient object from the user.
 
@@ -165,7 +205,7 @@ def get_all_list_names() -> QuerySet:
     return ListName.objects.all()
 
 
-def get_list_name(list_name: str, id: int = None) -> ListName | None:
+def get_list_name(list_name: str, id: int = None) -> ListName:
     """
     Gets the specific list name object from the database.
 
@@ -209,7 +249,7 @@ def get_all_measurements() -> QuerySet:
     return Measurement.objects.all()
 
 
-def get_measurement(unit: str, id: int = None) -> Measurement | None:
+def get_measurement(unit: str, id: int = None) -> Measurement:
     """
     Gets the specific measurement object from the database.
 
@@ -254,7 +294,7 @@ def get_all_users() -> QuerySet:
     return User.objects.all()
 
 
-def get_user(username: str, id: int = None) -> User | None:
+def get_user(username: str, id: int = None) -> User:
     """
     Gets the specific user object from the database.
 
@@ -349,26 +389,23 @@ def delete_list_ingredient(
         The updated list.
     """
     if isinstance(is_custom_ingredient, str):
-        is_custom_ingredient = is_custom_ingredient == 'True'
+        is_custom_ingredient = is_custom_ingredient.lower() == 'true'
 
-    user_list = UserListIngredients.objects.filter(
+    user_list = UserListIngredients.objects.get(
         user__username=username,
         list_name__list_name=list_name
-    ).first()
+    )
 
-    if user_list:
-        if user_list.ingredients:
-            # Check if ingredient exists, if so delete it
-            for dictionary in user_list.ingredients:
-                if (
-                    dictionary.get('ingredient_name', None) == ingredient
-                    and dictionary.get('unit', None) == unit
-                    and dictionary.get('is_custom_ingredient', None) == is_custom_ingredient
-                ):
-                    user_list.ingredients.remove(dictionary)
-            user_list.save()
-    else:
-        raise ValueError(INVALID_USER_LIST)
+    if user_list.ingredients:
+        # Check if ingredient exists, if so delete it
+        for dictionary in user_list.ingredients:
+            if (
+                dictionary.get('ingredient_name', None) == ingredient
+                and dictionary.get('unit', None) == unit
+                and dictionary.get('is_custom_ingredient', None) == is_custom_ingredient
+            ):
+                user_list.ingredients.remove(dictionary)
+        user_list.save()
 
     return user_list
 
@@ -399,7 +436,7 @@ def add_list_ingredient(
         The updated list.
     """
     if isinstance(is_custom_ingredient, str):
-        is_custom_ingredient = is_custom_ingredient == 'True'
+        is_custom_ingredient = is_custom_ingredient.lower() == 'true'
 
     user_id = None
     if is_custom_ingredient:
@@ -413,35 +450,32 @@ def add_list_ingredient(
         user_id=user_id
     )
 
-    user_list = UserListIngredients.objects.filter(
+    user_list = UserListIngredients.objects.get(
         user__username=username,
         list_name__list_name=list_name
-    ).first()
+    )
 
-    if user_list:
-        if not user_list.ingredients:
-            # Empty list so set the list
-            user_list.ingredients = [list_ingredient]
-        elif not any(
-            dictionary.get('ingredient_name', None) == ingredient
-            and dictionary.get('unit', None) == unit
-            and dictionary.get('is_custom_ingredient') == is_custom_ingredient
-            for dictionary in user_list.ingredients
-        ):
-            # ingredient does not exist so insert
-            user_list.ingredients.append(list_ingredient)
-        else:
-            # ingredient exists so add or set the ingredient
-            for i in user_list.ingredients:
-                if (
-                    i['ingredient_name'] == ingredient
-                    and i['unit'] == unit
-                    and i['is_custom_ingredient'] == is_custom_ingredient
-                ):
-                    i['amount'] += amount
-        user_list.save()
+    if not user_list.ingredients:
+        # Empty list so set the list
+        user_list.ingredients = [list_ingredient]
+    elif not any(
+        dictionary.get('ingredient_name', None) == ingredient
+        and dictionary.get('unit', None) == unit
+        and dictionary.get('is_custom_ingredient') == is_custom_ingredient
+        for dictionary in user_list.ingredients
+    ):
+        # ingredient does not exist so insert
+        user_list.ingredients.append(list_ingredient)
     else:
-        raise ValueError(INVALID_USER_LIST)
+        # ingredient exists so add or set the ingredient
+        for i in user_list.ingredients:
+            if (
+                i['ingredient_name'] == ingredient
+                and i['unit'] == unit
+                and i['is_custom_ingredient'] == is_custom_ingredient
+            ):
+                i['amount'] += amount
+    user_list.save()
 
     return user_list
 
@@ -482,10 +516,10 @@ def set_list_ingredient(
         All of the user's updated lists.
     """
     if isinstance(old_is_custom_ingredient, str):
-        old_is_custom_ingredient = old_is_custom_ingredient == 'True'
+        old_is_custom_ingredient = old_is_custom_ingredient.lower() == 'true'
 
     if isinstance(new_is_custom_ingredient, str):
-        new_is_custom_ingredient = new_is_custom_ingredient == 'True'
+        new_is_custom_ingredient = new_is_custom_ingredient.lower() == 'true'
 
     user_id = None
     if new_is_custom_ingredient:
@@ -500,19 +534,16 @@ def set_list_ingredient(
     )
 
     # Get the list to set/remove ingredient from
-    old_user_list = UserListIngredients.objects.filter(
+    old_user_list = UserListIngredients.objects.get(
         user__username=username,
         list_name__list_name=old_list_name
-    ).first()
+    )
 
     # Get the list to set/move ingredient to
-    new_user_list = UserListIngredients.objects.filter(
+    new_user_list = UserListIngredients.objects.get(
         user__username=username,
         list_name__list_name=new_list_name
-    ).first()
-
-    if not old_user_list or not new_user_list:
-        raise ValueError(INVALID_USER_LIST)
+    )
 
     # Update the old list
     if old_user_list.ingredients:
@@ -659,7 +690,7 @@ def get_specific_user_lists_ingredients(
     username: str,
     list_name: str,
     id: int = None
-) -> QuerySet:
+) -> UserListIngredients:
     """
     Gets specific list for the specific user from the database.
 
@@ -672,18 +703,15 @@ def get_specific_user_lists_ingredients(
         QuerySet of all the lists for the specific user.
     """
     if id:
-        result = UserListIngredients.objects.filter(
+        result = UserListIngredients.objects.get(
             user__id=id,
             list_name__list_name=list_name
-        ).first()
+        )
     else:
-        result = UserListIngredients.objects.filter(
+        result = UserListIngredients.objects.get(
             user__username=username,
             list_name__list_name=list_name
-        ).first()
-
-    if not result:
-        raise ValueError(INVALID_USER_LIST)
+        )
 
     return result
 
@@ -705,24 +733,21 @@ def change_user_list_ingredient_name(
         The updated UserListIngredient object.
         Raises exception if update was unsuccessful.
     """
-    user_list = UserListIngredients.objects.filter(
+    user_list = UserListIngredients.objects.get(
         user__username=username,
         list_name__list_name=old_list_name
-    ).first()
+    )
 
-    if user_list:
-        if old_list_name != new_list_name:
-            # Create the listName object if it doesn't already exist
-            create_list_name(list_name=new_list_name)
-            new_user_list = create_user_list_ingredients(
-                username=username,
-                list_name=new_list_name,
-                ingredients=user_list.ingredients
-            )
-            delete_user_list_ingredients(username=username, list_name=old_list_name)
-            user_list = new_user_list
-    else:
-        raise ValueError(INVALID_USER_LIST)
+    if old_list_name != new_list_name:
+        # Create the listName object if it doesn't already exist
+        create_list_name(list_name=new_list_name)
+        new_user_list = create_user_list_ingredients(
+            username=username,
+            list_name=new_list_name,
+            ingredients=user_list.ingredients
+        )
+        delete_user_list_ingredients(username=username, list_name=old_list_name)
+        user_list = new_user_list
 
     return user_list
 
@@ -824,38 +849,34 @@ def add_ingredient_to_recipe(
         unit=unit,
         user_id=user_id
     )
+    list_ingredient.pop('ingredient_type')
 
-    user_recipe = Recipe.objects.filter(
+    user_recipe = Recipe.objects.get(
         user__username=username,
         recipe_name=recipe_name
-    ).first()
+    )
 
-    if user_recipe:
-        if not user_recipe.ingredients:
-            # Empty list so set the list
-            list_ingredient.pop('ingredient_type')
-            user_recipe.ingredients = [list_ingredient]
-        elif not any(
-            dictionary.get('ingredient_name', None) == ingredient
-            and dictionary.get('unit', None) == unit
-            and dictionary.get('is_custom_ingredient') == is_custom_ingredient
-            for dictionary in user_recipe.ingredients
-        ):
-            # ingredient does not exist so insert
-            list_ingredient.pop('ingredient_type')
-            user_recipe.ingredients.append(list_ingredient)
-        else:
-            # ingredient exists so add or set the ingredient
-            for i in user_recipe.ingredients:
-                if (
-                    i['ingredient_name'] == ingredient
-                    and i['unit'] == unit
-                    and i['is_custom_ingredient'] == is_custom_ingredient
-                ):
-                    i['amount'] = amount
-        user_recipe.save()
+    if not user_recipe.ingredients:
+        # Empty list so set the list
+        user_recipe.ingredients = [list_ingredient]
+    elif not any(
+        dictionary.get('ingredient_name', None) == ingredient
+        and dictionary.get('unit', None) == unit
+        and dictionary.get('is_custom_ingredient') == is_custom_ingredient
+        for dictionary in user_recipe.ingredients
+    ):
+        # ingredient does not exist so insert
+        user_recipe.ingredients.append(list_ingredient)
     else:
-        raise ValueError(INVALID_RECIPE)
+        # ingredient exists so set the ingredient
+        for i in user_recipe.ingredients:
+            if (
+                i['ingredient_name'] == ingredient
+                and i['unit'] == unit
+                and i['is_custom_ingredient'] == is_custom_ingredient
+            ):
+                i['amount'] = amount
+    user_recipe.save()
 
     return user_recipe
 
@@ -881,25 +902,22 @@ def remove_ingredient_from_recipe(
         The updated recipe.
     """
     if isinstance(is_custom_ingredient, str):
-        is_custom_ingredient = is_custom_ingredient == 'True'
+        is_custom_ingredient = is_custom_ingredient.lower() == 'true'
 
-    user_recipe = Recipe.objects.filter(
+    user_recipe = Recipe.objects.get(
         user__username=username,
         recipe_name=recipe_name
-    ).first()
+    )
 
-    if user_recipe:
-        # Check if ingredient exists, if so delete it
-        for dictionary in user_recipe.ingredients:
-            if (
-                dictionary.get('ingredient_name', None) == ingredient
-                and dictionary.get('unit', None) == unit
-                and dictionary.get('is_custom_ingredient', None) == is_custom_ingredient
-            ):
-                user_recipe.ingredients.remove(dictionary)
-        user_recipe.save()
-    else:
-        raise ValueError(INVALID_RECIPE)
+    # Check if ingredient exists, if so delete it
+    for dictionary in user_recipe.ingredients:
+        if (
+            dictionary.get('ingredient_name', None) == ingredient
+            and dictionary.get('unit', None) == unit
+            and dictionary.get('is_custom_ingredient', None) == is_custom_ingredient
+        ):
+            user_recipe.ingredients.remove(dictionary)
+    user_recipe.save()
 
     return user_recipe
 
@@ -920,21 +938,18 @@ def add_step_to_recipe(
         The updated recipe.
     """
 
-    user_recipe = Recipe.objects.filter(
+    user_recipe = Recipe.objects.get(
         user__username=username,
         recipe_name=recipe_name
-    ).first()
+    )
 
-    if user_recipe:
-        if not user_recipe.steps:
-            # Empty list so set the list
-            user_recipe.steps = [step]
-        else:
-            # ingredient does not exist so insert
-            user_recipe.steps.append(step)
-        user_recipe.save()
+    if not user_recipe.steps:
+        # Empty list so set the list
+        user_recipe.steps = [step]
     else:
-        raise ValueError(INVALID_RECIPE)
+        # ingredient does not exist so insert
+        user_recipe.steps.append(step)
+    user_recipe.save()
 
     return user_recipe
 
@@ -955,16 +970,14 @@ def remove_step_from_recipe(
         The updated recipe.
     """
 
-    user_recipe = Recipe.objects.filter(
+    user_recipe = Recipe.objects.get(
         user__username=username,
         recipe_name=recipe_name
-    ).first()
+    )
 
-    if user_recipe and len(user_recipe.steps) >= step_number and step_number >= 1:
-        del user_recipe.steps[step_number-1]
+    if len(user_recipe.steps) >= step_number and step_number >= 1:
+        del user_recipe.steps[step_number - 1]
         user_recipe.save()
-    elif not user_recipe:
-        raise ValueError(INVALID_RECIPE)
 
     return user_recipe
 
@@ -987,16 +1000,14 @@ def edit_step_in_recipe(
         The updated recipe.
     """
 
-    user_recipe = Recipe.objects.filter(
+    user_recipe = Recipe.objects.get(
         user__username=username,
         recipe_name=recipe_name
-    ).first()
+    )
 
-    if user_recipe and len(user_recipe.steps) >= step_number and step_number >= 1:
-        user_recipe.steps[step_number-1] = new_step
+    if len(user_recipe.steps) >= step_number and step_number >= 1:
+        user_recipe.steps[step_number - 1] = new_step
         user_recipe.save()
-    elif not user_recipe:
-        raise ValueError(INVALID_RECIPE)
 
     return user_recipe
 
@@ -1008,12 +1019,11 @@ def get_all_recipes(username: str) -> QuerySet:
     Returns:
         QuerySet of all the user's recipes.
     """
-
     user = User.objects.get(username=username)
-    return Recipe.objects.all().filter(user=user)
+    return Recipe.objects.filter(user=user)
 
 
-def get_recipe(username: str, recipe_name: str) -> Recipe | None:
+def get_recipe(username: str, recipe_name: str) -> Recipe:
     """
     Gets the specific ingredient object from the database.
 

@@ -43,6 +43,7 @@ from cupboard_app.queries import (
     create_recipe,
     get_recipe,
     delete_recipe,
+    CANNOT_CREATE_INGREDIENT,
     INVALID_USER_LIST,
     INVALID_RECIPE,
     MAX_LISTS_PER_USER
@@ -150,7 +151,7 @@ invalid_user_list_response = OpenApiResponse(
         OpenApiExample(
             name='User List not found',
             value={'message': INVALID_USER_LIST},
-            status_codes=[500]
+            status_codes=[404]
         )
     ]
 )
@@ -160,7 +161,7 @@ invalid_recipe_response = OpenApiResponse(
         OpenApiExample(
             name='Recipe not found',
             value={'message': INVALID_RECIPE},
-            status_codes=[500]
+            status_codes=[404]
         )
     ]
 )
@@ -200,9 +201,12 @@ def api_exception_handler(exc, context=None) -> Response:
         response.data = PERMISSION_DENIED
     elif response and isinstance(response.data, dict):
         response.data = {'message': response.data.get('detail', 'API Error')}
-    elif isinstance(exc, ValueError) or isinstance(exc, ObjectDoesNotExist):
+    elif isinstance(exc, ValueError):
         data = {'message': str(exc)}
-        response = Response(data, status=500)
+        response = Response(data, status=400)
+    elif isinstance(exc, ObjectDoesNotExist):
+        data = {'message': str(exc)}
+        response = Response(data, status=404)
     else:
         data = {'message': 'API Error'}
         response = Response(data, status=500)
@@ -247,7 +251,7 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
             200: UserListIngredientsSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
-            500: invalid_user_list_response
+            404: invalid_user_list_response
         },
         examples=[
             OpenApiExample(
@@ -337,7 +341,7 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
             200: UserListIngredientsSerializer(many=True),
             400: MessageSerializer,
             401: auth_failed_response,
-            500: invalid_user_list_response
+            404: invalid_user_list_response
         },
         examples=[
             OpenApiExample(
@@ -466,7 +470,7 @@ class UpdateUserListIngredientsViewSet(viewsets.ViewSet):
             200: UserListIngredientsSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
-            500: invalid_user_list_response
+            404: invalid_user_list_response
         },
         examples=[
             OpenApiExample(
@@ -552,8 +556,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         responses={
             201: UserListIngredientsSerializer,
             400: MessageSerializer,
-            401: auth_failed_response,
-            500: MessageSerializer
+            401: auth_failed_response
         },
         examples=[
             OpenApiExample(
@@ -573,7 +576,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
             OpenApiExample(
                 name='Max User Lists Reached',
                 value={'message': MAX_LISTS_PER_USER},
-                status_codes=[500]
+                status_codes=[400]
             )
         ]
     )
@@ -606,7 +609,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
         responses={
             200: UserListIngredientsSerializer,
             401: auth_failed_response,
-            500: invalid_user_list_response
+            404: invalid_user_list_response
         },
         examples=[
             OpenApiExample(
@@ -643,7 +646,7 @@ class UserListIngredientsViewSet(viewsets.ViewSet):
             200: UserListIngredientsSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
-            500: invalid_user_list_response
+            404: invalid_user_list_response
         },
         examples=[
             OpenApiExample(
@@ -768,7 +771,7 @@ class IngredientsViewSet(viewsets.ViewSet):
 
 @extend_schema(tags=['Users'])
 class UserViewSet(viewsets.ViewSet):
-    MISSING_USER_INFO = 'Username or email missing. Unable to create new user.'
+    MISSING_USER_INFO = 'Username or email missing in the JWT token. Unable to create new user.'
 
     @extend_schema(
         request=None,
@@ -866,6 +869,12 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
                 value={'message': MISSING_ING},
                 status_codes=[400],
                 response_only=True
+            ),
+            OpenApiExample(
+                name='Failed to Create',
+                value={'message': CANNOT_CREATE_INGREDIENT},
+                status_codes=[400],
+                response_only=True
             )
         ]
     )
@@ -930,14 +939,14 @@ class RecipeIngredientsViewSet(viewsets.ViewSet):
     MISSING_RECIPE_PARAM_MSG = 'recipe_name parameter is missing or empty.'
     MISSING_ADD_INGREDIENT_MSG = (
         f'{REQUIRED_VALUE_MISSING}'
-        '{list_name: [LISTNAME], ingredient: [INGREDIENT], '
+        '{recipe_name: [RECIPE NAME], ingredient: [INGREDIENT], '
         'amount: [AMOUNT/QUANTITY], unit: [MEASURMENT UNIT], '
         'is_custom_ingredient: [CUSTOM INGREDIENT BOOLEAN]}'
     )
     MISSING_DELETE_INGREDIENT_MSG = (
         'Required query parameters missing from sent request. Please '
         'add the following query parameters'
-        '?list_name=[LISTNAME]&ingredient=[INGREDIENT]'
+        '?list_name=[RECIPE NAME]&ingredient=[INGREDIENT]'
         '&unit=[MEASURMENT UNIT]&is_custom_ingredient=[BOOLEAN]'
     )
 
@@ -956,7 +965,7 @@ class RecipeIngredientsViewSet(viewsets.ViewSet):
             200: RecipeSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
-            500: invalid_recipe_response
+            404: invalid_recipe_response
         },
         examples=[
             OpenApiExample(
@@ -1055,7 +1064,7 @@ class RecipeIngredientsViewSet(viewsets.ViewSet):
             200: RecipeSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
-            500: invalid_recipe_response
+            404: invalid_recipe_response
         },
         examples=[
             OpenApiExample(
@@ -1127,7 +1136,7 @@ class RecipeStepsViewSet(viewsets.ViewSet):
             200: RecipeSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
-            500: invalid_recipe_response
+            404: invalid_recipe_response
         },
         examples=[
             OpenApiExample(
@@ -1180,7 +1189,7 @@ class RecipeStepsViewSet(viewsets.ViewSet):
             200: RecipeSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
-            500: invalid_recipe_response
+            404: invalid_recipe_response
         },
         examples=[
             OpenApiExample(
@@ -1243,7 +1252,7 @@ class RecipeStepsViewSet(viewsets.ViewSet):
             200: RecipeSerializer,
             400: MessageSerializer,
             401: auth_failed_response,
-            500: invalid_recipe_response
+            404: invalid_recipe_response
         },
         examples=[
             OpenApiExample(
@@ -1384,7 +1393,7 @@ class RecipeViewSet(viewsets.ViewSet):
         responses={
             200: RecipeSerializer,
             401: auth_failed_response,
-            500: invalid_recipe_response
+            404: invalid_recipe_response
         },
         examples=[
             OpenApiExample(
