@@ -833,6 +833,7 @@ def add_ingredient_to_recipe(
     if user_recipe:
         if not user_recipe.ingredients:
             # Empty list so set the list
+            list_ingredient.pop('ingredient_type')
             user_recipe.ingredients = [list_ingredient]
         elif not any(
             dictionary.get('ingredient_name', None) == ingredient
@@ -841,6 +842,7 @@ def add_ingredient_to_recipe(
             for dictionary in user_recipe.ingredients
         ):
             # ingredient does not exist so insert
+            list_ingredient.pop('ingredient_type')
             user_recipe.ingredients.append(list_ingredient)
         else:
             # ingredient exists so add or set the ingredient

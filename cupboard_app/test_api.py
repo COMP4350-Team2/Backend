@@ -1846,7 +1846,7 @@ class DeleteCustomIngredientsApi(TestCase):
             ]
         )
 
- 
+
 class CreateRecipeApi(TestCase):
     unit1 = None
     unit2 = None
@@ -1882,7 +1882,6 @@ class CreateRecipeApi(TestCase):
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
-        print(response.json())
         self.assertEqual(response.status_code, 201)
         self.assertEqual(
             response.json(),
@@ -1941,7 +1940,6 @@ class DeleteRecipeApi(TestCase):
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
-        print(response.json())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
@@ -1951,8 +1949,8 @@ class DeleteRecipeApi(TestCase):
     @patch.object(TokenBackend, 'decode')
     def test_delete_nonexistant_recipe(self, mock_decode):
         """
-        Testing delete_custom_ingredient works properly when a custom
-        ingredient to be deleted isnt found in the database
+        Testing delete_recipe works properly when given
+        a non-existant recipe
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
 
@@ -1964,13 +1962,12 @@ class DeleteRecipeApi(TestCase):
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
-        print(response.json())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
             [
                 {
-                    'user': self.user1,
+                    'user': self.user1.username,
                     'recipe_name': 'My_Recipe2',
                     'steps': [],
                     'ingredients': []
@@ -2007,7 +2004,7 @@ class GetRecipeApi(TestCase):
     @patch.object(TokenBackend, 'decode')
     def test_get_recipe(self, mock_decode):
         """
-        Testing get_recipes retrieves a specific recipe
+        Testing get_recipe retrieves a specific recipe
         for the user
         """
         mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
@@ -2020,19 +2017,15 @@ class GetRecipeApi(TestCase):
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
-        print(response.json())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
-            [
-                {
-                    'user': self.user1,
-                    'recipe_name': 'My_Recipe3',
-                    'steps': [],
-                    'ingredients': []
-                
-                },
-            ]
+            {
+                'user': self.user1.username,
+                'recipe_name': 'My_Recipe3',
+                'steps': [],
+                'ingredients': []
+            }
         )
 
     @patch.object(TokenBackend, 'decode')
@@ -2051,11 +2044,12 @@ class GetRecipeApi(TestCase):
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
-        print(response.json())
         self.assertEqual(response.status_code, 500)
         self.assertEqual(
             response.json(),
-            []
+            {
+                'message': 'Recipe matching query does not exist.'
+            }
         )
 
     @patch.object(TokenBackend, 'decode')
@@ -2070,24 +2064,442 @@ class GetRecipeApi(TestCase):
             reverse(f'{API_VERSION}:recipe'),
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
-        print(response.json())
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
             [
                 {
-                    'user': self.user1,
+                    'user': self.user1.username,
                     'recipe_name': 'My_Recipe2',
                     'steps': [],
                     'ingredients': []
-                
                 },
                 {
-                    'user': self.user1,
+                    'user': self.user1.username,
                     'recipe_name': 'My_Recipe3',
                     'steps': [],
                     'ingredients': []
-                
-                },
+                }
             ]
+        )
+
+
+class RecipeStepApi(TestCase):
+
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        self.user1 = User.objects.create(
+            username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
+        )
+
+        self.step1 = "My first step!"
+        self.step2 = "My second step!"
+
+        self.recipe = Recipe.objects.create(
+            user=self.user1,
+            recipe_name='My_Recipe2',
+            steps=[],
+            ingredients=[]
+        )
+
+        self.recipe2 = Recipe.objects.create(
+            user=self.user1,
+            recipe_name='My_Recipe3',
+            steps=[self.step1],
+            ingredients=[]
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_add_step_to_recipe(self, mock_decode):
+        """
+        Testing add_step_to_recipe properly
+        adds a step to a user's recipe.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse(
+                f'{API_VERSION}:recipe_steps',
+                kwargs={'recipe_name': self.recipe.recipe_name},
+            ),
+            json.dumps(
+                {
+                    'step': self.step1,
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'recipe_name': self.recipe.recipe_name,
+                'steps': [self.step1],
+                'ingredients': []
+            }
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_add_step_to_nonexistant_recipe(self, mock_decode):
+        """
+        Testing add_step_to_recipe works properly
+        when given a non-existant recipe.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse(
+                f'{API_VERSION}:recipe_steps',
+                kwargs={'recipe_name': 'doesnt_exist'},
+            ),
+            json.dumps(
+                {
+                    'step': self.step1,
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 500)
+
+    @patch.object(TokenBackend, 'decode')
+    def test_edit_step_in_recipe(self, mock_decode):
+        """
+        Testing remove_step_from_recipe properly
+        edits a step from a user's recipe.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.patch(
+            reverse(
+                f'{API_VERSION}:recipe_steps',
+                kwargs={'recipe_name': self.recipe2.recipe_name},
+            ),
+            json.dumps(
+                {
+                    'step': self.step2,
+                    'step_number': len(self.recipe2.steps),
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'recipe_name': self.recipe2.recipe_name,
+                'steps': [self.step2],
+                'ingredients': []
+            }
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_edit_step_in_nonexistant_recipe(self, mock_decode):
+        """
+        Testing edit_step_in_nonexistant_recipe works properly
+        when given a non-existant recipe.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.patch(
+            reverse(
+                f'{API_VERSION}:recipe_steps',
+                kwargs={'recipe_name': 'doesnt_exist'},
+            ),
+            json.dumps(
+                {
+                    'step': self.step2,
+                    'step_number': len(self.recipe2.steps),
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 500)
+
+    @patch.object(TokenBackend, 'decode')
+    def test_edit_nonexistant_step_in_recipe(self, mock_decode):
+        """
+        Testing edit_step_in_nonexistant_recipe works properly
+        when given a non-existant step.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.patch(
+            reverse(
+                f'{API_VERSION}:recipe_steps',
+                kwargs={'recipe_name': self.recipe2.recipe_name},
+            ),
+            json.dumps(
+                {
+                    'step': self.step2,
+                    'step_number': len(self.recipe2.steps)+1,
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'recipe_name': self.recipe2.recipe_name,
+                'steps': [self.step1],
+                'ingredients': []
+            }
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_remove_step_from_recipe(self, mock_decode):
+        """
+        Testing remove_step_from_recipe properly
+        removes a step from a user's recipe.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.delete(
+            reverse(
+                f'{API_VERSION}:recipe_steps',
+                kwargs={'recipe_name': self.recipe2.recipe_name},
+            ),
+            json.dumps(
+                {
+                    'step_number': len(self.recipe2.steps),
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'recipe_name': self.recipe2.recipe_name,
+                'steps': [],
+                'ingredients': []
+            }
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_remove_nonexistant_step_from_recipe(self, mock_decode):
+        """
+        Testing remove_step_from_recipe works properly
+        when given a non-existant step.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.delete(
+            reverse(
+                f'{API_VERSION}:recipe_steps',
+                kwargs={'recipe_name': self.recipe2.recipe_name},
+            ),
+            json.dumps(
+                {
+                    'step_number': len(self.recipe2.steps)+1,
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'recipe_name': self.recipe2.recipe_name,
+                'steps': [self.step1],
+                'ingredients': []
+            }
+        )
+
+
+class RecipeIngredientApi(TestCase):
+
+    def setUp(self):
+        """
+        Sets up a test database with test values
+        """
+        self.user1 = User.objects.create(
+            username=USER_VALID_TOKEN_PAYLOAD.get('sub'),
+            email=USER_VALID_TOKEN_PAYLOAD.get(CUPBOARD_EMAIL_CLAIM)
+        )
+
+        self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
+        self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type2')
+        self.cust_ing1 = CustomIngredient.objects.create(
+            user=self.user1,
+            name='test_ingredient1',
+            type='test_type1'
+        )
+        self.unit1 = Measurement.objects.create(unit='test_unit1')
+        self.list_ing1 = {
+            'ingredient_name': self.ing1.name,
+            'amount': 5,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': False
+        }
+        self.list_cust_ing1 = {
+            'ingredient_name': self.cust_ing1.name,
+            'amount': 5,
+            'unit': self.unit1.unit,
+            'is_custom_ingredient': True
+        }
+        self.recipe = Recipe.objects.create(
+            user=self.user1,
+            recipe_name='My_Recipe2',
+            steps=[],
+            ingredients=[]
+        )
+
+        self.recipe2 = Recipe.objects.create(
+            user=self.user1,
+            recipe_name='My_Recipe3',
+            steps=[],
+            ingredients=[self.list_ing1, self.list_cust_ing1]
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_add_ingredient_to_recipe(self, mock_decode):
+        """
+        Testing add_ingredient_to_recipe properly
+        adds an ingredient to a user's recipe.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse(
+                f'{API_VERSION}:recipe_ingredients',
+                kwargs={'recipe_name': self.recipe.recipe_name},
+            ),
+            json.dumps(
+                {
+                    'ingredient': self.list_ing1['ingredient_name'],
+                    'amount': self.list_ing1['amount'],
+                    'unit': self.list_ing1['unit'],
+                    'is_custom_ingredient': False
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'recipe_name': self.recipe.recipe_name,
+                'steps': [],
+                'ingredients': [self.list_ing1]
+            }
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_add_nonexistant_ingredient_to_recipe(self, mock_decode):
+        """
+        Testing add_ingredient_to_recipe works properly
+        when given a non-existant ingredient.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.post(
+            reverse(
+                f'{API_VERSION}:recipe_ingredients',
+                kwargs={'recipe_name': self.recipe.recipe_name},
+            ),
+            json.dumps(
+                {
+                    'ingredient': 'doesnt_exist',
+                    'amount': self.list_ing1['amount'],
+                    'unit': self.list_ing1['unit'],
+                    'is_custom_ingredient': False
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(
+            response.json(),
+            {
+                'message': 'Ingredient matching query does not exist.'
+            }
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_remove_ingredient_from_recipe(self, mock_decode):
+        """
+        Testing remove_ingredient_from_recipe properly
+        removes an ingredient from a user's recipe
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.delete(
+            reverse(
+                f'{API_VERSION}:recipe_ingredients',
+                kwargs={'recipe_name': self.recipe2.recipe_name},
+            ),
+            json.dumps(
+                {
+                    'ingredient': self.cust_ing1.name,
+                    'unit': self.unit1.unit,
+                    'is_custom_ingredient': True
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'recipe_name': self.recipe2.recipe_name,
+                'steps': [],
+                'ingredients': [self.list_ing1]
+            }
+        )
+
+    @patch.object(TokenBackend, 'decode')
+    def test_remove_nonexistant_ingredient_from_recipe(self, mock_decode):
+        """
+        Testing remove_ingredient_from_recipe works properly
+        when given a non-existant ingredient.
+        """
+        mock_decode.return_value = USER_VALID_TOKEN_PAYLOAD
+
+        response = self.client.delete(
+            reverse(
+                f'{API_VERSION}:recipe_ingredients',
+                kwargs={'recipe_name': self.recipe2.recipe_name},
+            ),
+            json.dumps(
+                {
+                    'ingredient': 'doesnt_exist',
+                    'unit': self.unit1.unit,
+                    'is_custom_ingredient': True
+                }
+            ),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer valid-token'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                'user': self.user1.username,
+                'recipe_name': self.recipe2.recipe_name,
+                'steps': [],
+                'ingredients': [self.list_ing1, self.list_cust_ing1]
+            }
         )

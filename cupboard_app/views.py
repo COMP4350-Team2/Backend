@@ -112,7 +112,7 @@ SINGLE_CUSTOM_INGREDIENT_DICT = {
 }
 SINGLE_RECIPE = {
     'user': 'teacup',
-    'recipe_name': 'my_recipe',  
+    'recipe_name': 'my_recipe',
     'ingredients': INGREDIENTS,
     'steps': STEPS
 }
@@ -182,6 +182,7 @@ recipe_name_param = OpenApiParameter(
     type=str,
     location=OpenApiParameter.PATH
 )
+
 
 def api_exception_handler(exc, context=None) -> Response:
     """
@@ -925,7 +926,7 @@ class CustomIngredientsViewSet(viewsets.ViewSet):
 
 
 @extend_schema(tags=['Recipes'])
-class UpdateRecipeIngredientsViewSet(viewsets.ViewSet):
+class RecipeIngredientsViewSet(viewsets.ViewSet):
     MISSING_RECIPE_PARAM_MSG = 'recipe_name parameter is missing or empty.'
     MISSING_ADD_INGREDIENT_MSG = (
         f'{REQUIRED_VALUE_MISSING}'
@@ -939,6 +940,7 @@ class UpdateRecipeIngredientsViewSet(viewsets.ViewSet):
         '?list_name=[LISTNAME]&ingredient=[INGREDIENT]'
         '&unit=[MEASURMENT UNIT]&is_custom_ingredient=[BOOLEAN]'
     )
+
     @extend_schema(
         parameters=[recipe_name_param],
         request=inline_serializer(
@@ -1085,7 +1087,7 @@ class UpdateRecipeIngredientsViewSet(viewsets.ViewSet):
             and body.get('unit', None)
             and body.get('is_custom_ingredient', None) is not None
         ):
-            my_recipe = delete_list_ingredient(
+            my_recipe = remove_ingredient_from_recipe(
                 username=username,
                 recipe_name=recipe_name,
                 ingredient=body['ingredient'],
@@ -1102,7 +1104,7 @@ class UpdateRecipeIngredientsViewSet(viewsets.ViewSet):
 
 
 @extend_schema(tags=['Recipes'])
-class UpdateRecipeStepsViewSet(viewsets.ViewSet):
+class RecipeStepsViewSet(viewsets.ViewSet):
     MISSING_RECIPE_PARAM_MSG = 'recipe_name parameter is missing or empty.'
     MISSING_STEP_MSG = (
         'Required query parameters missing from sent request. Please '
@@ -1158,14 +1160,14 @@ class UpdateRecipeStepsViewSet(viewsets.ViewSet):
             recipe = remove_step_from_recipe(
                 username=username,
                 recipe_name=recipe_name,
-                step_number=body['step']
+                step_number=body['step_number']
             )
             serializer = RecipeSerializer(recipe)
         else:
             raise MissingInformation(self.MISSING_STEP_MSG)
 
         return Response(serializer.data, status=200)
-    
+
     @extend_schema(
         parameters=[recipe_name_param],
         request=inline_serializer(
@@ -1228,7 +1230,6 @@ class UpdateRecipeStepsViewSet(viewsets.ViewSet):
             raise MissingInformation(self.MISSING_STEP_MSG)
 
         return Response(serializer.data, status=200)
-
 
     @extend_schema(
         parameters=[recipe_name_param],
@@ -1326,7 +1327,6 @@ class RecipeViewSet(viewsets.ViewSet):
         Retrieves all the recipes for a user.
         """
         username = get_auth_username_from_payload(request=request)
-        print(username)
         # Retrieves all the lists for the user
         recipes = get_all_recipes(username=username)
         serializer = RecipeSerializer(recipes, many=True)
@@ -1348,7 +1348,7 @@ class RecipeViewSet(viewsets.ViewSet):
                     'user': 'teacup',
                     'recipe_name': 'Toast',
                     'ingredients': [],
-                    'steps':[]
+                    'steps': []
                 },
                 status_codes=[201]
             ),
@@ -1377,7 +1377,7 @@ class RecipeViewSet(viewsets.ViewSet):
             raise MissingInformation(self.MISSING_USER_LIST_PARAM_MSG)
 
         return Response(serializer.data, status=201)
-    
+
     @extend_schema(
         parameters=[recipe_name_param],
         request=None,
@@ -1398,10 +1398,8 @@ class RecipeViewSet(viewsets.ViewSet):
         """
         Retrieves the specific recipe for a user.
         """
-       
+
         username = get_auth_username_from_payload(request=request)
-        print(username)
-        print(recipe_name)
         # Retrieves the specific list for the user
         my_recipe = get_recipe(
             username=username,
@@ -1410,7 +1408,7 @@ class RecipeViewSet(viewsets.ViewSet):
         serializer = RecipeSerializer(my_recipe)
 
         return Response(serializer.data, status=200)
-    
+
     @extend_schema(
         parameters=[recipe_name_param],
         request=None,
@@ -1432,8 +1430,6 @@ class RecipeViewSet(viewsets.ViewSet):
         all of the user's recipes after the delete.
         """
         username = get_auth_username_from_payload(request=request)
-        print(username)
-        print(recipe_name)
         # Delete the list for specified user
         recipes = delete_recipe(
             username=username,
@@ -1442,4 +1438,3 @@ class RecipeViewSet(viewsets.ViewSet):
         serializer = RecipeSerializer(recipes, many=True)
 
         return Response(serializer.data, status=200)
-    
