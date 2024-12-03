@@ -922,49 +922,8 @@ paths:
                   summary: User List not found
           description: ''
   /login:
-    get:
-      operationId: login_retrieve
-      description: |-
-        Redirects to the Auth0 universal login for user to enter credentials if
-        session is not set. Returns the access token, refresh token, id token,
-        and user info.
-      tags:
-      - Authentication
-      security:
-      - jwtAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Session'
-              examples:
-                LoginSuccess:
-                  value:
-                    access_token: very_long_jwt_token
-                    refresh_token: refresh_token
-                    id_token: very_long_jwt_token
-                    issued_time: '2024-11-16 01:49:09'
-                    expire_time: '2024-11-17 01:49:09'
-                    user_info:
-                      nickname: teacup.backend
-                      name: cupboard@teacup.ca
-                      picture: image_url
-                      updated_at: '2024-11-16T07:49:07.640Z'
-                      email: cupboard@teacup.ca
-                      email_verified: true
-                      iss: issuer_string
-                      aud: audience_string
-                      iat: 1731743349
-                      exp: 1731779349
-                      sub: auth0|fake_user_string
-                      sid: session_id
-                  summary: Login Success
-          description: ''
-  /login/cli:
     post:
-      operationId: login_cli_create
+      operationId: login_create
       description: |-
         Logs in user using Auth0 if session is not set.
         Returns the access token, refresh token, id token, and user info.
@@ -974,7 +933,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CLILoginRequest'
+              $ref: '#/components/schemas/LoginRequest'
             examples:
               LoginCredentials:
                 value:
@@ -983,10 +942,10 @@ paths:
                 summary: Login Credentials
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/CLILoginRequest'
+              $ref: '#/components/schemas/LoginRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/CLILoginRequest'
+              $ref: '#/components/schemas/LoginRequest'
         required: true
       security:
       - jwtAuth: []
@@ -1032,35 +991,13 @@ paths:
                   summary: Required Value Missing
           description: ''
   /logout:
-    get:
-      operationId: logout_retrieve
-      description: Logs out the user from Auth0 and clears the session.
-      tags:
-      - Authentication
-      security:
-      - jwtAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-              examples:
-                LogoutSuccess:
-                  value:
-                    message: Logout successful. Login again using the login endpoint.
-                  summary: Logout Success
-          description: ''
-  /logout/cli:
     post:
-      operationId: logout_cli_create
+      operationId: logout_create
       description: Logs out the user from Auth0 and clears the session.
       tags:
       - Authentication
       security:
       - jwtAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -1079,9 +1016,32 @@ paths:
       description: Refreshes the access token for the user from Auth0.
       tags:
       - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+            examples:
+              AllBodyParameters:
+                value:
+                  client_id: skjehfgef98732984hjkfse
+                  client_secret: whdkjsjkabuie32984hiou298qhdkj93782hiudh
+                  refresh_token: iudoue98yu3ugifhkjo823iuygugik
+                summary: All Body Parameters
+              WithoutClientSecret:
+                value:
+                  client_id: skjehfgef98732984hjkfse
+                  refresh_token: iudoue98yu3ugifhkjo823iuygugik
+                summary: Without Client Secret
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+        required: true
       security:
       - jwtAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -1119,7 +1079,7 @@ paths:
               examples:
                 RequiredValueMissing:
                   value:
-                    message: Refresh token is missing.
+                    message: Client ID or Refresh token is missing.
                   summary: Required Value Missing
           description: ''
 components:
@@ -1168,16 +1128,6 @@ components:
       required:
       - common_ingredients
       - custom_ingredients
-    CLILoginRequest:
-      type: object
-      properties:
-        username:
-          type: string
-        password:
-          type: string
-      required:
-      - password
-      - username
     ChangeUserIngredientsListNameRequest:
       type: object
       properties:
@@ -1216,6 +1166,16 @@ components:
       required:
       - name
       - type
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+      - password
+      - username
     Measurement:
       type: object
       properties:
@@ -1256,6 +1216,18 @@ components:
           type: string
         new_is_custom_ingredient:
           type: boolean
+    RefreshTokenRequest:
+      type: object
+      properties:
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        refresh_token:
+          type: string
+      required:
+      - client_id
+      - refresh_token
     Session:
       type: object
       properties:

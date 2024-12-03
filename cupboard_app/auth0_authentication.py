@@ -1,13 +1,8 @@
 import os
 from time import strftime, localtime
-from urllib.parse import quote_plus, urlencode
 
 import jwt
 import requests
-from authlib.integrations.django_client import OAuth
-from django.http import HttpResponseRedirect
-from django.shortcuts import redirect
-from django.urls import reverse
 from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
@@ -42,6 +37,8 @@ AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
 AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 AUTH0_BACKEND_CLIENT_ID = os.getenv('AUTH0_BACKEND_CLIENT_ID')
 AUTH0_BACKEND_CLIENT_SECRET = os.getenv('AUTH0_BACKEND_CLIENT_SECRET')
+AUTH0_DESKTOP_CLIENT_ID = os.getenv('AUTH0_DESKTOP_CLIENT_ID')
+AUTH0_DESKTOP_CLIENT_SECRET = os.getenv('AUTH0_DESKTOP_CLIENT_SECRET')
 TOKEN_TIMESTAMP = '%Y-%m-%d %H:%M:%S'
 
 session_example = OpenApiExample(
@@ -72,20 +69,7 @@ session_example = OpenApiExample(
 )
 
 
-# Auth0 Client setup
-login_oauth = OAuth()
-login_oauth.register(
-    'auth0',
-    client_id=AUTH0_BACKEND_CLIENT_ID,
-    client_secret=AUTH0_BACKEND_CLIENT_SECRET,
-    client_kwargs={
-        'scope': 'openid profile email offline_access',
-    },
-    server_metadata_url=f'https://{AUTH0_DOMAIN}/.well-known/openid-configuration'
-)
-
-
-def set_session(request: Request, token_info: str):
+def set_session(request: Request, token_info: str) -> dict:
     '''
     Sets the session for the user using the returned token information
     from Auth0.
@@ -118,23 +102,10 @@ def set_session(request: Request, token_info: str):
     }
     request.session['user'] = new_session
 
+    return new_session
 
-def login_callback(request: Request) -> HttpResponseRedirect:
-    """
-    Callback from the login. Creates a user if user does not exist in the database.
-    Then redirects to the login endpoint.
 
-    Args:
-        request: The current request
-
-    Returns:
-        Redirects back to the login endpoint with session set if no errors occurred.
-    """
-    token = login_oauth.auth0.authorize_access_token(request)
-
-    set_session(request=request, token_info=token)
-    session = request.session.get('user')
-
+def initialize_user_in_db(session: dict):
     if session:
         payload = AccessToken(session.get('access_token'))
         username = get_auth_username_from_payload(payload=payload)
@@ -146,108 +117,42 @@ def login_callback(request: Request) -> HttpResponseRedirect:
             create_user(username=username, email=email)
             add_default_user_lists(username=username)
 
-    return redirect(request.build_absolute_uri(reverse('login')))
-
-
-def logout_callback(request: Request) -> HttpResponseRedirect:
-    """
-    Callback from the logout. Clears the session and redirects
-    to the logout endpoint.
-
-    Args:
-        request: The current request
-
-    Returns:
-        Redirects back to the logout endpoint with session cleared if no errors occurred.
-    """
-    request.session.clear()
-    return redirect(request.build_absolute_uri(reverse('logout')))
-
-
-@extend_schema(tags=['Authentication'])
-class LoginAPIView(APIView):
-    permission_classes = [AllowAny]
-
-    @extend_schema(
-        request=None,
-        responses={
-            200: SessionSerializer
-        },
-        examples=[session_example]
-    )
-    def get(self, request: Request) -> Response | HttpResponseRedirect:
-        """
-        Redirects to the Auth0 universal login for user to enter credentials if
-        session is not set. Returns the access token, refresh token, id token,
-        and user info.
-        """
-        session = request.session.get('user')
-        if session:
-            result = Response(session, status=200)
-        else:
-            result = login_oauth.auth0.authorize_redirect(
-                request,
-                request.build_absolute_uri(reverse('login_callback')),
-                audience=AUTH0_API_IDENTIFIER
-            )
-
-        return result
-
-
-@extend_schema(tags=['Authentication'])
-class LogoutAPIView(APIView):
-    permission_classes = [AllowAny]
-    LOGOUT_MSG = 'Logout successful. Login again using the login endpoint.'
-
-    @extend_schema(
-        request=None,
-        responses={
-            200: MessageSerializer
-        },
-        examples=[
-            OpenApiExample(
-                name='Logout Success',
-                value={'message': LOGOUT_MSG},
-                status_codes=[200],
-                response_only=True
-            )
-        ]
-    )
-    def get(self, request: Request) -> Response | HttpResponseRedirect:
-        """
-        Logs out the user from Auth0 and clears the session.
-        """
-        if request.session.get('user'):
-            result = redirect(
-                f'https://{AUTH0_DOMAIN}/v2/logout?'
-                + urlencode(
-                    {
-                        'returnTo': request.build_absolute_uri(reverse('logout_callback')),
-                        'client_id': AUTH0_BACKEND_CLIENT_ID,
-                    },
-                    quote_via=quote_plus,
-                )
-            )
-        else:
-            message = Message(message=self.LOGOUT_MSG)
-            serializer = MessageSerializer(message)
-            result = Response(serializer.data, status=200)
-
-        return result
-
 
 @extend_schema(tags=['Authentication'])
 class RefreshTokenAPIView(APIView):
-    permission_classes = [AllowAny]
-    MISSING_REFRESH_TOKEN = 'Refresh token is missing.'
+    MISSING_REFRESH_TOKEN = 'Client ID or Refresh token is missing.'
 
     @extend_schema(
-        request=None,
+        request=inline_serializer(
+            name='RefreshTokenRequestSerializer',
+            fields={
+                'client_id': serializers.CharField(),
+                'client_secret': serializers.CharField(required=False),
+                'refresh_token': serializers.CharField()
+            }
+        ),
         responses={
             200: SessionSerializer,
             400: MessageSerializer
         },
         examples=[
+            OpenApiExample(
+                name='All Body Parameters',
+                value={
+                    'client_id': 'skjehfgef98732984hjkfse',
+                    'client_secret': 'whdkjsjkabuie32984hiou298qhdkj93782hiudh',
+                    'refresh_token': 'iudoue98yu3ugifhkjo823iuygugik'
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name='Without Client Secret',
+                value={
+                    'client_id': 'skjehfgef98732984hjkfse',
+                    'refresh_token': 'iudoue98yu3ugifhkjo823iuygugik'
+                },
+                request_only=True
+            ),
             session_example,
             OpenApiExample(
                 name='Required Value Missing',
@@ -261,26 +166,37 @@ class RefreshTokenAPIView(APIView):
         """
         Refreshes the access token for the user from Auth0.
         """
-        session = request.session.get('user')
-        refresh_token = session.get('refresh_token')
+        body = request.data
+        if (
+            body.get('client_id', None)
+            and body.get('refresh_token', None)
+        ):
+            client_id = body['client_id']
+            refresh_token = body['refresh_token']
 
-        if refresh_token:
+            # Check for client secret. Desktop does not have client secret in the frontend
+            if body.get('client_secret', None):
+                client_secret = body['client_secret']
+            elif client_id == AUTH0_DESKTOP_CLIENT_ID:
+                client_secret = AUTH0_DESKTOP_CLIENT_SECRET
+            elif client_id == AUTH0_BACKEND_CLIENT_ID:
+                client_secret = AUTH0_BACKEND_CLIENT_SECRET
+
             try:
                 response = requests.post(
                     f'https://{AUTH0_DOMAIN}/oauth/token',
                     headers={'content-type': 'application/x-www-form-urlencoded'},
                     data={
                         'grant_type': 'refresh_token',
-                        'client_id': AUTH0_BACKEND_CLIENT_ID,
-                        'client_secret': AUTH0_BACKEND_CLIENT_SECRET,
+                        'client_id': client_id,
+                        'client_secret': client_secret,
                         'audience': AUTH0_API_IDENTIFIER,
                         'refresh_token': refresh_token
                     }
                 )
 
                 if response.status_code == 200:
-                    set_session(request=request, token_info=response.json())
-                    session = request.session.get('user')
+                    session = set_session(request=request, token_info=response.json())
                     result = Response(session, status=200)
                 else:
                     raise FailedOperation(response.json())
@@ -299,7 +215,7 @@ class CLILoginAPIView(APIView):
 
     @extend_schema(
         request=inline_serializer(
-            name='CLILoginRequestSerializer',
+            name='LoginRequestSerializer',
             fields={
                 'username': serializers.CharField(),
                 'password': serializers.CharField()
@@ -357,8 +273,8 @@ class CLILoginAPIView(APIView):
                 )
 
                 if response.status_code == 200:
-                    set_session(request=request, token_info=response.json())
-                    session = request.session.get('user')
+                    session = set_session(request=request, token_info=response.json())
+                    initialize_user_in_db(session=session)
                     result = Response(session, status=200)
                 else:
                     raise FailedOperation(response.json())
@@ -372,14 +288,11 @@ class CLILoginAPIView(APIView):
 
 @extend_schema(tags=['Authentication'])
 class CLILogoutAPIView(APIView):
-    permission_classes = [AllowAny]
     LOGOUT_MSG = 'Logout successful. Login again using the login endpoint.'
 
     @extend_schema(
         request=None,
-        responses={
-            200: MessageSerializer
-        },
+        responses={200: MessageSerializer},
         examples=[
             OpenApiExample(
                 name='Logout Success',
