@@ -1,6 +1,5 @@
 import json
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase
 
 from cupboard_app.models import (
@@ -602,7 +601,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(result, list_created)
 
         # Getting a non-existent list raises error
-        with self.assertRaises(ObjectDoesNotExist):
+        with self.assertRaises(UserListIngredients.DoesNotExist):
             get_specific_user_lists_ingredients(
                 username=self.user1.username,
                 list_name=self.empty_list_name1.list_name
@@ -647,7 +646,7 @@ class UserListIngredientsQueries(TestCase):
         )
 
         # Changing in a non-existent list raises error
-        with self.assertRaises(ObjectDoesNotExist):
+        with self.assertRaises(UserListIngredients.DoesNotExist):
             change_user_list_ingredient_name(
                 username=self.user1.username,
                 old_list_name=self.empty_list_name1.list_name,
@@ -806,7 +805,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_list.ingredients, [self.list_ing1, self.list_ing2])
 
         # Deleting in a non-existent list raises error
-        with self.assertRaises(ObjectDoesNotExist):
+        with self.assertRaises(UserListIngredients.DoesNotExist):
             delete_list_ingredient(
                 username=self.user2.username,
                 list_name=self.empty_list_name1.list_name,
@@ -883,7 +882,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_list.ingredients, [updated_ing1, self.list_ing2, self.list_cust_ing1])
 
         # Adding a non-existent list raises error
-        with self.assertRaises(ObjectDoesNotExist):
+        with self.assertRaises(UserListIngredients.DoesNotExist):
             add_list_ingredient(
                 username=self.user1.username,
                 list_name=self.empty_list_name1.list_name,
@@ -1024,7 +1023,7 @@ class UserListIngredientsQueries(TestCase):
         self.assertEqual(user_list.ingredients, [updated_ing1, updated_ing2, self.list_ing2])
 
         # Setting a non-existent list raises error
-        with self.assertRaises(ObjectDoesNotExist):
+        with self.assertRaises(UserListIngredients.DoesNotExist):
             set_list_ingredient(
                 username=self.user1.username,
                 old_list_name=self.empty_list_name1.list_name,
@@ -1158,45 +1157,34 @@ class UserListIngredientsQueries(TestCase):
 
 class RecipeQueries(TestCase):
     user1 = None
-    user2 = None
     ing1 = None
     ing2 = None
     cust_ing1 = None
-    cust_ing2 = None
     recipe_name1 = None
     recipe_name2 = None
     empty_recipe_name = None
-    non_existant_ingredient = None
     unit1 = None
     unit2 = None
-    unit3 = None
     list_ing1 = None
     list_ing2 = None
     list_cust_ing1 = None
-    list_cust_ing2 = None
     step1 = None
     step2 = None
 
     def setUp(self):
         self.user1 = User.objects.create(username='test_user1', email='user1@test.com')
-        self.user2 = User.objects.create(username='test_user2', email='user2@test.com')
         self.ing1 = Ingredient.objects.create(name='test_ingredient1', type='test_type1')
         self.ing2 = Ingredient.objects.create(name='test_ingredient2', type='test_type1')
         self.cust_ing1 = CustomIngredient.objects.create(
             user=self.user1,
-            name='test_ingredient1',
-            type='test_type1'
-        )
-        self.cust_ing2 = CustomIngredient.objects.create(
-            user=self.user2,
-            name='test_ingredient1',
-            type='test_type1'
+            name=self.ing1.name,
+            type=self.ing1.type
         )
         self.recipe_name1 = 'test_recipename1'
         self.recipe_name2 = 'test_recipename2'
+        self.empty_recipe_name = 'empty_recipename1'
         self.unit1 = Measurement.objects.create(unit='test_unit1')
         self.unit2 = Measurement.objects.create(unit='test_unit2')
-        self.unit3 = Measurement.objects.create(unit='test_unit3')
         self.list_ing1 = {
             'ingredient_name': self.ing1.name,
             'amount': 500,
@@ -1213,12 +1201,6 @@ class RecipeQueries(TestCase):
             'ingredient_name': self.cust_ing1.name,
             'amount': 500,
             'unit': self.unit1.unit,
-            'is_custom_ingredient': True
-        }
-        self.list_cust_ing2 = {
-            'ingredient_name': self.cust_ing2.name,
-            'amount': 400,
-            'unit': self.unit2.unit,
             'is_custom_ingredient': True
         }
         self.step1 = "This is the first step in my recipe!"
@@ -1315,7 +1297,7 @@ class RecipeQueries(TestCase):
         self.assertEqual(len(user_recipe.ingredients), 1)
         self.assertEqual(user_recipe.ingredients, [self.list_ing1])
 
-        # Adding to same ingredient in a list
+        # Adding to same ingredient in a recipe
         add_ingredient_to_recipe(
             username=self.user1.username,
             recipe_name=self.recipe_name1,
@@ -1325,14 +1307,11 @@ class RecipeQueries(TestCase):
             is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
         )
         user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        updated_ing1 = {
-            **self.list_ing1,
-            'amount': 100
-        }
+        updated_ing1 = {**self.list_ing1, 'amount': 100}
         self.assertEqual(len(user_recipe.ingredients), 1)
         self.assertEqual(user_recipe.ingredients, [updated_ing1])
 
-        # Adding different ingredient to a list
+        # Adding different ingredient to a recipe
         add_ingredient_to_recipe(
             username=self.user1.username,
             recipe_name=self.recipe_name1,
@@ -1345,7 +1324,7 @@ class RecipeQueries(TestCase):
         self.assertEqual(len(user_recipe.ingredients), 2)
         self.assertEqual(user_recipe.ingredients, [updated_ing1, self.list_ing2])
 
-        # Adding custom ingredient to a list
+        # Adding custom ingredient to a recipe
         add_ingredient_to_recipe(
             username=self.user1.username,
             recipe_name=self.recipe_name1,
@@ -1387,17 +1366,15 @@ class RecipeQueries(TestCase):
         """
         Testing remove_ingredient_from_recipe correctly removes an ingredient from a user's recipe
         """
-
-        Recipe.objects.create(
+        user_recipe = Recipe.objects.create(
             user=self.user1,
             recipe_name=self.recipe_name1,
             steps=[],
             ingredients=[]
         )
+        self.assertEqual(len(user_recipe.ingredients), 0)
 
         # Removing ingredient from an empty recipe
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.ingredients), 0)
         remove_ingredient_from_recipe(
             username=self.user1.username,
             recipe_name=self.recipe_name1,
@@ -1407,28 +1384,48 @@ class RecipeQueries(TestCase):
         )
         user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
         self.assertEqual(len(user_recipe.ingredients), 0)
+
+        user_recipe = Recipe.objects.create(
+            user=self.user1,
+            recipe_name=self.recipe_name2,
+            steps=[],
+            ingredients=[self.list_ing1, self.list_cust_ing1]
+        )
+        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name2)
+        self.assertEqual(len(user_recipe.ingredients), 2)
 
         # Removing ingredient not in the recipe
-
-        add_ingredient_to_recipe(
-            username=self.user1.username,
-            recipe_name=self.recipe_name1,
-            ingredient=self.list_ing1.get('ingredient_name'),
-            amount=self.list_ing1.get('amount'),
-            unit=self.list_ing1.get('unit'),
-            is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
-        )
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.ingredients), 1)
         remove_ingredient_from_recipe(
             username=self.user1.username,
-            recipe_name=self.recipe_name1,
+            recipe_name=self.recipe_name2,
             ingredient=self.list_ing2.get('ingredient_name'),
             unit=self.list_ing2.get('unit'),
             is_custom_ingredient=self.list_ing2.get('is_custom_ingredient')
         )
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
+        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name2)
+        self.assertEqual(len(user_recipe.ingredients), 2)
+
+        # Removing ingredient from a recipe
+        remove_ingredient_from_recipe(
+            username=self.user1.username,
+            recipe_name=self.recipe_name2,
+            ingredient=self.list_ing1.get('ingredient_name'),
+            unit=self.list_ing1.get('unit'),
+            is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
+        )
+        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name2)
         self.assertEqual(len(user_recipe.ingredients), 1)
+
+        # Removing custom ingredient from a recipe
+        remove_ingredient_from_recipe(
+            username=self.user1.username,
+            recipe_name=self.recipe_name2,
+            ingredient=self.list_cust_ing1.get('ingredient_name'),
+            unit=self.list_cust_ing1.get('unit'),
+            is_custom_ingredient=self.list_cust_ing1.get('is_custom_ingredient')
+        )
+        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name2)
+        self.assertEqual(len(user_recipe.ingredients), 0)
 
         # Removing ingredient from non-existant recipe raises error
         with self.assertRaises(Recipe.DoesNotExist):
@@ -1440,55 +1437,19 @@ class RecipeQueries(TestCase):
                 is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
             )
 
-        # Removing ingredient from a recipe
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.ingredients), 1)
-        remove_ingredient_from_recipe(
-            username=self.user1.username,
-            recipe_name=self.recipe_name1,
-            ingredient=self.list_ing1.get('ingredient_name'),
-            unit=self.list_ing1.get('unit'),
-            is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
-        )
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.ingredients), 0)
-
-        # Removing custom ingredient from a recipe
-        add_ingredient_to_recipe(
-            username=self.user1.username,
-            recipe_name=self.recipe_name1,
-            ingredient=self.list_cust_ing1.get('ingredient_name'),
-            amount=self.list_cust_ing1.get('amount'),
-            unit=self.list_cust_ing1.get('unit'),
-            is_custom_ingredient=self.list_cust_ing1.get('is_custom_ingredient')
-        )
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.ingredients), 1)
-        remove_ingredient_from_recipe(
-            username=self.user1.username,
-            recipe_name=self.recipe_name1,
-            ingredient=self.list_cust_ing1.get('ingredient_name'),
-            unit=self.list_cust_ing1.get('unit'),
-            is_custom_ingredient=self.list_cust_ing1.get('is_custom_ingredient')
-        )
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.ingredients), 0)
-
     def test_add_step_to_recipe(self):
         """
         Testing add_step_to_recipe correctly adds a step to a user's recipe
         """
-
-        Recipe.objects.create(
+        user_recipe = Recipe.objects.create(
             user=self.user1,
             recipe_name=self.recipe_name1,
             steps=[],
             ingredients=[]
         )
+        self.assertEqual(len(user_recipe.steps), 0)
 
         # Adding step to an empty recipe
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.steps), 0)
         add_step_to_recipe(
             username=self.user1.username,
             recipe_name=self.recipe_name1,
@@ -1498,8 +1459,6 @@ class RecipeQueries(TestCase):
         self.assertEqual(len(user_recipe.steps), 1)
 
         # Adding different step to a list
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.steps), 1)
         add_step_to_recipe(
             username=self.user1.username,
             recipe_name=self.recipe_name1,
@@ -1520,17 +1479,15 @@ class RecipeQueries(TestCase):
         """
         Testing remove_step_from_recipe correctly removes a step in a user's recipe
         """
-
-        Recipe.objects.create(
+        user_recipe = Recipe.objects.create(
             user=self.user1,
             recipe_name=self.recipe_name1,
             steps=[],
             ingredients=[]
         )
-
-        # Removing step from an empty recipe
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
         self.assertEqual(len(user_recipe.steps), 0)
+
+        # Removing step 0 in an empty recipe. Steps start from 1
         remove_step_from_recipe(
             username=self.user1.username,
             recipe_name=self.recipe_name1,
@@ -1539,31 +1496,39 @@ class RecipeQueries(TestCase):
         user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
         self.assertEqual(len(user_recipe.steps), 0)
 
-        # Removing step not in recipe (index out of bounds)
-        add_step_to_recipe(
-                username=self.user1.username,
-                recipe_name=self.recipe_name1,
-                step=self.step1
-        )
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.steps), 1)
+        # Removing non existant step in an empty recipe.
         remove_step_from_recipe(
             username=self.user1.username,
             recipe_name=self.recipe_name1,
             step_number=len(user_recipe.steps) + 1
         )
         user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
+        self.assertEqual(len(user_recipe.steps), 0)
+
+        user_recipe = Recipe.objects.create(
+            user=self.user1,
+            recipe_name=self.recipe_name2,
+            steps=[self.step1],
+            ingredients=[]
+        )
+        self.assertEqual(len(user_recipe.steps), 1)
+
+        # Removing step not in recipe (index out of bounds)
+        remove_step_from_recipe(
+            username=self.user1.username,
+            recipe_name=self.recipe_name2,
+            step_number=len(user_recipe.steps) + 1
+        )
+        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name2)
         self.assertEqual(len(user_recipe.steps), 1)
 
         # Removing step in recipe
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.steps), 1)
         remove_step_from_recipe(
             username=self.user1.username,
-            recipe_name=self.recipe_name1,
+            recipe_name=self.recipe_name2,
             step_number=len(user_recipe.steps)
         )
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
+        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name2)
         self.assertEqual(len(user_recipe.steps), 0)
 
         # Removing from a non-existent recipe raises error
@@ -1578,59 +1543,65 @@ class RecipeQueries(TestCase):
         """
         Testing edit_step_in_recipe correctly modifies a step in a user's recipe
         """
-
-        Recipe.objects.create(
+        user_recipe = Recipe.objects.create(
             user=self.user1,
             recipe_name=self.recipe_name1,
             steps=[],
             ingredients=[]
         )
-
-        # Editing step from an empty recipe
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
         self.assertEqual(len(user_recipe.steps), 0)
+
+        # Editing step 0 in an empty recipe. Steps start from 1
         edit_step_in_recipe(
             username=self.user1.username,
             recipe_name=self.recipe_name1,
             new_step=self.step1,
-            step_number=len(user_recipe.steps)
+            step_number=0
         )
         user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
         self.assertEqual(len(user_recipe.steps), 0)
 
-        # Editing step not in recipe (index out of bounds)
-
-        add_step_to_recipe(
-                username=self.user1.username,
-                recipe_name=self.recipe_name1,
-                step=self.step1
-        )
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.steps), 1)
+        # Editing non-existant step in an empty recipe.
         edit_step_in_recipe(
             username=self.user1.username,
             recipe_name=self.recipe_name1,
-            new_step=self.step2,
+            new_step=self.step1,
             step_number=len(user_recipe.steps) + 1
         )
         user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
+        self.assertEqual(len(user_recipe.steps), 0)
+
+        user_recipe = Recipe.objects.create(
+            user=self.user1,
+            recipe_name=self.recipe_name2,
+            steps=[self.step1],
+            ingredients=[]
+        )
+        self.assertEqual(len(user_recipe.steps), 1)
+
+        # Editing step not in recipe (index out of bounds)
+        edit_step_in_recipe(
+            username=self.user1.username,
+            recipe_name=self.recipe_name2,
+            new_step=self.step2,
+            step_number=len(user_recipe.steps) + 1
+        )
+        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name2)
         self.assertEqual(len(user_recipe.steps), 1)
         self.assertEqual(user_recipe.steps[0], self.step1)
 
         # Editing step in recipe
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        self.assertEqual(len(user_recipe.steps), 1)
         edit_step_in_recipe(
             username=self.user1.username,
-            recipe_name=self.recipe_name1,
+            recipe_name=self.recipe_name2,
             new_step=self.step2,
             step_number=len(user_recipe.steps)
         )
-        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
+        user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name2)
         self.assertEqual(len(user_recipe.steps), 1)
         self.assertEqual(user_recipe.steps[0], self.step2)
 
-        # Removing from a non-existent recipe raises error
+        # Editing step in a non-existent recipe raises error
         with self.assertRaises(Recipe.DoesNotExist):
             edit_step_in_recipe(
                 username=self.user1.username,
@@ -1643,7 +1614,6 @@ class RecipeQueries(TestCase):
         """
         Testing get_all_recipes correctly gets all recipes given a user's name
         """
-
         all_recipes = get_all_recipes(self.user1.username)
         self.assertEqual(len(all_recipes), 0)
 
@@ -1653,7 +1623,6 @@ class RecipeQueries(TestCase):
             steps=[],
             ingredients=[]
         )
-
         all_recipes = get_all_recipes(self.user1.username)
         self.assertEqual(len(all_recipes), 1)
 
@@ -1663,7 +1632,6 @@ class RecipeQueries(TestCase):
             steps=[],
             ingredients=[]
         )
-
         all_recipes = get_all_recipes(self.user1.username)
         self.assertEqual(len(all_recipes), 2)
 
@@ -1671,26 +1639,23 @@ class RecipeQueries(TestCase):
         """
         Testing get_recipe correctly gets a recipe given a user's name and recipe name
         """
-
         with self.assertRaises(Recipe.DoesNotExist):
             get_recipe(self.user1.username, self.recipe_name1)
 
-        Recipe.objects.create(
+        recipe_created = Recipe.objects.create(
             user=self.user1,
             recipe_name=self.recipe_name1,
             steps=[],
             ingredients=[]
         )
-
         recipe = get_recipe(self.user1.username, self.recipe_name1)
-        self.assertEqual(recipe, Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1))
+        self.assertEqual(recipe, recipe_created)
 
-        Recipe.objects.create(
+        recipe_created2 = Recipe.objects.create(
             user=self.user1,
             recipe_name=self.recipe_name2,
             steps=[],
             ingredients=[]
         )
-
         recipe = get_recipe(self.user1.username, self.recipe_name2)
-        self.assertEqual(recipe, Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name2))
+        self.assertEqual(recipe, recipe_created2)
