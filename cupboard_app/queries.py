@@ -774,7 +774,7 @@ def delete_recipe(username: str, recipe_name: str) -> QuerySet:
         QuerySet of all the user's remaining recipes.
     """
     user = User.objects.get(username=username)
-    query = Recipe.objects.all().filter(
+    query = Recipe.objects.filter(
         user=user,
         recipe_name=recipe_name
     )
@@ -811,7 +811,7 @@ def add_ingredient_to_recipe(
     """
 
     if isinstance(is_custom_ingredient, str):
-        is_custom_ingredient = is_custom_ingredient == 'True'
+        is_custom_ingredient = is_custom_ingredient.lower() == 'true'
 
     user_id = None
     if is_custom_ingredient:
