@@ -991,7 +991,7 @@ class UpdateRecipeIngredientsViewSet(viewsets.ViewSet):
             )
         ]
     )
-    def create(self, request: Request, recipe_name: str = None) -> Response:
+    def create(self, request: Response, recipe_name: str = None) -> Response:
         """
         Adds an ingredient to a specified user's recipe.
         """
@@ -1070,7 +1070,7 @@ class UpdateRecipeIngredientsViewSet(viewsets.ViewSet):
             ),
         ]
     )
-    def destroy(self, request: Request, recipe_name: str = None) -> Response:
+    def destroy(self, request: Response, recipe_name: str = None) -> Response:
         """
         Deletes an ingredient from a specified user's recipe.
         """
@@ -1141,7 +1141,7 @@ class UpdateRecipeStepsViewSet(viewsets.ViewSet):
             ),
         ]
     )
-    def destroy(self, request: Request, recipe_name: str = None) -> Response:
+    def destroy(self, request: Response, recipe_name: str = None) -> Response:
         """
         Deletes an step from a specified user's recipe.
         """
@@ -1201,7 +1201,7 @@ class UpdateRecipeStepsViewSet(viewsets.ViewSet):
             )
         ]
     )
-    def create(self, request: Request, recipe_name: str = None) -> Response:
+    def create(self, request: Response, recipe_name: str = None) -> Response:
         """
         Adds an step to a specified user's recipe.
         """
@@ -1272,7 +1272,7 @@ class UpdateRecipeStepsViewSet(viewsets.ViewSet):
             )
         ]
     )
-    def update(self, request: Request, recipe_name: str = None) -> Response:
+    def update(self, request: Response, recipe_name: str = None) -> Response:
         """
         Updates a step in a specified user's recipe.
         """
@@ -1325,7 +1325,7 @@ class RecipeViewSet(viewsets.ViewSet):
         Retrieves all the recipes for a user.
         """
         username = get_auth_username_from_payload(request=request)
-
+        print(username)
         # Retrieves all the lists for the user
         recipes = get_all_recipes(username=username)
         serializer = RecipeSerializer(recipes, many=True)
@@ -1358,14 +1358,17 @@ class RecipeViewSet(viewsets.ViewSet):
             )
         ]
     )
-    def create(self, request: Request, recipe_name: str = None) -> Response:
+    def create(self, request: Response, recipe_name: str = None) -> Response:
         """
         Creates a recipe for the user.
         Returns the recipe object.
         """
+
+        
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
-
+        print(username)
+        print(recipe_name)
         if username and recipe_name:
 
             # Create the list
@@ -1395,12 +1398,14 @@ class RecipeViewSet(viewsets.ViewSet):
             )
         ]
     )
-    def retrieve(self, request: Request, recipe_name: str = None) -> Response:
+    def retrieve(self, request: Response, recipe_name: str = None) -> Response:
         """
         Retrieves the specific recipe for a user.
         """
+       
         username = get_auth_username_from_payload(request=request)
-
+        print(username)
+        print(recipe_name)
         # Retrieves the specific list for the user
         my_recipe = get_recipe(
             username=username,
@@ -1431,7 +1436,8 @@ class RecipeViewSet(viewsets.ViewSet):
         all of the user's recipes after the delete.
         """
         username = get_auth_username_from_payload(request=request)
-
+        print(username)
+        print(recipe_name)
         # Delete the list for specified user
         recipes = delete_recipe(
             username=username,
