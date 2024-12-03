@@ -145,11 +145,11 @@ class QuickstartUser(HttpUser):
             load_env_variables()  # Adds the .env values to environment to allow use
 
             # Log in user 
-            logging.info("Logging User In")
+            logging.info("Logging User In as user: " + str(os.environ['LOAD_TEST_USERNAME'])+"_"+str(self.user_id)+"@gmail.com")
             response = self.client.post(
-                "/login/cli",
+                "/login",
                 json={
-                    "username": os.environ['LOAD_TEST_USERNAME']+"_"+str(self.user_id)+"@gmail.com",
+                    "username": str(os.environ['LOAD_TEST_USERNAME'])+"_"+str(self.user_id)+"@gmail.com",
                     "password": os.environ['LOAD_TEST_PASSWORD']
                 }
             )
