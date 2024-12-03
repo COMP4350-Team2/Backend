@@ -995,6 +995,12 @@ class RecipeIngredientsViewSet(viewsets.ViewSet):
                 response_only=True
             ),
             OpenApiExample(
+                name='Recipe Value Missing',
+                value={'message': MISSING_RECIPE_PARAM_MSG},
+                status_codes=[400],
+                response_only=True
+            ),
+            OpenApiExample(
                 name='Required Value Missing',
                 value={'message': MISSING_ADD_INGREDIENT_MSG},
                 status_codes=[400],
@@ -1037,6 +1043,7 @@ class RecipeIngredientsViewSet(viewsets.ViewSet):
 
     @extend_schema(
         parameters=[
+            recipe_name_param,
             OpenApiParameter(
                 name='ingredient',
                 description='Name of the ingredient.',
@@ -1071,6 +1078,12 @@ class RecipeIngredientsViewSet(viewsets.ViewSet):
                 name='Ingredient Deleted',
                 value=SINGLE_RECIPE,
                 status_codes=[200],
+                response_only=True
+            ),
+            OpenApiExample(
+                name='Recipe Value Missing',
+                value={'message': MISSING_RECIPE_PARAM_MSG},
+                status_codes=[400],
                 response_only=True
             ),
             OpenApiExample(
@@ -1115,75 +1128,24 @@ class RecipeIngredientsViewSet(viewsets.ViewSet):
 @extend_schema(tags=['Recipes'])
 class RecipeStepsViewSet(viewsets.ViewSet):
     MISSING_RECIPE_PARAM_MSG = 'recipe_name parameter is missing or empty.'
-    MISSING_STEP_MSG = (
-        'Required query parameters missing from sent request. Please '
-        'add the following query parameters'
-        '?recipe_name=[STRING]&step=[STRING]'
+    MISSING_CREATE_STEP_MSG = (
+        f'{REQUIRED_VALUE_MISSING}'
+        '{step: [STEP STRING]}'
     )
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name='step_number',
-                description='The number step to remove from a recipe.',
-                type=str,
-                location=OpenApiParameter.QUERY,
-                required=True
-            ),
-        ],
-        request=None,
-        responses={
-            200: RecipeSerializer,
-            400: MessageSerializer,
-            401: auth_failed_response,
-            404: invalid_recipe_response
-        },
-        examples=[
-            OpenApiExample(
-                name='Step Deleted',
-                value=SINGLE_RECIPE,
-                status_codes=[200],
-                response_only=True
-            ),
-            OpenApiExample(
-                name='Required Value Missing',
-                value={'message': MISSING_STEP_MSG},
-                status_codes=[400],
-                response_only=True
-            ),
-        ]
+    MISSING_EDIT_STEP_MSG = (
+        f'{REQUIRED_VALUE_MISSING}'
+        '{step: [STEP STRING], step_number: [STEP NUMBER]}'
     )
-    def destroy(self, request: Response, recipe_name: str = None) -> Response:
-        """
-        Deletes an step from a specified user's recipe.
-        """
-        # Extract username from the access token
-        username = get_auth_username_from_payload(request=request)
-        body = request.data
-
-        if (
-            username
-            and recipe_name
-            and body.get('step_number', None)
-        ):
-            recipe = remove_step_from_recipe(
-                username=username,
-                recipe_name=recipe_name,
-                step_number=body['step_number']
-            )
-            serializer = RecipeSerializer(recipe)
-        else:
-            raise MissingInformation(self.MISSING_STEP_MSG)
-
-        return Response(serializer.data, status=200)
+    MISSING_DELETE_STEP_MSG = (
+        'Required query parameter missing from sent request. Please '
+        'add the following query parameter: ?step_number=[STEP NUMBER]'
+    )
 
     @extend_schema(
         parameters=[recipe_name_param],
         request=inline_serializer(
             name='AddStepInRecipeRequest',
-            fields={
-                'step': serializers.CharField(),
-            }
+            fields={'step': serializers.CharField()}
         ),
         responses={
             200: RecipeSerializer,
@@ -1194,9 +1156,7 @@ class RecipeStepsViewSet(viewsets.ViewSet):
         examples=[
             OpenApiExample(
                 name='Add Step in Recipe',
-                value={
-                    'step': 'A step in my recipe!',
-                },
+                value={'step': 'Final step of my recipe!'},
                 request_only=True
             ),
             OpenApiExample(
@@ -1206,8 +1166,14 @@ class RecipeStepsViewSet(viewsets.ViewSet):
                 response_only=True
             ),
             OpenApiExample(
+                name='Recipe Value Missing',
+                value={'message': MISSING_RECIPE_PARAM_MSG},
+                status_codes=[400],
+                response_only=True
+            ),
+            OpenApiExample(
                 name='Required Value Missing',
-                value={'message': MISSING_STEP_MSG},
+                value={'message': MISSING_CREATE_STEP_MSG},
                 status_codes=[400],
                 response_only=True
             )
@@ -1230,13 +1196,13 @@ class RecipeStepsViewSet(viewsets.ViewSet):
             my_recipe = add_step_to_recipe(
                 username=username,
                 recipe_name=recipe_name,
-                step=body['step'],
+                step=body['step']
             )
             serializer = RecipeSerializer(my_recipe)
         elif not recipe_name:
             raise MissingInformation(self.MISSING_RECIPE_PARAM_MSG)
         else:
-            raise MissingInformation(self.MISSING_STEP_MSG)
+            raise MissingInformation(self.MISSING_CREATE_STEP_MSG)
 
         return Response(serializer.data, status=200)
 
@@ -1246,6 +1212,7 @@ class RecipeStepsViewSet(viewsets.ViewSet):
             name='UpdateStepInRecipeRequest',
             fields={
                 'step': serializers.CharField(),
+                'step_number': serializers.FloatField()
             }
         ),
         responses={
@@ -1256,17 +1223,13 @@ class RecipeStepsViewSet(viewsets.ViewSet):
         },
         examples=[
             OpenApiExample(
-                name='New step in Recipe',
-                value={
-                    'step': 'A step in my recipe!'
-                },
+                name='New Step in Recipe',
+                value={'step': 'Final step of my recipe!', 'step_number': 3},
                 request_only=True
             ),
             OpenApiExample(
-                name='The number step to update from a recipe',
-                value={
-                    'step_number': 1
-                },
+                name='Update Step in Recipe',
+                value={'step': 'Step two of my recipe!', 'step_number': 2},
                 request_only=True
             ),
             OpenApiExample(
@@ -1276,8 +1239,14 @@ class RecipeStepsViewSet(viewsets.ViewSet):
                 response_only=True
             ),
             OpenApiExample(
+                name='Recipe Value Missing',
+                value={'message': MISSING_RECIPE_PARAM_MSG},
+                status_codes=[400],
+                response_only=True
+            ),
+            OpenApiExample(
                 name='Required Value Missing',
-                value={'message': MISSING_STEP_MSG},
+                value={'message': MISSING_EDIT_STEP_MSG},
                 status_codes=[400],
                 response_only=True
             )
@@ -1302,20 +1271,77 @@ class RecipeStepsViewSet(viewsets.ViewSet):
                 username=username,
                 recipe_name=recipe_name,
                 new_step=body['step'],
-                step_number=body['step_number'],
+                step_number=body['step_number']
             )
             serializer = RecipeSerializer(my_recipe)
         elif not recipe_name:
             raise MissingInformation(self.MISSING_RECIPE_PARAM_MSG)
         else:
-            raise MissingInformation(self.MISSING_STEP_MSG)
+            raise MissingInformation(self.MISSING_EDIT_STEP_MSG)
+
+        return Response(serializer.data, status=200)
+
+    @extend_schema(
+        parameters=[
+            recipe_name_param,
+            OpenApiParameter(
+                name='step_number',
+                description='The number step to remove from a recipe.',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                required=True
+            )
+        ],
+        request=None,
+        responses={
+            200: RecipeSerializer,
+            400: MessageSerializer,
+            401: auth_failed_response,
+            404: invalid_recipe_response
+        },
+        examples=[
+            OpenApiExample(
+                name='Step Deleted',
+                value=SINGLE_RECIPE,
+                status_codes=[200],
+                response_only=True
+            ),
+            OpenApiExample(
+                name='Required Value Missing',
+                value={'message': MISSING_DELETE_STEP_MSG},
+                status_codes=[400],
+                response_only=True
+            ),
+        ]
+    )
+    def destroy(self, request: Response, recipe_name: str = None) -> Response:
+        """
+        Deletes an step from a specified user's recipe.
+        """
+        # Extract username from the access token
+        username = get_auth_username_from_payload(request=request)
+        query_params = request.query_params
+
+        if (
+            username
+            and recipe_name
+            and query_params.get('step_number', None)
+        ):
+            recipe = remove_step_from_recipe(
+                username=username,
+                recipe_name=recipe_name,
+                step_number=query_params['step_number']
+            )
+            serializer = RecipeSerializer(recipe)
+        else:
+            raise MissingInformation(self.MISSING_DELETE_STEP_MSG)
 
         return Response(serializer.data, status=200)
 
 
 @extend_schema(tags=['Recipes'])
 class RecipeViewSet(viewsets.ViewSet):
-    MISSING_USER_LIST_PARAM_MSG = 'recipe_name parameter is missing or empty.'
+    MISSING_USER_RECIPE_PARAM_MSG = 'recipe_name parameter is missing or empty.'
 
     @extend_schema(
         request=None,
@@ -1326,7 +1352,7 @@ class RecipeViewSet(viewsets.ViewSet):
         examples=[
             OpenApiExample(
                 name="All User Lists Retrieved",
-                value=[SINGLE_RECIPE],
+                value=SINGLE_RECIPE,
                 status_codes=[200]
             )
         ]
@@ -1336,6 +1362,7 @@ class RecipeViewSet(viewsets.ViewSet):
         Retrieves all the recipes for a user.
         """
         username = get_auth_username_from_payload(request=request)
+
         # Retrieves all the lists for the user
         recipes = get_all_recipes(username=username)
         serializer = RecipeSerializer(recipes, many=True)
@@ -1363,18 +1390,18 @@ class RecipeViewSet(viewsets.ViewSet):
             ),
             OpenApiExample(
                 name='Required Value Missing',
-                value={'message': MISSING_USER_LIST_PARAM_MSG},
+                value={'message': MISSING_USER_RECIPE_PARAM_MSG},
                 status_codes=[400]
             )
         ]
     )
     def create(self, request: Response, recipe_name: str = None) -> Response:
         """
-        Creates a recipe for the user.
-        Returns the recipe object.
+        Creates a recipe for the user. Returns the recipe object.
         """
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
+
         if username and recipe_name:
             # Create the list
             my_recipe = create_recipe(
@@ -1383,7 +1410,7 @@ class RecipeViewSet(viewsets.ViewSet):
             )
             serializer = RecipeSerializer(my_recipe)
         else:
-            raise MissingInformation(self.MISSING_USER_LIST_PARAM_MSG)
+            raise MissingInformation(self.MISSING_USER_RECIPE_PARAM_MSG)
 
         return Response(serializer.data, status=201)
 
@@ -1407,8 +1434,8 @@ class RecipeViewSet(viewsets.ViewSet):
         """
         Retrieves the specific recipe for a user.
         """
-
         username = get_auth_username_from_payload(request=request)
+
         # Retrieves the specific list for the user
         my_recipe = get_recipe(
             username=username,
@@ -1428,7 +1455,7 @@ class RecipeViewSet(viewsets.ViewSet):
         examples=[
             OpenApiExample(
                 name='Recipe Deleted',
-                value=[SINGLE_RECIPE],
+                value=SINGLE_RECIPE,
                 status_codes=[200]
             )
         ]
@@ -1439,6 +1466,7 @@ class RecipeViewSet(viewsets.ViewSet):
         all of the user's recipes after the delete.
         """
         username = get_auth_username_from_payload(request=request)
+
         # Delete the list for specified user
         recipes = delete_recipe(
             username=username,

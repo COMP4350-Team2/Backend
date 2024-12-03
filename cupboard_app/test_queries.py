@@ -1187,18 +1187,21 @@ class RecipeQueries(TestCase):
         self.unit2 = Measurement.objects.create(unit='test_unit2')
         self.list_ing1 = {
             'ingredient_name': self.ing1.name,
+            'ingredient_type': self.ing1.type,
             'amount': 500,
             'unit': self.unit1.unit,
             'is_custom_ingredient': False
         }
         self.list_ing2 = {
             'ingredient_name': self.ing2.name,
+            'ingredient_type': self.ing2.type,
             'amount': 400,
             'unit': self.unit2.unit,
             'is_custom_ingredient': False
         }
         self.list_cust_ing1 = {
             'ingredient_name': self.cust_ing1.name,
+            'ingredient_type': self.cust_ing1.type,
             'amount': 500,
             'unit': self.unit1.unit,
             'is_custom_ingredient': True

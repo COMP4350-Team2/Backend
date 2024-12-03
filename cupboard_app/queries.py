@@ -849,7 +849,6 @@ def add_ingredient_to_recipe(
         unit=unit,
         user_id=user_id
     )
-    list_ingredient.pop('ingredient_type')
 
     user_recipe = Recipe.objects.get(
         user__username=username,
