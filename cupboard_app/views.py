@@ -1100,6 +1100,7 @@ class UpdateRecipeIngredientsViewSet(viewsets.ViewSet):
 
         return Response(serializer.data, status=200)
 
+
 @extend_schema(tags=['Recipes'])
 class UpdateRecipeStepsViewSet(viewsets.ViewSet):
     MISSING_RECIPE_PARAM_MSG = 'recipe_name parameter is missing or empty.'
@@ -1363,18 +1364,13 @@ class RecipeViewSet(viewsets.ViewSet):
         Creates a recipe for the user.
         Returns the recipe object.
         """
-
-        
         # Extract username from the access token
         username = get_auth_username_from_payload(request=request)
-        print(username)
-        print(recipe_name)
         if username and recipe_name:
-
             # Create the list
             my_recipe = create_recipe(
-                username,
-                recipe_name
+                username=username,
+                recipe_name=recipe_name
             )
             serializer = RecipeSerializer(my_recipe)
         else:

@@ -740,7 +740,7 @@ def add_default_user_lists(username: str):
     create_user_list_ingredients(username=username, list_name=PANTRY_LIST_NAME)
 
 
-def create_recipe(username: str, recipe_name: str):
+def create_recipe(username: str, recipe_name: str) -> Recipe:
     """
     Creates a recipe in the recipe dimension table.
 
@@ -762,7 +762,7 @@ def create_recipe(username: str, recipe_name: str):
     return obj
 
 
-def delete_recipe(username: str, recipe_name: str):
+def delete_recipe(username: str, recipe_name: str) -> QuerySet:
     """
     Deletes a recipe in the Recipe dimension table.
 
@@ -864,7 +864,7 @@ def remove_ingredient_from_recipe(
     ingredient: str,
     unit: str,
     is_custom_ingredient: bool
-) -> UserListIngredients:
+) -> Recipe:
     """
     Removes an ingredient from the user's recipe.
 

@@ -1845,7 +1845,8 @@ class DeleteCustomIngredientsApi(TestCase):
                 }
             ]
         )
-    
+
+ 
 class CreateRecipeApi(TestCase):
     unit1 = None
     unit2 = None
@@ -1905,6 +1906,7 @@ class CreateRecipeApi(TestCase):
             HTTP_AUTHORIZATION='Bearer valid-token'
         )
         self.assertEqual(response.status_code, 500)
+
 
 class DeleteRecipeApi(TestCase):
 
@@ -1975,6 +1977,7 @@ class DeleteRecipeApi(TestCase):
                 }
             ]
         )
+
 
 class GetRecipeApi(TestCase):
 
