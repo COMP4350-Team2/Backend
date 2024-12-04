@@ -12,8 +12,8 @@ class QuickstartUser(HttpUser):
 
     @task
     def all_api(self):
-        logging.info("User ID: " + str(self.user_id))
-        logging.info("User Count: " + str(user_count))
+        #logging.info("User ID: " + str(self.user_id))
+        #logging.info("User Count: " + str(user_count))
 
         # Basic info retrieval
         result = self.client.get(
@@ -22,15 +22,15 @@ class QuickstartUser(HttpUser):
         )
         # output of all items is too long logging.info(str(result.json()))
 
-        logging.info("measurments")
+        #logging.info("measurments")
         result = self.client.get(
             "/api/v3/measurements",
             headers={"Authorization": "Bearer " + self.access_token}
         )
-        logging.info(str(result.content))
+        #logging.info(str(result.content))
 
         # Custom ingredient api test
-        logging.info("create custom ingredient")
+        #logging.info("create custom ingredient")
         result = self.client.post(
             "/api/v3/user/ingredients/custom",
             headers={"Authorization": "Bearer " + self.access_token},
@@ -39,31 +39,31 @@ class QuickstartUser(HttpUser):
                 "type": "load_test_type"
             }
         )
-        logging.info(str(result.json()))
+        #logging.info(str(result.json()))
 
-        logging.info("delete custom ingredient")
+        #logging.info("delete custom ingredient")
         result = self.client.delete(
             "/api/v3/user/ingredients/custom/load_test_ingredient",
             headers={"Authorization": "Bearer " + self.access_token}
         )
-        logging.info(str(result.json()))
+        #logging.info(str(result.json()))
 
         # Test lists
-        logging.info("get users lists")
+        #logging.info("get users lists")
         result = self.client.get(
             "/api/v3/user/lists",
             headers={"Authorization": "Bearer " + self.access_token}
         )
-        logging.info(str(result.json()))
+        #logging.info(str(result.json()))
 
-        logging.info("create user list")
+        #logging.info("create user list")
         result = self.client.post(
             "/api/v3/user/lists/load_test_list",
             headers={"Authorization": "Bearer " + self.access_token}
         )
-        logging.info(str(result.json()))
+        #logging.info(str(result.json()))
 
-        logging.info("adds ingredient to list")
+        #logging.info("adds ingredient to list")
         result = self.client.post(
             "/api/v3/user/lists/ingredients",
             headers={"Authorization": "Bearer " + self.access_token},
@@ -75,9 +75,9 @@ class QuickstartUser(HttpUser):
                 "is_custom_ingredient": False
             }
         )
-        logging.info(str(result.json()))
+        #logging.info(str(result.json()))
 
-        logging.info("renames ingredient in list")
+        #logging.info("renames ingredient in list")
         result = self.client.patch(
             "/api/v3/user/lists/ingredients",
             headers={"Authorization": "Bearer " + self.access_token},
@@ -94,16 +94,16 @@ class QuickstartUser(HttpUser):
                 "new_is_custom_ingredient": False
             }
         )
-        logging.info(str(result.json()))
+        #logging.info(str(result.json()))
 
-        logging.info("get the load test list")
+        #logging.info("get the load test list")
         result = self.client.get(
             "/api/v3/user/lists/load_test_list",
             headers={"Authorization": "Bearer " + self.access_token}
         )
-        logging.info(str(result.json()))
+        #logging.info(str(result.json()))
 
-        logging.info("delete item in list")
+        #logging.info("delete item in list")
         url_string = "/api/v3/user/lists/ingredients"
         url_string += "?list_name=load_test_list&ingredient=Chewing gum"
         url_string += "&unit=lb&is_custom_ingredient=false"
@@ -113,9 +113,9 @@ class QuickstartUser(HttpUser):
                 "Authorization": "Bearer " + self.access_token,
             }
         )
-        logging.info(str(result.json()))
+        #logging.info(str(result.json()))
 
-        logging.info("renaming list, adding 2 after it")
+        #logging.info("renaming list, adding 2 after it")
         result = self.client.put(
             "/api/v3/user/lists",
             headers={"Authorization": "Bearer " + self.access_token},
@@ -124,15 +124,92 @@ class QuickstartUser(HttpUser):
                 "new_list_name": "load_test_list2"
             }
         )
-        logging.info(str(result.json()))
+        #logging.info(str(result.json()))
 
-        logging.info("delets the renamed list")
+        #logging.info("deletes the renamed list")
         result = self.client.delete(
             "/api/v3/user/lists/load_test_list2",
             headers={"Authorization": "Bearer " + self.access_token}
         )
-        logging.info(str(result.json()))
+        #logging.info(str(result.json()))
+        
+        # Recipies
+        #logging.info("gets all recipies")
+        result = self.client.get(
+            "/api/v3/user/recipe",
+            headers={"Authorization": "Bearer " + self.access_token}
+        )
+        #logging.info(str(result.json()))
 
+        #logging.info("creates new recipe")
+        result = self.client.post(
+            "/api/v3/user/recipe/load_test_recipe",
+            headers={"Authorization": "Bearer " + self.access_token}
+        )
+        #logging.info(str(result.json()))
+        
+        #logging.info("gets the newly created recipe")
+        result = self.client.get(
+            "/api/v3/user/recipe/load_test_recipe",
+            headers={"Authorization": "Bearer " + self.access_token}
+        )
+        #logging.info(str(result.json()))
+        
+        #logging.info("Adds item to the recipe")
+        result = self.client.post(
+            "/api/v3/user/recipe/load_test_recipe/ingredient",
+            headers={"Authorization": "Bearer " + self.access_token},
+            json={
+                "list_name": "load_test_list",
+                "ingredient": "Chewing gum",
+                "amount": 500,
+                "unit": "g",
+                "is_custom_ingredient": False
+            }
+        )
+        #logging.info(str(result.json()))
+
+        url_string = "/api/v3/user/recipe/load_test_recipe/ingredient"
+        url_string += "?ingredient=Chewing gum"
+        url_string += "&unit=g&is_custom_ingredient=false"
+        #logging.info("Deletes an ingredient from recipe")
+        result = self.client.delete(
+            url_string,
+            headers={"Authorization": "Bearer " + self.access_token}
+        )
+        #logging.info(str(result.json()))
+        
+        #logging.info("Adds a load test step to recipe")
+        result = self.client.post(
+            "/api/v3/user/recipe/load_test_recipe/step",
+            headers={"Authorization": "Bearer " + self.access_token},
+            json={"step":"Load test step."}
+        )
+        #logging.info(str(result.json()))
+
+        #logging.info("updates content of a step")
+        result = self.client.patch(
+            "/api/v3/user/recipe/load_test_recipe/step",
+            headers={"Authorization": "Bearer " + self.access_token},
+            json={"step": "Load test step 2.", "step_number": 1}
+        )
+        #logging.info(str(result.json()))
+        
+        #logging.info("Deletes a step")
+        result = self.client.delete(
+            "/api/v3/user/recipe/load_test_recipe/step?step_number=1",
+            headers={"Authorization": "Bearer " + self.access_token}
+        )
+        #logging.info(str(result))
+        #logging.info(str(result.json()))
+        
+        #logging.info("Deletes the recipe")
+        result = self.client.delete(
+            "/api/v3/user/recipe/load_test_recipe",
+            headers={"Authorization": "Bearer " + self.access_token}
+        )
+        #logging.info(str(result.json()))
+        
     def on_start(self):
         global user_count
         user_count = user_count + 1
