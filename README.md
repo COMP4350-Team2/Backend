@@ -95,3 +95,11 @@ pull to dockerhub using default tag (latest)
 ```
 docker pull swanso15/cupboard_backend
 ```
+
+## Locust Load Testing
+
+run `locust` in the command line in the base Backend directory (where this file is found)
+
+enter 100 as the number of concurrent users and 1 as the number of users per second
+
+for host put the aws instace url/ip with the port ie http://2.4.5.7:6060 (this is not the actual ip)

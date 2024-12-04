@@ -3,15 +3,11 @@ import os
 import logging
 from utils.env_helper import load_env_variables
 
-#access_token = ''
-#cust_ing_count = 0 # Tracks the number of custom ingredients in all runners to ensure they don't overlap
 user_count = 0
 
+
 class QuickstartUser(HttpUser):
-    #global cust_ing_count 
     global user_count
-    #user_id = 0
-    #cust_ing_num = cust_ing_count +1 
     wait_time = between(1, 5)    
 
     @task
@@ -19,7 +15,6 @@ class QuickstartUser(HttpUser):
         logging.info("User ID: " + str(self.user_id))
         logging.info("User Count: " + str(user_count))
 
-        #global cust_ing_count
         # Basic info retrieval
         result = self.client.get(
             "/api/v3/ingredients",
@@ -109,8 +104,11 @@ class QuickstartUser(HttpUser):
         logging.info(str(result.json()))
 
         logging.info("delete item in list")
+        url_string = "/api/v3/user/lists/ingredients"
+        url_string += "?list_name=load_test_list&ingredient=Chewing gum"
+        url_string += "&unit=lb&is_custom_ingredient=false"
         result = self.client.delete(
-            "/api/v3/user/lists/ingredients?list_name=load_test_list&ingredient=Chewing gum&unit=lb&is_custom_ingredient=false",
+            url_string,
             headers={
                 "Authorization": "Bearer " + self.access_token,
             }
@@ -149,10 +147,12 @@ class QuickstartUser(HttpUser):
             print_str += str(os.environ['LOAD_TEST_USERNAME'])
             print_str += "_"+str(self.user_id)+"@gmail.com"
             logging.info(print_str)
+            username = str(os.environ['LOAD_TEST_USERNAME'])
+            username += "_"+str(self.user_id)+"@gmail.com"
             response = self.client.post(
                 "/login",
                 json={
-                    "username": str(os.environ['LOAD_TEST_USERNAME'])+"_"+str(self.user_id)+"@gmail.com",
+                    "username": username,
                     "password": os.environ['LOAD_TEST_PASSWORD']
                 }
             )
