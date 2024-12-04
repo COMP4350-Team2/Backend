@@ -68,10 +68,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         read_only=True,
         slug_field='username'
     )
-    recipe_name = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='recipe_name'
-    )
 
     class Meta:
         model = Recipe
