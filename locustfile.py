@@ -107,7 +107,7 @@ class QuickstartUser(HttpUser):
             headers={"Authorization": "Bearer " + self.access_token}
         )
         logging.info(str(result.json()))
-        
+
         logging.info("delete item in list")
         result = self.client.delete(
             "/api/v3/user/lists/ingredients?list_name=load_test_list&ingredient=Chewing gum&unit=lb&is_custom_ingredient=false",
@@ -137,7 +137,7 @@ class QuickstartUser(HttpUser):
 
     def on_start(self):
         global user_count
-        user_count = user_count +1
+        user_count = user_count + 1
         self.user_id = user_count
         self.access_token = ''
 
@@ -145,7 +145,10 @@ class QuickstartUser(HttpUser):
             load_env_variables()  # Adds the .env values to environment to allow use
 
             # Log in user 
-            logging.info("Logging User In as user: " + str(os.environ['LOAD_TEST_USERNAME'])+"_"+str(self.user_id)+"@gmail.com")
+            print_str = "Logging User In as user: "
+            print_str += str(os.environ['LOAD_TEST_USERNAME'])
+            print_str += "_"+str(self.user_id)+"@gmail.com"
+            logging.info(print_str)
             response = self.client.post(
                 "/login",
                 json={
