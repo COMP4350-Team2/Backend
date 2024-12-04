@@ -153,7 +153,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Security
-CORS_ALLOWED_ORIGINS = os.getenv('REACT_CLIENT_ORIGIN_URL').split(',')
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS').split(',')
 
 
 REST_FRAMEWORK = {
