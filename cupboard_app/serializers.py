@@ -15,6 +15,15 @@ class MessageSerializer(serializers.Serializer):
     message = serializers.CharField()
 
 
+class SessionSerializer(serializers.Serializer):
+    access_token = serializers.CharField()
+    refresh_token = serializers.CharField()
+    id_token = serializers.CharField()
+    issued_time = serializers.CharField()
+    expire_time = serializers.CharField()
+    user_info = serializers.JSONField()
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
@@ -58,10 +67,6 @@ class RecipeSerializer(serializers.ModelSerializer):
     user = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
-    )
-    recipe_name = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='recipe_name'
     )
 
     class Meta:

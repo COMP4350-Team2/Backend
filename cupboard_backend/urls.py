@@ -18,11 +18,18 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework.versioning import NamespaceVersioning
 
-from cupboard_app import v3_urls
+from cupboard_app import auth0_authentication, v3_urls
 
 versioning_class = NamespaceVersioning
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v3/', include((v3_urls, 'v3'), namespace='v3'))
+]
+
+# Auth0 Authentication
+urlpatterns += [
+    path('login', auth0_authentication.CLILoginAPIView.as_view(), name='cli_login'),
+    path('logout', auth0_authentication.CLILogoutAPIView.as_view(), name='cli_logout'),
+    path('refresh-token', auth0_authentication.RefreshTokenAPIView.as_view(), name='refresh_token')
 ]

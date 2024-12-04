@@ -27,7 +27,6 @@ AUTH0_API_IDENTIFIER = os.getenv('AUTH0_API_IDENTIFIER')
 DB_NAME = os.getenv('DB_NAME')
 DB_TEST_NAME = os.getenv('DB_TEST_NAME')
 MONGO_URL = os.getenv('MONGO_URL')
-REACT_CLIENT_ORIGIN_URL = os.getenv('REACT_CLIENT_ORIGIN_URL')
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if os.getenv('DEBUG_ENABLE') == 'true':
     DEBUG = True
@@ -42,7 +41,7 @@ else:
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
 
 
 # Application definition
@@ -154,7 +153,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Security
-CORS_ALLOWED_ORIGINS = [REACT_CLIENT_ORIGIN_URL]
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS').split(',')
 
 
 REST_FRAMEWORK = {

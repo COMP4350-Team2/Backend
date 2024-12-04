@@ -10,7 +10,11 @@ from cupboard_app.views import (
     MeasurementsViewSet,
     UserViewSet,
     UserListIngredientsViewSet,
-    UpdateUserListIngredientsViewSet
+    UpdateUserListIngredientsViewSet,
+    CustomIngredientsViewSet,
+    RecipeViewSet,
+    RecipeIngredientsViewSet,
+    RecipeStepsViewSet
 )
 
 """
@@ -23,16 +27,25 @@ urlpatterns = [
     path('ingredients', IngredientsViewSet.as_view({'get': 'list'}), name='ingredients'),
     path('measurements', MeasurementsViewSet.as_view({'get': 'list'}), name='measurements'),
     path(
-        'user/lists/<str:list_name>/ingredients/<str:ingredient>/units/<str:unit>',
-        UpdateUserListIngredientsViewSet.as_view({'delete': 'destroy'}),
-        name='delete_ingredient'
-    ),
-    path(
         'user/lists/ingredients',
         UpdateUserListIngredientsViewSet.as_view(
-            {'post': 'create', 'patch': 'update'}
+            {'post': 'create', 'patch': 'update', 'delete': 'destroy'}
         ),
-        name='add_set_ingredients'
+        name='edit_user_list_ingredients'
+    ),
+    path(
+        'user/ingredients/custom',
+        CustomIngredientsViewSet.as_view(
+            {'post': 'create'}
+        ),
+        name='custom_ingredient'
+    ),
+    path(
+        'user/ingredients/custom/<str:ingredient>',
+        CustomIngredientsViewSet.as_view(
+            {'delete': 'destroy'}
+        ),
+        name='specific_custom_ingredient'
     ),
     path(
         'user/lists/<str:list_name>',
@@ -46,6 +59,26 @@ urlpatterns = [
         UserListIngredientsViewSet.as_view({'get': 'list', 'put': 'update'}),
         name='user_list_ingredients'
     ),
+    path(
+        'user/recipe/<str:recipe_name>/ingredient',
+        RecipeIngredientsViewSet.as_view({'post': 'create', 'delete': 'destroy'}),
+        name='recipe_ingredients'
+    ),
+    path(
+        'user/recipe/<str:recipe_name>/step',
+        RecipeStepsViewSet.as_view({'post': 'create', 'patch': 'update', 'delete': 'destroy'}),
+        name='recipe_steps'
+    ),
+    path(
+        'user/recipe/<str:recipe_name>',
+        RecipeViewSet.as_view({'get': 'retrieve', 'post': 'create', 'delete': 'destroy'}),
+        name='specific_recipe'
+    ),
+    path(
+        'user/recipe',
+        RecipeViewSet.as_view({'get': 'list'}),
+        name='recipe'
+    )
 ]
 
 # API Documentation versions
