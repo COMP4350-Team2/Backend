@@ -35,13 +35,3 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO_NAME }}:latest
-
-      - name: Load and Run Docker Image on AWS
-        run: |
-          scp -i aws.pem -o StrictHostKeyChecking=no .env ec2-user@35.183.197.0:/home/ec2-user
-          ssh -i aws.pem -o StrictHostKeyChecking=no ec2-user@35.183.197.0 "
-            docker ps -a -q | xargs -r docker stop
-            docker ps -a -q | xargs -r docker remove
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO_NAME }}:latest
-            docker run -d -p 6060:6060 --env-file .env ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO_NAME }}:latest
-          "
