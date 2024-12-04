@@ -50,12 +50,12 @@ pyinstrument manage.py runserver
 For the official API documentation, run the backend and go to one of the following links in your browser:  
 Swagger UI: http://localhost:6060/api/[version]/doc/  
 ```
-http://localhost:6060/api/v2/doc/
+http://localhost:6060/api/v3/doc/
 ```  
 
 Redoc UI: http://localhost:6060/api/[version]/redoc/  
 ```
-http://localhost:6060/api/v2/redoc/
+http://localhost:6060/api/v3/redoc/
 ```
 
 To test the user authentication required endpoints, click the **authorize** button and put your Auth0 access token.
