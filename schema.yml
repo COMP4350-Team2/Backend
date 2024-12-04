@@ -921,50 +921,796 @@ paths:
                     message: UserListIngredients matching query does not exist.
                   summary: User List not found
           description: ''
-  /login:
+  /api/v3/user/recipe:
     get:
-      operationId: login_retrieve
-      description: |-
-        Redirects to the Auth0 universal login for user to enter credentials if
-        session is not set. Returns the access token, refresh token, id token,
-        and user info.
+      operationId: api_v3_user_recipe_list
+      description: Retrieves all the recipes for a user.
       tags:
-      - Authentication
+      - Recipes
       security:
       - jwtAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Session'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
               examples:
-                LoginSuccess:
+                AllUserListsRetrieved:
                   value:
-                    access_token: very_long_jwt_token
-                    refresh_token: refresh_token
-                    id_token: very_long_jwt_token
-                    issued_time: '2024-11-16 01:49:09'
-                    expire_time: '2024-11-17 01:49:09'
-                    user_info:
-                      nickname: teacup.backend
-                      name: cupboard@teacup.ca
-                      picture: image_url
-                      updated_at: '2024-11-16T07:49:07.640Z'
-                      email: cupboard@teacup.ca
-                      email_verified: true
-                      iss: issuer_string
-                      aud: audience_string
-                      iat: 1731743349
-                      exp: 1731779349
-                      sub: auth0|fake_user_string
-                      sid: session_id
-                  summary: Login Success
+                  - user: teacup
+                    recipe_name: my_recipe
+                    ingredients:
+                    - ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit: g
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
+                    steps:
+                    - Step one of my recipe!
+                    - Step two of my recipe!
+                    - Final step of my recipe!
+                  summary: All User Lists Retrieved
           description: ''
-  /login/cli:
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+  /api/v3/user/recipe/{recipe_name}:
+    get:
+      operationId: api_v3_user_recipe_retrieve
+      description: Retrieves the specific recipe for a user.
+      parameters:
+      - in: path
+        name: recipe_name
+        schema:
+          type: string
+        description: Name of the recipe.
+        required: true
+      tags:
+      - Recipes
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+              examples:
+                RecipeRetrieved:
+                  value:
+                    user: teacup
+                    recipe_name: my_recipe
+                    ingredients:
+                    - ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit: g
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
+                    steps:
+                    - Step one of my recipe!
+                    - Step two of my recipe!
+                    - Final step of my recipe!
+                  summary: Recipe Retrieved
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RecipeNotFound:
+                  value:
+                    message: Recipe matching query does not exist.
+                  summary: Recipe not found
+          description: ''
     post:
-      operationId: login_cli_create
+      operationId: api_v3_user_recipe_create
+      description: Creates a recipe for the user. Returns the recipe object.
+      parameters:
+      - in: path
+        name: recipe_name
+        schema:
+          type: string
+        description: Name of the recipe.
+        required: true
+      tags:
+      - Recipes
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+              examples:
+                RecipeCreated:
+                  value:
+                    user: teacup
+                    recipe_name: Toast
+                    ingredients: []
+                    steps: []
+                  summary: Recipe Created
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: recipe_name parameter is missing or empty.
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+    delete:
+      operationId: api_v3_user_recipe_destroy
+      description: |-
+        Deletes the specified recipe from the user's recipes and returns
+        all of the user's recipes after the delete.
+      parameters:
+      - in: path
+        name: recipe_name
+        schema:
+          type: string
+        description: Name of the recipe.
+        required: true
+      tags:
+      - Recipes
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+              examples:
+                RecipeDeleted:
+                  value:
+                  - user: teacup
+                    recipe_name: my_recipe
+                    ingredients:
+                    - ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit: g
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
+                    steps:
+                    - Step one of my recipe!
+                    - Step two of my recipe!
+                    - Final step of my recipe!
+                  summary: Recipe Deleted
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+  /api/v3/user/recipe/{recipe_name}/ingredient:
+    post:
+      operationId: api_v3_user_recipe_ingredient_create
+      description: Adds an ingredient to a specified user's recipe.
+      parameters:
+      - in: path
+        name: recipe_name
+        schema:
+          type: string
+        description: Name of the recipe.
+        required: true
+      tags:
+      - Recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddIngredientInRecipeRequest'
+            examples:
+              AddIngredientInRecipe:
+                value:
+                  ingredient: Bread
+                  amount: 1
+                  unit: count
+                  is_custom_ingredient: false
+                summary: Add Ingredient in Recipe
+              AddCustomIngredientInRecipe:
+                value:
+                  ingredient: Jam
+                  amount: 25
+                  unit: g
+                  is_custom_ingredient: true
+                summary: Add Custom Ingredient in Recipe
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddIngredientInRecipeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AddIngredientInRecipeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+              examples:
+                IngredientAdded:
+                  value:
+                    user: teacup
+                    recipe_name: my_recipe
+                    ingredients:
+                    - ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit: g
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
+                    steps:
+                    - Step one of my recipe!
+                    - Step two of my recipe!
+                    - Final step of my recipe!
+                  summary: Ingredient Added
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RecipeValueMissing:
+                  value:
+                    message: recipe_name parameter is missing or empty.
+                  summary: Recipe Value Missing
+                RequiredValueMissing:
+                  value:
+                    message: 'Required value missing from sent request, please ensure
+                      all items are sent in the following format: {recipe_name: [RECIPE
+                      NAME], ingredient: [INGREDIENT], amount: [AMOUNT/QUANTITY],
+                      unit: [MEASURMENT UNIT], is_custom_ingredient: [CUSTOM INGREDIENT
+                      BOOLEAN]}'
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RecipeNotFound:
+                  value:
+                    message: Recipe matching query does not exist.
+                  summary: Recipe not found
+          description: ''
+    delete:
+      operationId: api_v3_user_recipe_ingredient_destroy
+      description: Deletes an ingredient from a specified user's recipe.
+      parameters:
+      - in: query
+        name: ingredient
+        schema:
+          type: string
+        description: Name of the ingredient.
+        required: true
+      - in: query
+        name: is_custom_ingredient
+        schema:
+          type: boolean
+        description: Flag if ingredient is a custom ingredient or not.
+        required: true
+      - in: path
+        name: recipe_name
+        schema:
+          type: string
+        description: Name of the recipe.
+        required: true
+      - in: query
+        name: unit
+        schema:
+          type: string
+        description: Unit of measurement for the ingredient.
+        required: true
+      tags:
+      - Recipes
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+              examples:
+                IngredientDeleted:
+                  value:
+                    user: teacup
+                    recipe_name: my_recipe
+                    ingredients:
+                    - ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit: g
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
+                    steps:
+                    - Step one of my recipe!
+                    - Step two of my recipe!
+                    - Final step of my recipe!
+                  summary: Ingredient Deleted
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RecipeValueMissing:
+                  value:
+                    message: recipe_name parameter is missing or empty.
+                  summary: Recipe Value Missing
+                RequiredValueMissing:
+                  value:
+                    message: Required query parameters missing from sent request.
+                      Please add the following query parameters?list_name=[RECIPE
+                      NAME]&ingredient=[INGREDIENT]&unit=[MEASURMENT UNIT]&is_custom_ingredient=[BOOLEAN]
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RecipeNotFound:
+                  value:
+                    message: Recipe matching query does not exist.
+                  summary: Recipe not found
+          description: ''
+  /api/v3/user/recipe/{recipe_name}/step:
+    post:
+      operationId: api_v3_user_recipe_step_create
+      description: Adds an step to a specified user's recipe.
+      parameters:
+      - in: path
+        name: recipe_name
+        schema:
+          type: string
+        description: Name of the recipe.
+        required: true
+      tags:
+      - Recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddStepInRecipeRequest'
+            examples:
+              AddStepInRecipe:
+                value:
+                  step: Final step of my recipe!
+                summary: Add Step in Recipe
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddStepInRecipeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AddStepInRecipeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+              examples:
+                StepAdded:
+                  value:
+                    user: teacup
+                    recipe_name: my_recipe
+                    ingredients:
+                    - ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit: g
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
+                    steps:
+                    - Step one of my recipe!
+                    - Step two of my recipe!
+                    - Final step of my recipe!
+                  summary: Step Added
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RecipeValueMissing:
+                  value:
+                    message: recipe_name parameter is missing or empty.
+                  summary: Recipe Value Missing
+                RequiredValueMissing:
+                  value:
+                    message: 'Required value missing from sent request, please ensure
+                      all items are sent in the following format: {step: [STEP STRING]}'
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RecipeNotFound:
+                  value:
+                    message: Recipe matching query does not exist.
+                  summary: Recipe not found
+          description: ''
+    patch:
+      operationId: api_v3_user_recipe_step_partial_update
+      description: Updates an existing step in a specified user's recipe.
+      parameters:
+      - in: path
+        name: recipe_name
+        schema:
+          type: string
+        description: Name of the recipe.
+        required: true
+      tags:
+      - Recipes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateStepInRecipeRequest'
+            examples:
+              UpdateStepInRecipe:
+                value:
+                  step: Step two of my recipe!
+                  step_number: 2
+                summary: Update Step in Recipe
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateStepInRecipeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateStepInRecipeRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+              examples:
+                StepUpdated:
+                  value:
+                    user: teacup
+                    recipe_name: my_recipe
+                    ingredients:
+                    - ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit: g
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
+                    steps:
+                    - Step one of my recipe!
+                    - Step two of my recipe!
+                    - Final step of my recipe!
+                  summary: Step Updated
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RecipeValueMissing:
+                  value:
+                    message: recipe_name parameter is missing or empty.
+                  summary: Recipe Value Missing
+                RequiredValueMissing:
+                  value:
+                    message: 'Required value missing from sent request, please ensure
+                      all items are sent in the following format: {step: [STEP STRING],
+                      step_number: [STEP NUMBER]}'
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RecipeNotFound:
+                  value:
+                    message: Recipe matching query does not exist.
+                  summary: Recipe not found
+          description: ''
+    delete:
+      operationId: api_v3_user_recipe_step_destroy
+      description: Deletes an step from a specified user's recipe.
+      parameters:
+      - in: path
+        name: recipe_name
+        schema:
+          type: string
+        description: Name of the recipe.
+        required: true
+      - in: query
+        name: step_number
+        schema:
+          type: string
+        description: The number step to remove from a recipe.
+        required: true
+      tags:
+      - Recipes
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+              examples:
+                StepDeleted:
+                  value:
+                    user: teacup
+                    recipe_name: my_recipe
+                    ingredients:
+                    - ingredient_name: Beef
+                      ingredient_type: Meat
+                      amount: 500
+                      unit: g
+                      is_custom_ingredient: false
+                    - ingredient_name: 2% Milk
+                      ingredient_type: Dairy
+                      amount: 2
+                      unit: L
+                      is_custom_ingredient: false
+                    - ingredient_name: Homemade Meatball
+                      ingredient_type: Meat
+                      amount: 25
+                      unit: count
+                      is_custom_ingredient: true
+                    steps:
+                    - Step one of my recipe!
+                    - Step two of my recipe!
+                    - Final step of my recipe!
+                  summary: Step Deleted
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RequiredValueMissing:
+                  value:
+                    message: 'Required query parameter missing from sent request.
+                      Please add the following query parameter: ?step_number=[STEP
+                      NUMBER]'
+                  summary: Required Value Missing
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                AuthenticationNotProvided:
+                  value:
+                    message: Authentication credentials were not provided.
+                  summary: Authentication not provided
+                InvalidToken:
+                  value:
+                    message: Given token not valid for any token type
+                  summary: Invalid token
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+              examples:
+                RecipeNotFound:
+                  value:
+                    message: Recipe matching query does not exist.
+                  summary: Recipe not found
+          description: ''
+  /login:
+    post:
+      operationId: login_create
       description: |-
         Logs in user using Auth0 if session is not set.
         Returns the access token, refresh token, id token, and user info.
@@ -974,7 +1720,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CLILoginRequest'
+              $ref: '#/components/schemas/LoginRequest'
             examples:
               LoginCredentials:
                 value:
@@ -983,10 +1729,10 @@ paths:
                 summary: Login Credentials
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/CLILoginRequest'
+              $ref: '#/components/schemas/LoginRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/CLILoginRequest'
+              $ref: '#/components/schemas/LoginRequest'
         required: true
       security:
       - jwtAuth: []
@@ -1032,35 +1778,13 @@ paths:
                   summary: Required Value Missing
           description: ''
   /logout:
-    get:
-      operationId: logout_retrieve
-      description: Logs out the user from Auth0 and clears the session.
-      tags:
-      - Authentication
-      security:
-      - jwtAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-              examples:
-                LogoutSuccess:
-                  value:
-                    message: Logout successful. Login again using the login endpoint.
-                  summary: Logout Success
-          description: ''
-  /logout/cli:
     post:
-      operationId: logout_cli_create
+      operationId: logout_create
       description: Logs out the user from Auth0 and clears the session.
       tags:
       - Authentication
       security:
       - jwtAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -1079,9 +1803,32 @@ paths:
       description: Refreshes the access token for the user from Auth0.
       tags:
       - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+            examples:
+              AllBodyParameters:
+                value:
+                  client_id: skjehfgef98732984hjkfse
+                  client_secret: whdkjsjkabuie32984hiou298qhdkj93782hiudh
+                  refresh_token: iudoue98yu3ugifhkjo823iuygugik
+                summary: All Body Parameters
+              WithoutClientSecret:
+                value:
+                  client_id: skjehfgef98732984hjkfse
+                  refresh_token: iudoue98yu3ugifhkjo823iuygugik
+                summary: Without Client Secret
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+        required: true
       security:
       - jwtAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -1119,7 +1866,7 @@ paths:
               examples:
                 RequiredValueMissing:
                   value:
-                    message: Refresh token is missing.
+                    message: Client ID or Refresh token is missing.
                   summary: Required Value Missing
           description: ''
 components:
@@ -1154,6 +1901,30 @@ components:
       - is_custom_ingredient
       - list_name
       - unit
+    AddIngredientInRecipeRequest:
+      type: object
+      properties:
+        ingredient:
+          type: string
+        amount:
+          type: number
+          format: double
+        unit:
+          type: string
+        is_custom_ingredient:
+          type: boolean
+      required:
+      - amount
+      - ingredient
+      - is_custom_ingredient
+      - unit
+    AddStepInRecipeRequest:
+      type: object
+      properties:
+        step:
+          type: string
+      required:
+      - step
     AllIngredients:
       type: object
       properties:
@@ -1168,16 +1939,6 @@ components:
       required:
       - common_ingredients
       - custom_ingredients
-    CLILoginRequest:
-      type: object
-      properties:
-        username:
-          type: string
-        password:
-          type: string
-      required:
-      - password
-      - username
     ChangeUserIngredientsListNameRequest:
       type: object
       properties:
@@ -1216,6 +1977,16 @@ components:
       required:
       - name
       - type
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+      - password
+      - username
     Measurement:
       type: object
       properties:
@@ -1256,6 +2027,42 @@ components:
           type: string
         new_is_custom_ingredient:
           type: boolean
+    PatchedUpdateStepInRecipeRequest:
+      type: object
+      properties:
+        step:
+          type: string
+        step_number:
+          type: number
+          format: double
+    Recipe:
+      type: object
+      properties:
+        user:
+          type: string
+          readOnly: true
+        recipe_name:
+          type: string
+          maxLength: 50
+        steps: {}
+        ingredients: {}
+      required:
+      - ingredients
+      - recipe_name
+      - steps
+      - user
+    RefreshTokenRequest:
+      type: object
+      properties:
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        refresh_token:
+          type: string
+      required:
+      - client_id
+      - refresh_token
     Session:
       type: object
       properties:
