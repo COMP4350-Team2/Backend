@@ -780,7 +780,7 @@ def create_recipe(username: str, recipe_name: str) -> Recipe:
     user = User.objects.get(username=username)
 
     try:
-        obj = Recipe.objects.get(user=user,recipe_name=recipe_name)
+        obj = Recipe.objects.get(user=user, recipe_name=recipe_name)
     except Recipe.DoesNotExist:
         obj = Recipe.objects.create(
             user=user,
