@@ -8,7 +8,8 @@ MAX_TIMEOUT = 120
 if os.getenv('LAYER') == 'DEV':
     max_workers = 1
 else:
-    max_workers = multiprocessing.cpu_count()
+    # Optimal recommendation from gunicorn
+    max_workers = (2 * multiprocessing.cpu_count()) + 1
 
 
 load_env_variables()
