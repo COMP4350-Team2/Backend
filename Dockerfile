@@ -15,4 +15,4 @@ RUN pip3 install -r requirements.txt
 EXPOSE 6060
 
 # Start the app using serve command
-CMD ["python3", "manage.py", "runserver"]
+CMD ["gunicorn"]
