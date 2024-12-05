@@ -166,10 +166,9 @@ if os.getenv('LAYER') == 'PROD':
     SESSION_COOKIE_SECURE = False  # Ensures session cookies sent only over HTTPS connections
     CSRF_COOKIE_SECURE = False  # Ensures CSRF protection cookies sent only over HTTPS connections
 
-    SECURE_SSL_REDIRECT = True  # Redirects all HTTP requests to HTTPS
-    SECURE_HSTS_SECONDS = 1  # Set to 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Ensure HTTPS applied to subdomains as well
-    SECURE_HSTS_PRELOAD = True  # Ensure always accessed via HTTPS, even on the first visit
+    SECURE_SSL_REDIRECT = False  # Redirects all HTTP requests to HTTPS
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False  # Ensure HTTPS applied to subdomains as well
+    SECURE_HSTS_PRELOAD = False  # Ensure always accessed via HTTPS, even on the first visit
 
 
 REST_FRAMEWORK = {
