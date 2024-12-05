@@ -107,8 +107,8 @@ locust
 ```
 3. A message similar to "Starting web interface at http://localhost:8089 (accepting connections from all network interfaces)" will appear in the command line. Copy the url that appears into the browser.
 4. In the browser, enter the following values:  
-**Number of Concurrent Users**: 100
-**Number of Users per Second**: 1
+**Number of Concurrent Users**: 100  
+**Number of Users per Second**: 1  
 **Host**: [AWS instance url or server url with port i.e. http://2.4.5.7:6060 (this is not the actual ip)]  
 
 To remove load test values from the database:
