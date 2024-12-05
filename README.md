@@ -109,4 +109,14 @@ locust
 4. In the browser, enter the following values:  
 **Number of Concurrent Users**: 100
 **Number of Users per Second**: 1
-**Host**: [AWS instance url or server url with port i.e. http://2.4.5.7:6060 (this is not the actual ip)]
+**Host**: [AWS instance url or server url with port i.e. http://2.4.5.7:6060 (this is not the actual ip)]  
+
+To remove load test values from the database:
+1. Open the shell with the command:
+```
+python manage.py shell
+```
+2. In the shell, run:
+```
+exec(open('utils/db_helper/remove_load_test_values.py').read())
+```
