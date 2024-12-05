@@ -17,6 +17,6 @@ wsgi_app = 'cupboard_backend.wsgi'
 workers = max_workers
 timeout = MAX_TIMEOUT
 bind = '{address}:{port}'.format(
-    address = os.getenv('DJANGO_ADDRESS'),
-    port = os.getenv('DJANGO_PORT')
+    address=os.getenv('DJANGO_ADDRESS'),
+    port=os.getenv('DJANGO_PORT')
 )
