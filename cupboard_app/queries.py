@@ -780,7 +780,7 @@ def create_recipe(username: str, recipe_name: str) -> Recipe:
     user = User.objects.get(username=username)
     obj = Recipe.objects.get(user=user,recipe_name=recipe_name)
     if not obj:
-        obj, new_created = Recipe.objects.get_or_create(
+        obj, new_created = Recipe.objects.create(
             user=user,
             recipe_name=recipe_name,
             steps=[],
