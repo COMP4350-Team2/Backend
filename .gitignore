@@ -64,3 +64,6 @@ Thumbs.db
 
 # Virtual Environment Folder
 venv/
+
+# Ignore staticfiles in git
+staticfiles/
