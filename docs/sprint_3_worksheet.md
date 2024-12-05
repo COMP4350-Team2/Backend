@@ -29,28 +29,29 @@ The API documentation can also be accessed via putting the `schema.yml` file in 
 ## Load Testing
 Link to the Load Test document in the folder
 
-Tool:
-Load test cases:
+Describe the environment for load testing, such as tool, load test cases.  
+- We used Locust (https://locust.io/) to do the testing and tested all api endpoints users would be expected to have access to when performing regular function. Here is a link to our locust file defining the tests [INSERT LINK TO OUR LOCUSTFILE IN GITHUB] 
 
-Bottlenecks Found:
+provide the test report for load testing.  
+- Report is proviced, named Load_test_report.txt in this directory
 
-Goals:
+discuss one bottleneck found in the load testing.  
+- Patch requests sent to /api/v3/user/lists/ingredients to change an ingredient in a users list took over 35.5 seconds on average, according to the load test output, which was the longest of all requests. 
 
-Results:
+Load testing should test the non-functional requirements - did you meet your goals? Why or why not? Could you meet your goals with money? 
+- We were not able to meet the non-funtional requirement of having a response time of less than 1s when having 100 concurrent users. This is likely because of the machine we are running the backend is the smallest possible allowed by AWS (its free), and as such thier are likely limitations on its capability. Money would likely allow us to do this as it would not just allow for faster machines but also to build out faster surrounding architecture. 
 
 ## Security Analysis
 Link to the Security Report
 
-Problems found
+Describe the choice of the security analysis tool and how do you run it. The security analysis tool should analyze the language that is used in the majority of your source code. 
+- We used Bandit to do static analysis of our code. To run it, first install it with `pip install bandit` then run the following at the top of the project directory `bandit -r . > bandit_security_analysis.txt` to run it recursivly on all files in this and all sub-directories. 
 
-Why did we choose that security analysis tool?
+Attach a report as an appendix below from static analysis tools by running the security analysis tool on your source code. Randomly select 5 detected problems and discuss what you see. Note that you are not required to fix the alarms (bugs and vulnerabilities) in the course. 
+- Security report provided in Bandit_security_analysis.txt , no high or critical problems were found. There were only 6 issues in total, most of the other medium or low priority problems was it suspecting things like access_token = “ “ was us storing credentials in plain text and not realizing these were default placeholder values (it makes a similar mistake thinking a variable holding a date-time format for a string was actually plain text security credentials). The other kind of error was noting that we may not be sending time out requests with some of our auth0 requests 
 
-How to run the security analysis tool
-
-What are 5 detected problems and discuss what you see
-
-Handle (or mitigate) all Critical and High Priority vulnerabilities in the project
-
+Handle (or mitigate) all Critical and High priority vulnerabilities in the project. Attach commits where these are handled. If there are no critical or high vulnerabilities, discuss 2 other problems found. 
+-  No critical/high problems found, other problems included “Possible hardcoded password: ''” thinking that ‘’ could be a hardcoded password (its just an empty default or “Possible hardcoded password: '%Y-%m-%d %H:%M:%S'” again mistakenly identifying a date-time format string as a hardcoded password. 
 
 ## Continuous Integration and Deployment (CI/CD)
 ### Backend
