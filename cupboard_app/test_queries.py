@@ -1310,7 +1310,10 @@ class RecipeQueries(TestCase):
             is_custom_ingredient=self.list_ing1.get('is_custom_ingredient')
         )
         user_recipe = Recipe.objects.get(user=self.user1, recipe_name=self.recipe_name1)
-        updated_ing1 = {**self.list_ing1, 'amount': 100}
+        updated_ing1 = {
+            **self.list_ing1,
+            'amount': self.list_ing1.get('amount') + 100
+        }
         self.assertEqual(len(user_recipe.ingredients), 1)
         self.assertEqual(user_recipe.ingredients, [updated_ing1])
 
