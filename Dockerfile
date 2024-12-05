@@ -14,5 +14,5 @@ RUN pip3 install -r requirements.txt
 
 EXPOSE 6060
 
-# Start the app using serve command
-CMD ["gunicorn"]
+# entrypoint shell scripts to be executed
+ENTRYPOINT ["sh", "docker-entrypoint.sh"]
