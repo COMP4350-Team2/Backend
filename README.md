@@ -102,4 +102,4 @@ run `locust` in the command line in the base Backend directory (where this file 
 
 enter 100 as the number of concurrent users and 1 as the number of users per second
 
-for host put the aws instace url/ip with the port ie http://2.4.5.7:6060 (this is not the actual ip)
+for host put the aws instance url/ip with the port i.e. http://2.4.5.7:6060 (this is not the actual ip)
