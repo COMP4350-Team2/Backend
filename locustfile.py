@@ -26,7 +26,7 @@ class QuickstartUser(HttpUser):
             headers={'Authorization': 'Bearer ' + self.access_token}
         )
 
-        # Custom ingredient api test
+        # Custom Ingredients
         self.client.post(
             '/api/v3/user/ingredients/custom',
             headers={'Authorization': 'Bearer ' + self.access_token},
@@ -41,7 +41,7 @@ class QuickstartUser(HttpUser):
             headers={'Authorization': 'Bearer ' + self.access_token}
         )
 
-        # Test lists
+        # Lists
         self.client.get(
             '/api/v3/user/lists',
             headers={'Authorization': 'Bearer ' + self.access_token}
@@ -110,7 +110,7 @@ class QuickstartUser(HttpUser):
             headers={'Authorization': 'Bearer ' + self.access_token}
         )
 
-        # Recipies
+        # Recipes
         self.client.get(
             '/api/v3/user/recipe',
             headers={'Authorization': 'Bearer ' + self.access_token}
