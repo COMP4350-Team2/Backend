@@ -10,14 +10,14 @@ class QuickstartUser(HttpUser):
     global user_count
     wait_time = between(1, 5)
 
-    """
-    all_api
-
-    Sends queries to all cupboard apis
-    """
     @task
     def all_api(self):
+        """
+        all_api
 
+        Sends queries to all cupboard apis
+        """
+        
         # Basic info retrieval
         self.client.get(
             '/api/v3/ingredients',
@@ -171,12 +171,13 @@ class QuickstartUser(HttpUser):
             headers={'Authorization': 'Bearer ' + self.access_token}
         )
 
-    """
-    on_start
-
-    Preforms initial login when runner is created
-    """
     def on_start(self):
+        """
+        on_start
+
+        Preforms initial login when runner is created
+        """
+    
         global user_count
         user_count = user_count + 1
         self.user_id = user_count
@@ -188,10 +189,10 @@ class QuickstartUser(HttpUser):
             # Log in user
             print_str = 'Logging User In as user: '
             print_str += str(os.environ['LOAD_TEST_USERNAME'])
-            print_str += '_'+str(self.user_id)+'@gmail.com'
+            print_str += '_' + str(self.user_id)+'@gmail.com'
             logging.info(print_str)
             username = str(os.environ['LOAD_TEST_USERNAME'])
-            username += '_'+str(self.user_id)+'@gmail.com'
+            username += '_' + str(self.user_id)+'@gmail.com'
             response = self.client.post(
                 '/login',
                 json={
