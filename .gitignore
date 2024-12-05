@@ -62,3 +62,9 @@ Thumbs.db
 
 # Code coverage file
 .coverage
+
+# Virtual Environment Folder
+venv/
+
+# Ignore staticfiles in git
+staticfiles/

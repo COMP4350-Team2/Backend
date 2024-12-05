@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  env_file: ${{ secrets.env }}
+  env_file: ${{ secrets.ENV_DEV }}
 jobs:
   build:
     runs-on: ubuntu-latest
