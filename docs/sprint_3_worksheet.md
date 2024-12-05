@@ -67,12 +67,12 @@ Provide link to the workflow
 Snapshots of the CI/CD execution
 
 ### Mobile Web App
+For the Mobile WebApp, the team decided to use Github actions for CI/CD as well. There are a total of two **(2)** files responsible for CI and CD:
+- [mobile_ci.yml](https://github.com/COMP4350-Team2/Mobile-Webapp/blob/2681ccc32c4f92eac14eb1684b0214e5b138e668/.github/workflows/mobile_ci.yml): This file triggers (our CI) on every push to `main` and ensures the build is successful followed by pushing our Docker image to Dockerhub. 
+- [deploy.yml](https://github.com/COMP4350-Team2/Mobile-Webapp/blob/2681ccc32c4f92eac14eb1684b0214e5b138e668/.github/workflows/deploy.yml): This file triggers (our CD) on every `release` of the WebApp and ensures that the latest release is deployed to Vercel. **Note**: Vercel does Blue-Green for us!
 
-CI/CD environment and clickable link to the pipeline.
-
-Provide link to the workflow
-
-Snapshots of the CI/CD execution
+The CI/CD pipelines can be found in the [.github workflows directory](https://github.com/COMP4350-Team2/Mobile-Webapp/tree/2681ccc32c4f92eac14eb1684b0214e5b138e668/.github/workflows). <br>
+A snapshot of the CI/CD execution can be found under the actions tab at the top of [this page](https://github.com/COMP4350-Team2/Mobile-Webapp/actions)
 
 
 ## Thoughts
