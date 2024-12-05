@@ -10,13 +10,12 @@ Our team issue tracking is available in Linear. Please see UMLearn submission fo
 
 ## Architecture Diagram
 
-![Architecture Diagram](/docs/images/sprint_2/Sprint_3_Architecture.jpg)
+![Architecture Diagram](/docs/images/sprint_3/Sprint_3_Architecture.jpg)
 
 ## Get Started Documentation
 
 The Get started documentation is available in the README.md for each respective repository:  
 [Backend Get Started](https://github.com/COMP4350-Team2/Backend?tab=readme-ov-file#prerequisites)  
-[Backend Get Started - with Docker](https://github.com/COMP4350-Team2/Backend?tab=readme-ov-file#docker-commands)  
 [Desktop Get Started](https://github.com/COMP4350-Team2/Desktop-NativeApp#requirements)  
 [Mobile Get Started](https://github.com/COMP4350-Team2/Mobile-Webapp#prerequisites)
 
@@ -54,6 +53,21 @@ Handle (or mitigate) all Critical and High Priority vulnerabilities in the proje
 
 
 ## Continuous Integration and Deployment (CI/CD)
+### Backend
+We use GitHub actions for the CI/CD in the backend repository. We have two GitHub Actions .yml files one for the CI, and the other for the CD. They are set to run when there is a push to main or if the it is manually triggered. If the latter method is used, then the CD pipeline waits for the CI to succeed before executing. Otherwise the CD will not run.  
+
+The CI/CD pipeline files can be found in the [.github directory](/.github)  
+A snapshot of the CI/CD execution can be found under the Actions tab at the top of this page:  
+https://github.com/COMP4350-Team2/Backend/actions
+
+### Desktop Native App
+CI/CD environment and clickable link to the pipeline.
+
+Provide link to the workflow
+
+Snapshots of the CI/CD execution
+
+### Mobile Web App
 
 CI/CD environment and clickable link to the pipeline.
 
