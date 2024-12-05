@@ -162,14 +162,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Security
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS').split(',')
 
-if os.getenv('LAYER') == 'PROD':
-    SESSION_COOKIE_SECURE = False  # Ensures session cookies sent only over HTTPS connections
-    CSRF_COOKIE_SECURE = False  # Ensures CSRF protection cookies sent only over HTTPS connections
-
-    SECURE_SSL_REDIRECT = False  # Redirects all HTTP requests to HTTPS
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = False  # Ensure HTTPS applied to subdomains as well
-    SECURE_HSTS_PRELOAD = False  # Ensure always accessed via HTTPS, even on the first visit
-
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
