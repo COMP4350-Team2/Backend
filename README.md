@@ -97,11 +97,16 @@ docker pull swanso15/cupboard_backend
 ```
 
 ## Locust Load Testing
-
-run `locust` in the command line in the base Backend directory (where this file is found)
-
-Copy the url that appears into the browser
-
-enter 100 as the number of concurrent users and 1 as the number of users per second
-
-for host put the aws instance url/ip with the port i.e. http://2.4.5.7:6060 (this is not the actual ip)
+1. Run the backend server if load testing on development. Otherwise, skip this step.
+```
+python manage.py runserver
+```
+2. Run locust in the command line in the base backend directory (where this file is found).
+```
+locust
+```
+3. A message similar to "Starting web interface at http://localhost:8089 (accepting connections from all network interfaces)" will appear in the command line. Copy the url that appears into the browser.
+4. In the browser, enter the following values:  
+**Number of Concurrent Users**: 100
+**Number of Users per Second**: 1
+**Host**: [AWS instance url or server url with port i.e. http://2.4.5.7:6060 (this is not the actual ip)]
