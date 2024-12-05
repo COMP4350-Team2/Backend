@@ -95,3 +95,28 @@ pull to dockerhub using default tag (latest)
 ```
 docker pull swanso15/cupboard_backend
 ```
+
+## Locust Load Testing
+1. Run the backend server if load testing on development. Otherwise, skip this step.
+```
+python manage.py runserver
+```
+2. Run locust in the command line in the base backend directory (where this file is found).
+```
+locust
+```
+3. A message similar to "Starting web interface at http://localhost:8089 (accepting connections from all network interfaces)" will appear in the command line. Copy the url that appears into the browser.
+4. In the browser, enter the following values:  
+**Number of Concurrent Users**: 100  
+**Number of Users per Second**: 1  
+**Host**: [AWS instance url or server url with port i.e. http://2.4.5.7:6060 (this is not the actual ip)]  
+
+To remove load test values from the database:
+1. Open the shell with the command:
+```
+python manage.py shell
+```
+2. In the shell, run:
+```
+exec(open('utils/db_helper/remove_load_test_values.py').read())
+```
