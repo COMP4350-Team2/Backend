@@ -47,7 +47,7 @@ jobs:
           ssh -i aws.pem -o StrictHostKeyChecking=no ec2-user@3.99.18.11 "
             docker ps -a -q | xargs -r docker stop
             docker ps -a -q | xargs -r docker remove
-            docker system prune -a
+            docker system prune -af
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO_NAME }}:latest
             docker run -d -p 6060:6060 --env-file .env ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO_NAME }}:latest
           "
