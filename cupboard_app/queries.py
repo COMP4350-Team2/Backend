@@ -874,7 +874,7 @@ def add_ingredient_to_recipe(
                 and i['unit'] == unit
                 and i['is_custom_ingredient'] == is_custom_ingredient
             ):
-                i['amount'] = amount
+                i['amount'] += amount
     user_recipe.save()
 
     return user_recipe
