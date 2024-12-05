@@ -163,11 +163,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS').split(',')
 
 if os.getenv('LAYER') == 'PROD':
-    SESSION_COOKIE_SECURE = True  # Ensures session cookies sent only over HTTPS connections
-    CSRF_COOKIE_SECURE = True  # Ensures CSRF protection cookies sent only over HTTPS connections
+    SESSION_COOKIE_SECURE = False  # Ensures session cookies sent only over HTTPS connections
+    CSRF_COOKIE_SECURE = False  # Ensures CSRF protection cookies sent only over HTTPS connections
 
     SECURE_SSL_REDIRECT = True  # Redirects all HTTP requests to HTTPS
-    SECURE_HSTS_SECONDS = 31536000  # Set to 1 year
+    SECURE_HSTS_SECONDS = 1  # Set to 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Ensure HTTPS applied to subdomains as well
     SECURE_HSTS_PRELOAD = True  # Ensure always accessed via HTTPS, even on the first visit
 
