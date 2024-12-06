@@ -1,0 +1,103 @@
+Run started:2024-12-06 03:23:50.869579
+
+Test results:
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: '%Y-%m-%d %H:%M:%S'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.0/plugins/b105_hardcoded_password_string.html
+   Location: .\cupboard_app\auth0_authentication.py:42:18
+41	AUTH0_DESKTOP_CLIENT_SECRET = os.getenv('AUTH0_DESKTOP_CLIENT_SECRET')
+42	TOKEN_TIMESTAMP = '%Y-%m-%d %H:%M:%S'
+43	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'Client ID or Refresh token is missing.'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.0/plugins/b105_hardcoded_password_string.html
+   Location: .\cupboard_app\auth0_authentication.py:123:28
+122	class RefreshTokenAPIView(APIView):
+123	    MISSING_REFRESH_TOKEN = 'Client ID or Refresh token is missing.'
+124	
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.0/plugins/b113_request_without_timeout.html
+   Location: .\cupboard_app\auth0_authentication.py:186:27
+185	            try:
+186	                response = requests.post(
+187	                    f'https://{AUTH0_DOMAIN}/oauth/token',
+188	                    headers={'content-type': 'application/x-www-form-urlencoded'},
+189	                    data={
+190	                        'grant_type': 'refresh_token',
+191	                        'client_id': client_id,
+192	                        'client_secret': client_secret,
+193	                        'audience': AUTH0_API_IDENTIFIER,
+194	                        'refresh_token': refresh_token
+195	                    }
+196	                )
+197	
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.0/plugins/b113_request_without_timeout.html
+   Location: .\cupboard_app\auth0_authentication.py:261:27
+260	            try:
+261	                response = requests.post(
+262	                    f'https://{AUTH0_DOMAIN}/oauth/token',
+263	                    headers={'content-type': 'application/x-www-form-urlencoded'},
+264	                    data={
+265	                        'grant_type': 'password',
+266	                        'client_id': AUTH0_BACKEND_CLIENT_ID,
+267	                        'client_secret': AUTH0_BACKEND_CLIENT_SECRET,
+268	                        'audience': AUTH0_API_IDENTIFIER,
+269	                        'scope': 'openid profile email offline_access',
+270	                        'username': body['username'],
+271	                        'password': body['password']
+272	                    }
+273	                )
+274	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: ''
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.0/plugins/b105_hardcoded_password_string.html
+   Location: .\locustfile.py:178:28
+177	        self.user_id = user_count
+178	        self.access_token = ''
+179	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: ''
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.0/plugins/b105_hardcoded_password_string.html
+   Location: .\locustfile.py:180:33
+179	
+180	        if (self.access_token == ''):
+181	            load_env_variables()  # Adds the .env values to environment to allow use
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 7037
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 4
+		Medium: 2
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 2
+		Medium: 4
+		High: 0
+Files skipped (0):
