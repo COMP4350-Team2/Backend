@@ -1,33 +1,53 @@
 name: backend_cd
 
 on:
+  workflow_run:
+    workflows: [backend_ci]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 env:
-  env_file: ${{ secrets.env_prod }}
-  aws_pem_file: ${{ secrets.aws_pem_file }}
+  env_file: ${{ secrets.ENV_PROD }}
+  aws_pem_file: ${{ secrets.AWS_PEM_FILE }}
+
 jobs:
-  Testing:
+  build-and-share:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }} || ${{ github.event_name == 'workflow_dispatch' }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main 
-      - name: Create docker image and send to aws
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy aws.pem and .env
         run: |
           echo "$env_file" > ".env"
           echo "$aws_pem_file" > aws.pem
           chmod 600 aws.pem
-          docker build -t cupboard_backend:latest .
-          docker save -o cupboard_backend.tar cupboard_backend:latest
-          scp -i aws.pem -o StrictHostKeyChecking=no .env ec2-user@35.183.197.0:/home/ec2-user
-          scp -i aws.pem -o StrictHostKeyChecking=no cupboard_backend.tar ec2-user@35.183.197.0:/home/ec2-user
-      - name: Load and run docker image on aws
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Docker Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO_NAME }}:latest
+
+      - name: Load and Run Docker Image on AWS
         run: |
-          ssh -i aws.pem -o StrictHostKeyChecking=no ec2-user@35.183.197.0 "
+          scp -i aws.pem -o StrictHostKeyChecking=no .env ec2-user@3.99.18.11:/home/ec2-user
+          ssh -i aws.pem -o StrictHostKeyChecking=no ec2-user@3.99.18.11 "
             docker ps -a -q | xargs -r docker stop
             docker ps -a -q | xargs -r docker remove
-            docker image rm --force cupboard_backend
-            docker image load --input cupboard_backend.tar
-            docker run -d -p 6060:6060 --env-file .env cupboard_backend:latest
+            docker system prune -af
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO_NAME }}:latest
+            docker run -d -p 6060:6060 --env-file .env ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPO_NAME }}:latest
           "
