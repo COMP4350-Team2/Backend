@@ -40,7 +40,7 @@ The features include:
 ## Getting Started
 ### Requirements
 Python version >= 3.12 and < 3.12.13 installed on machine.  
-Pip installed on machine
+Pip installed on machine.
 
 Install all the repository requirements by running:
 ```
@@ -49,10 +49,10 @@ pip install -r requirements.txt
 
 ### Environment Variables
 - Download `SAMPLE.env` and rename it to `.env`. 
-- Enter the required details. (Contact a member of the dev team for a copy of the proper file)
+- Enter the required details. (Contact a member of the dev team for a copy of the proper file).
 
 ### Run
-You may get a Userwarning if you do not have any static files. This is the expected behaviour and should not affect running the development server. If you want to avoid the warning, run the command below before running the server.  
+You may get a userwarning if you do not have any static files. This is the expected behaviour and should not affect running the development server. If you want to avoid the warning, run the command below before running the server.  
 Note: you will get a folder containing several static files after running this command:
 ```
 python manage.py collectstatic
@@ -85,7 +85,12 @@ To test the user authentication required endpoints, click the **authorize** butt
 The API documentation can also be accessed via putting the `schema.yml` file in the repository into https://editor.swagger.io/ However, you will not be able to test the API endpoints themselves via this method.
 
 ### Running the API endpoints
-To run the actual endpoints, send HTTPS to the url with the correct request type and parameters (if applicable) following the API documentation.
+To run the actual endpoints, send HTTP requests to the url with the correct request type and parameters (if applicable) following the API documentation. i.e.
+```
+curl --request GET ^
+--url http://localhost:6060/api/v3/ingredients \
+--header "Authorization: Bearer [access_token]"
+```
 
 ## Other Development Commands
 ### Profiling
@@ -108,9 +113,9 @@ For load testing, we use locust.
 #### Run Load Test
 1. If load testing on development, run the server locally by running the command under [run section](#run). Otherwise, skip this step.
 2. Run locust in the command line in the base backend directory (where this file is found).
-```
-locust
-```
+   ```
+   locust
+   ```
 3. A message will appear in the command line. i.e. "Starting web interface at http://localhost:8089 (accepting connections from all network interfaces)." Copy the url that appears in the message into the browser.
 4. In the browser, enter the following values:  
 **Number of Concurrent Users**: 100  
@@ -119,13 +124,13 @@ locust
 
 #### Remove Load Test Values from the Database
 1. Open the shell with the command:
-```
-python manage.py shell
-```
+   ```
+   python manage.py shell
+   ```
 2. In the shell, run:
-```
-exec(open('utils/db_helper/remove_load_test_values.py').read())
-```
+   ```
+   exec(open('utils/db_helper/remove_load_test_values.py').read())
+   ```
 
 ### Docker Commands
 #### Build and Run Docker in Development
@@ -137,45 +142,49 @@ docker compose up --build
 #### AWS Manual Uploads
 For manual docker commands for AWS, please see the following commands below:  
 1. Build the docker image:
-```
-docker compose build
-```
+   ```
+   docker compose build
+   ```
 2. Tag the docker image:
-```
-docker tag cupboard_backend:latest teacupbackend/cupboard_backend:latest
-```
+   ```
+   docker tag cupboard_backend:latest teacupbackend/cupboard_backend:latest
+   ```
 3. Push the image to dockerhub using "latest" tag
-```
-docker push teacupbackend/cupboard_backend:latest
-```
+   ```
+   docker push teacupbackend/cupboard_backend:latest
+   ```
 4. Upload .env to docker (manual .env change only) where "aws.pem" is the location of the pem file for aws auth
-```
-scp -i aws.pem -o StrictHostKeyChecking=no .env ec2-user@3.99.18.11:/home/ec2-user
-```
+   ```
+   scp -i aws.pem -o StrictHostKeyChecking=no .env ec2-user@3.99.18.11:/home/ec2-user
+   ```
 5. Connect to the AWS EC2 container either through the AWS dashboard console or via ssh where "aws.pem" is the location of the pem file for aws auth
-```
-ssh -i aws.pem ec2-user@3.99.18.11
-```
+   ```
+   ssh -i aws.pem ec2-user@3.99.18.11
+   ```
 6. In the AWS console, pull the image from Dockerhub using the "latest" tag
-```
-docker pull teacupbackend/cupboard_backend:latest
-```
+   ```
+   docker pull teacupbackend/cupboard_backend:latest
+   ```
 7. Stop the current containers
-```
-docker ps -a -q | xargs -r docker stop
-```
+   ```
+   docker ps -a -q | xargs -r docker stop
+   ```
 8. Remove the current containers
-```
-docker ps -a -q | xargs -r docker remove
-```
+   ```
+   docker ps -a -q | xargs -r docker remove
+   ```
 9. Run docker image 
-```
-docker run -d -p 6060:6060 --env-file .env teacupbackend/cupboard_backend:latest
-```
+   ```
+   docker run -d -p 6060:6060 --env-file .env teacupbackend/cupboard_backend:latest
+   ```
 
 ## Contributors
 This project exists thanks to all the people who contributed.
-<a href="https://github.com/COMP4350-Team2/Backend/graphs/contributors"></a>
+<a href="https://github.com/COMP4350-Team2/Backend/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=COMP4350-Team2/Backend" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
 
 ## License
-[GNU GENERAL PUBLIC LICENSE](LICENSE) © COMP4350-Team2 - Teacup
+[GNU GENERAL PUBLIC LICENSE](LICENSE) © Teacup (COMP4350-Team2)
