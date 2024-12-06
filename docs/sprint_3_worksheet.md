@@ -28,7 +28,7 @@ The API documentation can also be accessed via putting the `schema.yml` file in 
 ## Load Testing
 The link to the locust test report can be found [here](/docs/sprint_3_reports/Load_testing_report.txt).  
 
-We used Locust (https://locust.io/) to do the testing and tested all api endpoints users would be expected to have access to when performing regular function.    
+We used Locust (https://locust.io/) to do the testing and tested all api endpoints users would be expected to have access to when performing regular function. The locust file can be found [here](https://github.com/COMP4350-Team2/Backend/blob/main/locustfile.py)   
 
 One bottleneck we found in the load testing was the patch requests sent to /api/v3/user/lists/ingredients to change an ingredient in a users list that took over 35.5 seconds on average, according to the load test output, which was the longest of all requests. 
 
