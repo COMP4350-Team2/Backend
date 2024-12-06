@@ -1,4 +1,4 @@
-Run started:2024-12-04 16:56:02.243975
+Run started:2024-12-06 03:23:50.869579
 
 Test results:
 >> Issue: [B105:hardcoded_password_string] Possible hardcoded password: '%Y-%m-%d %H:%M:%S'
@@ -67,25 +67,25 @@ Test results:
    Severity: Low   Confidence: Medium
    CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
    More Info: https://bandit.readthedocs.io/en/1.8.0/plugins/b105_hardcoded_password_string.html
-   Location: .\locustfile.py:140:28
-139	        self.user_id = user_count
-140	        self.access_token = ''
-141	
+   Location: .\locustfile.py:178:28
+177	        self.user_id = user_count
+178	        self.access_token = ''
+179	
 
 --------------------------------------------------
 >> Issue: [B105:hardcoded_password_string] Possible hardcoded password: ''
    Severity: Low   Confidence: Medium
    CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
    More Info: https://bandit.readthedocs.io/en/1.8.0/plugins/b105_hardcoded_password_string.html
-   Location: .\locustfile.py:142:33
-141	
-142	        if (self.access_token == ''):
-143	            load_env_variables()  # Adds the .env values to environment to allow use
+   Location: .\locustfile.py:180:33
+179	
+180	        if (self.access_token == ''):
+181	            load_env_variables()  # Adds the .env values to environment to allow use
 
 --------------------------------------------------
 
 Code scanned:
-	Total lines of code: 6959
+	Total lines of code: 7037
 	Total lines skipped (#nosec): 0
 	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
 
