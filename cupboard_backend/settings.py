@@ -207,6 +207,10 @@ SPECTACULAR_SETTINGS = {
     'CONTACT': {'email': 'teacup.backend@gmail.com'},
     'VERSION': None,
     'SERVE_INCLUDE_SCHEMA': False,
+    'EXTERNAL_DOCS': {
+        'url': 'https://github.com/COMP4350-Team2/Backend',
+        'description': 'Link to the API source code'
+    }
 }
 
 

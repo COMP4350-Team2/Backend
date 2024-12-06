@@ -2116,3 +2116,6 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+externalDocs:
+  url: https://github.com/COMP4350-Team2/Backend
+  description: Link to the API source code
