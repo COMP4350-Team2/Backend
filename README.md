@@ -132,6 +132,16 @@ For load testing, we use locust.
    exec(open('utils/db_helper/remove_load_test_values.py').read())
    ```
 
+### Security Analysis
+For security analysis, we use bandit.
+
+To run the security analysis, run
+```
+bandit -r . > [directory]/bandit_security_analysis.txt
+```
+
+Note: the analysis files should not be committed to the repository.
+
 ### Docker Commands
 #### Build and Run Docker in Development
 To build and run the Docker image in development, you will only need to run
