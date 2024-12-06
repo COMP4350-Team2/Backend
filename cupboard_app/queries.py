@@ -778,12 +778,16 @@ def create_recipe(username: str, recipe_name: str) -> Recipe:
         recipe already existed in the database.
     """
     user = User.objects.get(username=username)
-    obj, new_created = Recipe.objects.get_or_create(
-        user=user,
-        recipe_name=recipe_name,
-        steps=[],
-        ingredients=[]
-    )
+
+    try:
+        obj = Recipe.objects.get(user=user, recipe_name=recipe_name)
+    except Recipe.DoesNotExist:
+        obj = Recipe.objects.create(
+            user=user,
+            recipe_name=recipe_name,
+            steps=[],
+            ingredients=[]
+        )
     return obj
 
 
