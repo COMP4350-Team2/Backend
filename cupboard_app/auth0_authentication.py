@@ -120,6 +120,7 @@ def initialize_user_in_db(session: dict):
 
 @extend_schema(tags=['Authentication'])
 class RefreshTokenAPIView(APIView):
+    permission_classes = [AllowAny]
     MISSING_REFRESH_TOKEN = 'Client ID or Refresh token is missing.'
 
     @extend_schema(
