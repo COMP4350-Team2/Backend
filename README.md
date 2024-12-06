@@ -3,7 +3,9 @@ This repository contains the code for the Cupboard App backend. It was developed
 
 By running this code, you will have access to the Cupboard App API documentation and the API endpoints.
 
-To go to the deployed Cupboard App API go to https://teacup-cupboard-api.me/api/v3/doc
+To go to the deployed Cupboard App API go to either of the two links below:
+- http://teacup-cupboard-api.me:6060/api/v3/doc (insecure connection)
+- https://teacup-cupboard-api.me/api/v3/doc (secure connection)
 
 Links to the other repositories can be found below:
 - [Link to Desktop Webapp](https://github.com/COMP4350-Team2/Desktop-NativeApp)  
@@ -153,7 +155,7 @@ docker compose up --build
 For manual docker commands for AWS, please see the following commands below:  
 1. Build the docker image:
    ```
-   docker compose build
+   docker compose up --build
    ```
 2. Tag the docker image:
    ```

@@ -16,11 +16,13 @@ Our team issue tracking is available in Linear. Please see UMLearn submission fo
 
 The getting started documentation is available in the README.md for each respective repository:  
 [Backend Get Started](https://github.com/COMP4350-Team2/Backend#getting-started)  
-[Desktop Get Started](https://github.com/COMP4350-Team2/Desktop-NativeApp#requirements)  
-[Mobile Get Started](https://github.com/COMP4350-Team2/Mobile-Webapp#prerequisites)
+[Desktop Get Started](https://github.com/COMP4350-Team2/Desktop-NativeApp#getting-started)  
+[Mobile Get Started](https://github.com/COMP4350-Team2/Mobile-Webapp#getting-started)
 
 ## API Documentation
-The API documentation is available following the information at the bottom in the backend README.md.  
+The current deployed API Documentation can be accessed via https://teacup-cupboard-api.me/api/v3/doc.
+
+The development API documentation is available following the information in the backend README.md.  
 [Link to API documentation](https://github.com/COMP4350-Team2/Backend#api-documentation)
 
 The API documentation can also be accessed via putting the `schema.yml` file in the repository into https://editor.swagger.io/ However, you will not be able to test the API endpoints themselves via this method.
@@ -57,7 +59,7 @@ We use GitHub actions for the CI/CD in the backend repository. There are a total
 - [backend_ci.yml](https://github.com/COMP4350-Team2/Backend/blob/5158f66f84867b1eaa143da00eb6c5e252ee542b/.github/workflows/backend_ci.yml)
 - [backend_cd.yml](https://github.com/COMP4350-Team2/Backend/blob/5158f66f84867b1eaa143da00eb6c5e252ee542b/.github/workflows/backend_cd.yml)  
 
-These two actions are set to run when there is a push to main or if it is triggered manually. If the former method is used, then the CD pipeline waits for the CI to succeed before executing. Otherwise the CD will not run.  
+These two actions are set to run when there is a **push to main** or if it is triggered manually. If the former method is used, then the CD pipeline waits for the CI to succeed before executing. Otherwise the CD will not run.  
 
 The CI/CD pipeline files can be found in the [.github workflows directory](https://github.com/COMP4350-Team2/Backend/tree/5158f66f84867b1eaa143da00eb6c5e252ee542b/.github/workflows).  
 A snapshot of the CI/CD execution can be found under the Actions tab at the top of [this page](https://github.com/COMP4350-Team2/Backend/actions)
@@ -65,12 +67,11 @@ A snapshot of the CI/CD execution can be found under the Actions tab at the top 
 ### Desktop Native App
 The team decided to use Github actions for both CI and CD. 
 - [Link to CI yml](https://github.com/COMP4350-Team2/Desktop-NativeApp/blob/7e2025cf1ff3855152cc3a7409dc519dbb2c820f/.github/workflows/desktop_ci.yml) 
-- The CD pipeline for the Desktop Native App did not work, unfortunately. Releases are still created. [Link to CD yml](https://github.com/COMP4350-Team2/Desktop-NativeApp/blob/7e2025cf1ff3855152cc3a7409dc519dbb2c820f/.github/workflows/desktop_cd.yml). Releases can be used by running source code. See release</br>notes on the release for running instructions.</br>
+- [Link to CD yml](https://github.com/COMP4350-Team2/Desktop-NativeApp/blob/7e2025cf1ff3855152cc3a7409dc519dbb2c820f/.github/workflows/desktop_cd.yml). The CD pipeline for the Desktop Native App unfortunately did not work. Releases are still created and releases can be used by running the source code. See release notes on the specific release for running instructions.  
 
-`CI yml` ir run on each **push to main** and `CD yml` is run on each **release**. </br>
-The CI/CD pipeline files can be found in the [.github workflows directory](https://github.com/COMP4350-Team2/Desktop-NativeApp/tree/7e2025cf1ff3855152cc3a7409dc519dbb2c820f/.github/workflows).</br>  
+`CI yml` is run on each **push to main** and `CD yml` is run on each **release**.  
+The CI/CD pipeline files can be found in the [.github workflows directory](https://github.com/COMP4350-Team2/Desktop-NativeApp/tree/7e2025cf1ff3855152cc3a7409dc519dbb2c820f/.github/workflows).  
 A snapshot of the CI/CD execution can be found under the Actions tab at the top of [this page](https://github.com/COMP4350-Team2/Desktop-NativeApp/actions)
-
 
 ### Mobile Web App
 For the Mobile WebApp, the team decided to use Github actions for CI/CD as well. There are a total of two **(2)** files responsible for CI and CD:
