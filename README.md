@@ -87,7 +87,7 @@ The API documentation can also be accessed via putting the `schema.yml` file in 
 ### Running the API endpoints
 To run the actual endpoints, send HTTP requests to the url with the correct request type and parameters (if applicable) following the API documentation. i.e.
 ```
-curl --request GET ^
+curl --request GET \
 --url http://localhost:6060/api/v3/ingredients \
 --header "Authorization: Bearer [access_token]"
 ```
