@@ -1,11 +1,12 @@
 # Cupboard Backend
-This repository contains the code for the Cupboard App backend. It was developed for the University of Manitoba Fall 2024 COMP4350 class.  
+This repository contains the code for the Cupboard App backend. It was developed as a group project for the University of Manitoba Fall 2024 COMP 4350 class by Team 2 - Teacup.  
+
 By running this code, you will have access to the Cupboard App API documentation and the API endpoints.
 
 To go to the deployed Cupboard App API go to https://teacup-cupboard-api.me/api/v3/doc
 
-Links to the other repos can be found below:
-- [Link to Desktop Webapp](https://github.com/COMP4350-Team2/Desktop-WebApp)  
+Links to the other repositories can be found below:
+- [Link to Desktop Webapp](https://github.com/COMP4350-Team2/Desktop-NativeApp)  
 - [Link to Mobile Webapp](https://github.com/COMP4350-Team2/Mobile-WebApp)
 
 ## Table of Contents
@@ -174,7 +175,7 @@ docker run -d -p 6060:6060 --env-file .env teacupbackend/cupboard_backend:latest
 
 ## Contributors
 This project exists thanks to all the people who contributed.
-<a href="https://github.com/COMP4350-Team2/Backend/graphs/contributors"><img src="https://opencollective.com/standard-readme/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/COMP4350-Team2/Backend/graphs/contributors"></a>
 
 ## License
 [GNU GENERAL PUBLIC LICENSE](LICENSE) © COMP4350-Team2 - Teacup
