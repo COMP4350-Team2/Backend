@@ -63,11 +63,14 @@ The CI/CD pipeline files can be found in the [.github workflows directory](https
 A snapshot of the CI/CD execution can be found under the Actions tab at the top of [this page](https://github.com/COMP4350-Team2/Backend/actions)
 
 ### Desktop Native App
-CI/CD environment and clickable link to the pipeline.
+The team decided to use Github actions for both CI and CD. 
+- [Link to CI yml](https://github.com/COMP4350-Team2/Desktop-NativeApp/blob/7e2025cf1ff3855152cc3a7409dc519dbb2c820f/.github/workflows/desktop_ci.yml) 
+- The CD pipeline for the Desktop Native App did not work, unfortunately. Releases are still created. [Link to CD yml](https://github.com/COMP4350-Team2/Desktop-NativeApp/blob/7e2025cf1ff3855152cc3a7409dc519dbb2c820f/.github/workflows/desktop_cd.yml). Releases can be used by running source code. See release</br>notes on the release for running instructions.</br>
 
-Provide link to the workflow
+`CI yml` ir run on each **push to main** and `CD yml` is run on each **release**. </br>
+The CI/CD pipeline files can be found in the [.github workflows directory](https://github.com/COMP4350-Team2/Desktop-NativeApp/tree/7e2025cf1ff3855152cc3a7409dc519dbb2c820f/.github/workflows).</br>  
+A snapshot of the CI/CD execution can be found under the Actions tab at the top of [this page](https://github.com/COMP4350-Team2/Desktop-NativeApp/actions)
 
-Snapshots of the CI/CD execution
 
 ### Mobile Web App
 For the Mobile WebApp, the team decided to use Github actions for CI/CD as well. There are a total of two **(2)** files responsible for CI and CD:
