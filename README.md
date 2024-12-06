@@ -179,12 +179,12 @@ For manual docker commands for AWS, please see the following commands below:
    ```
 
 ## Contributors
-This project exists thanks to all the people who contributed.
+This project exists thanks to all the people who contributed.  
 <a href="https://github.com/COMP4350-Team2/Backend/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=COMP4350-Team2/Backend" />
 </a>
 
-Made with [contrib.rocks](https://contrib.rocks).
+Image made with [contrib.rocks](https://contrib.rocks).
 
 ## License
 [GNU GENERAL PUBLIC LICENSE](LICENSE) © Teacup (COMP4350-Team2)
