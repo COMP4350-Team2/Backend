@@ -81,6 +81,11 @@ For the Mobile WebApp, the team decided to use Github actions for CI/CD as well.
 The CI/CD pipelines can be found in the [.github workflows directory](https://github.com/COMP4350-Team2/Mobile-Webapp/tree/2681ccc32c4f92eac14eb1684b0214e5b138e668/.github/workflows).  
 A snapshot of the CI/CD execution can be found under the actions tab at the top of [this page](https://github.com/COMP4350-Team2/Mobile-Webapp/actions)
 
+
+## Top-tier Option
+Our Mobile WebApp deployment was on Vercel, which only allows `https` requests. However, the EC2 instance that was hosting the backend could only accept and return `http` responses.<br>
+The team was able to set up Nginx with Certbot to generate SSL certificates automatically and handle the `https` requests. This was, by far, the biggest challenge for the team and getting it to work was nothing short of incredible!
+
 ## Thoughts
 Although the team is proud of what they were able to accomplish, the teammates still had thoughts on how the project could have been improved in retrospect. Firstly, for the Mobile WebApp, the team would have liked to start off with mockup tools (Figma) and have the design ready in the earlier sprints. This way, the team could have designed the Mobile WebApp component-by-component and with a predetermined layout. Secondly, for the Desktop NativeApp, we would have liked to use Data Binding compatible DSOs which would make UI creation much easier. This would reduce the memory footprint, drastically reduce LOC and make the UI more robust. A dedicated authentication server abstracting away the details of the login/logout would be an improvement. The backend had similarly named DSOs and some inconsistent API naming, both of which could be improved to make development easier. Additionally, we would have liked to develop more helpful features and design the UI in a professional way. More specifically, we would like to provide list sharing and make the UI closely mimic industry standards, making the app more suitable for a professional setting. 
 
